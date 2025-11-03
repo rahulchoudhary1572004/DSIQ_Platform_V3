@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchWorkspaceProducts } from '../../../redux/slices/workspaceViewSlice';
 
-const FilterBar = ({ filters, setFilters }) => {
+const FilterBar = ({ filters, setFilters }: any) => {
   const dispatch = useDispatch();
-  const { currentWorkspace, products, productsStatus, productsError } = useSelector(state => state.workspaceView);
+  const { currentWorkspace, products, productsStatus, productsError } = useSelector((state: any) => state.workspaceView);
 
   const [pendingFilters, setPendingFilters] = useState({
     retailer: filters.retailer ? filters.retailer.split(',').filter(Boolean) : [],
@@ -34,16 +34,16 @@ const FilterBar = ({ filters, setFilters }) => {
 
   // Memoized derived data
   const { retailers, brands, categories, productsList } = useMemo(() => ({
-    retailers: [...new Set(currentWorkspace?.settings?.map(setting => setting.retailer?.retailer_name).filter(Boolean))] || [],
-    brands: [...new Set(currentWorkspace?.settings?.map(setting => setting.brand?.name).filter(Boolean))] || [],
-    categories: [...new Set(currentWorkspace?.settings?.map(setting => setting.category?.name).filter(Boolean))] || [],
+    retailers: [...new Set(currentWorkspace?.settings?.map((setting: any) => setting.retailer?.retailer_name).filter(Boolean))],
+    brands: [...new Set(currentWorkspace?.settings?.map((setting: any) => setting.brand?.name).filter(Boolean))],
+    categories: [...new Set(currentWorkspace?.settings?.map((setting: any) => setting.category?.name).filter(Boolean))],
     productsList: products || [],
   }), [currentWorkspace, products]);
 
   // Fetch products
   useEffect(() => {
     if (currentWorkspace?.id && productsStatus === 'idle') {
-      dispatch(fetchWorkspaceProducts(currentWorkspace.id));
+      dispatch(fetchWorkspaceProducts(currentWorkspace.id) as any);
     }
   }, [currentWorkspace?.id, productsStatus, dispatch]);
 

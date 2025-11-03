@@ -94,7 +94,7 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen, isLoggedIn, selectedApp, setS
 
   useEffect(() => {
     animate(navRef.current, { y: 0, opacity: 1 }, null);
-    dispatch(fetchWorkspaces());
+    dispatch(fetchWorkspaces() as any);
   }, [dispatch]);
 
   useEffect(() => {
@@ -152,23 +152,23 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen, isLoggedIn, selectedApp, setS
     if (response.success) {
       setPinnedApp(isPinned ? null : app);
       setApps(isPinned ? initialApps : [app, ...initialApps.filter(a => a.id !== app.id)]);
-      animate(e.target.closest("button"), { scale: isPinned ? 1 : 1.2, rotation: isPinned ? 0 : 15 });
+      animate(e.target.closest("button"), { scale: isPinned ? 1 : 1.2, rotation: isPinned ? 0 : 15 }, null as any);
     }
   };
 
   const handleSidebarToggle = () => {
-    animate(sidebarToggleRef.current, { scale: 0.95, yoyo: true, repeat: 1 });
+    animate(sidebarToggleRef.current, { scale: 0.95, yoyo: true, repeat: 1 }, null as any);
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleDropdownToggle = (setOpen, isOpen, ref) => {
-    animate(ref.current, { scale: 0.95, yoyo: true, repeat: 1 });
+  const handleDropdownToggle = (setOpen: any, isOpen: any, ref: any) => {
+    animate(ref.current, { scale: 0.95, yoyo: true, repeat: 1 }, null as any);
     setOpen(!isOpen);
-    animate(ref.current.querySelector("[data-chevron]"), { rotation: isOpen ? 0 : 180 });
+    animate(ref.current.querySelector("[data-chevron]"), { rotation: isOpen ? 0 : 180 }, null as any);
   };
 
-  const handleCreateButtonClick = (e) => {
-    animate(e.currentTarget, { rotate: 180 });
+  const handleCreateButtonClick = (e: any) => {
+    animate(e.currentTarget, { rotate: 180 }, null as any);
     navigate("/workspaceCreate");
   };
 
@@ -285,15 +285,15 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen, isLoggedIn, selectedApp, setS
         {!showMainNav && isLoggedIn && (
           <>
             <div className="relative group">
-              <button ref={(el) => (navButtonsRef.current[0] = el)} className="p-[6px] rounded-md text-gray-600 hover:text-primary-orange hover:bg-peach" onClick={() => navigate("/help")} aria-label="Help"><HelpCircle size={15} /></button>
+              <button ref={(el: any) => (navButtonsRef.current[0] = el)} className="p-[6px] rounded-md text-gray-600 hover:text-primary-orange hover:bg-peach" onClick={() => navigate("/help")} aria-label="Help"><HelpCircle size={15} /></button>
               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 px-[6px] py-[3px] bg-gray-800 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-50">Help</div>
             </div>
             <div className="relative group">
-              <button ref={(el) => (navButtonsRef.current[1] = el)} className="p-[6px] rounded-md text-gray-600 hover:text-primary-orange hover:bg-peach" onClick={() => navigate("/settings")} aria-label="Settings"><Settings size={15} /></button>
+              <button ref={(el: any) => (navButtonsRef.current[1] = el)} className="p-[6px] rounded-md text-gray-600 hover:text-primary-orange hover:bg-peach" onClick={() => navigate("/settings")} aria-label="Settings"><Settings size={15} /></button>
               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 px-[6px] py-[3px] bg-gray-800 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-50">Settings</div>
             </div>
             <div className="relative group">
-              <button ref={(el) => (navButtonsRef.current[2] = el)} className="p-[6px] rounded-md text-gray-600 hover:text-primary-orange hover:bg-peach relative" aria-label="Notifications">
+              <button ref={(el: any) => (navButtonsRef.current[2] = el)} className="p-[6px] rounded-md text-gray-600 hover:text-primary-orange hover:bg-peach relative" aria-label="Notifications">
                 <Bell size={15} />
                 <span className="absolute top-[3px] right-[3px] w-[7.5px] h-[7.5px] bg-accent-magenta rounded-full border-[1.5px] border-white" />
               </button>

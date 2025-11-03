@@ -231,7 +231,7 @@ export default function DAMPage() {
 
   // Process data for Kendo Grid
   const processedData = process(filteredAssets, {
-    filter: gridFilter,
+    filter: gridFilter as any,
     sort,
     group,
     skip: page.skip,
@@ -459,7 +459,7 @@ export default function DAMPage() {
                 filterable={true}
                 sortable={true}
                 groupable={true}
-                filter={gridFilter}
+                filter={gridFilter as any}
                 sort={sort}
                 group={group}
                 onFilterChange={(e) => setGridFilter(e.filter)}
@@ -483,7 +483,7 @@ export default function DAMPage() {
                   title="Name"
                   cell={assetNameCell}
                   filterable={{
-                    ui: (props) => (
+                    ui: (props: any) => (
                       <div className="p-2">
                         <label className="block mb-1 text-sm text-gray-700">
                           Filter by Name
@@ -497,14 +497,14 @@ export default function DAMPage() {
                         />
                       </div>
                     ),
-                  }}
+                  } as any}
                 />
                 <Column
                   field="type"
                   title="Type"
                   cell={assetTypeCell}
                   filterable={{
-                    ui: (props) => (
+                    ui: (props: any) => (
                       <div className="p-2">
                         <label className="block mb-1 text-sm text-gray-700">
                           Filter by Type
@@ -527,13 +527,13 @@ export default function DAMPage() {
                         </select>
                       </div>
                     ),
-                  }}
+                  } as any}
                 />
                 <Column
                   field="size"
                   title="Size"
                   filterable={{
-                    ui: (props) => (
+                    ui: (props: any) => (
                       <div className="p-2">
                         <label className="block mb-1 text-sm text-gray-700">
                           Filter by Size
@@ -547,13 +547,13 @@ export default function DAMPage() {
                         />
                       </div>
                     ),
-                  }}
+                  } as any}
                 />
                 <Column
                   field="format"
                   title="Format"
                   filterable={{
-                    ui: (props) => (
+                    ui: (props: any) => (
                       <div className="p-2">
                         <label className="block mb-1 text-sm text-gray-700">
                           Filter by Format
@@ -567,13 +567,13 @@ export default function DAMPage() {
                         />
                       </div>
                     ),
-                  }}
+                  } as any}
                 />
                 <Column
                   field="uploadDate"
                   title="Modified"
                   filterable={{
-                    ui: (props) => (
+                    ui: (props: any) => (
                       <div className="p-2">
                         <label className="block mb-1 text-sm text-gray-700">
                           Filter by Date
@@ -586,13 +586,13 @@ export default function DAMPage() {
                         />
                       </div>
                     ),
-                  }}
+                  } as any}
                 />
                 <Column
                   field="uploadedBy"
                   title="Uploaded By"
                   filterable={{
-                    ui: (props) => (
+                    ui: (props: any) => (
                       <div className="p-2">
                         <label className="block mb-1 text-sm text-gray-700">
                           Filter by User
@@ -606,7 +606,7 @@ export default function DAMPage() {
                         />
                       </div>
                     ),
-                  }}
+                  } as any}
                 />
                 <Column
                   field="actions"

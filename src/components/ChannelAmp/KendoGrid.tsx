@@ -16,7 +16,7 @@ const KendoGrid = ({
   gridDataState,
   setGridDataState,
   selectedRows = [],
-  setSelectedRows = () => { },
+  setSelectedRows = (rows?: any[]) => { },
   nonRemovableColumns,
   onRowClick,
   aggregates = [],
@@ -38,12 +38,12 @@ const KendoGrid = ({
     );
   };
 
-  const FooterCell = (props) => {
+  const FooterCell = (props: any) => {
     const { field } = props;
-    if (!data || data.length === 0 || !columns.find((col) => col.field === field)?.filter === "numeric") {
+    if (!data || data.length === 0 || columns.find((col: any) => col.field === field)?.filter !== "numeric") {
       return <td></td>;
     }
-    const total = data.reduce((sum, item) => sum + (Number(item[field]) || 0), 0);
+    const total = data.reduce((sum: number, item: any) => sum + (Number(item[field]) || 0), 0);
     return (
       <td className="text-right font-bold">
         {columns.find((col) => col.field === field)?.format
@@ -110,13 +110,13 @@ const KendoGrid = ({
     setGridDataState(event.dataState);
   };
 
-  const handleSelectionChange = (event) => {
+  const handleSelectionChange = (event: any) => {
     if (!showCheckboxColumn) return;
-    const newSelectedRows = event.selectedRows.map((row) => row.dataItem.id);
+    const newSelectedRows = event.selectedRows.map((row: any) => row.dataItem.id);
     setSelectedRows(newSelectedRows);
   };
 
-  const CheckboxCell = (props) => {
+  const CheckboxCell = (props: any) => {
     const { dataItem } = props;
     const isChecked = selectedRows.includes(dataItem.id);
     return (
@@ -126,7 +126,7 @@ const KendoGrid = ({
           checked={isChecked}
           onChange={() => {
             const newSelectedRows = isChecked
-              ? selectedRows.filter((id) => id !== dataItem.id)
+              ? selectedRows.filter((id: any) => id !== dataItem.id)
               : [...selectedRows, dataItem.id];
             setSelectedRows(newSelectedRows);
           }}
@@ -145,7 +145,7 @@ const KendoGrid = ({
           if (allSelected) {
             setSelectedRows([]);
           } else {
-            setSelectedRows(data.map((item) => item.id));
+            setSelectedRows(data.map((item: any) => item.id));
           }
         }}
       />
@@ -154,7 +154,7 @@ const KendoGrid = ({
 
   const processedData = processWithGroups(data, gridDataState);
 
-  const rowRender = (trElement, props) => {
+  const rowRender = (trElement: any, props: any) => {
     if (!showCheckboxColumn) return trElement;
     const isSelected = selectedRows.includes(props.dataItem.id);
     const trProps = {
@@ -190,6 +190,7 @@ const KendoGrid = ({
           columns={columns}
           setColumns={setColumns}
           data={data}
+          setData={() => {}}
           nonRemovableColumns={nonRemovableColumns}
           allColumnsState={allColumnsState}
           setAllColumnsState={setAllColumnsState}
@@ -250,12 +251,12 @@ const KendoGrid = ({
           />
         )}
         {Array.isArray(columns) &&
-          columns.map((column, index) => (
+          columns.map((column: any, index: number) => (
             <GridColumn
               key={index}
               field={column.field}
               title={
-                <div className="flex items-center justify-between">
+                (<div className="flex items-center justify-between">
                   <span className="font-medium mr-3">{column.title}</span>
                   {!nonRemovableColumns.includes(column.field) && (
                     <span
@@ -273,7 +274,7 @@ const KendoGrid = ({
                       </svg>
                     </span>
                   )}
-                </div>
+                </div>) as any
               }
               filter={column.filter}
               columnMenu={column.filter === "text" ? ColumnMenuCheckboxFilter : column.filter === "date" ? null : ColumnMenu}

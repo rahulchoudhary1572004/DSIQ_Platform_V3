@@ -9,9 +9,9 @@ import { getModuleIdByName } from "../../../utils/getModuleIdByName";
 import showToast from '../../../utils/toast'; 
 import { getRequest } from '../../api/apiHelper/getHelper';
 
-const CreateRoles = ({ onCancel, onRoleCreated }) => {
+const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
   const dispatch = useDispatch();
-  const { roles } = useSelector((state) => state.roles);
+  const { roles } = useSelector((state: any) => state.roles);
   // State for wizard flow
   const [activeTab, setActiveTab] = useState("details");
   const [creationComplete, setCreationComplete] = useState(false);
@@ -69,16 +69,16 @@ const CreateRoles = ({ onCancel, onRoleCreated }) => {
       setIsLoadingModules(true);
       try {
         const response = await getRequest('/get-modules'); 
-        setModules(response);
+        setModules(response as any);
         // Initialize permission matrix with fetched modules
-        setPermissionMatrix(response.map(module => ({
+        setPermissionMatrix((response as any[]).map((module: any) => ({
           name: module.module_name,
           create: false,
           read: true,
           update: false,
           archived: false
         })));
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching modules:', err);
         showToast.error(err.message, { autoClose: 5000 });
       } finally {
@@ -246,13 +246,13 @@ const CreateRoles = ({ onCancel, onRoleCreated }) => {
         permissions: transformPermissionsToBackend(permissionMatrix)
       };
 
-      await dispatch(createRole(payload)).unwrap();
+      await (dispatch(createRole(payload) as any) as any).unwrap();
       if (typeof onRoleCreated === 'function') {
         onRoleCreated();
       }
       showToast.success(`Role "${formData.details.name}" created successfully!`, { autoClose: 2000 });
       setCreationComplete(true);
-    } catch (err) {
+    } catch (err: any) {
       showToast.error(err, { autoClose: 2000 });
     } finally {
       setIsSubmitting(false);
@@ -483,7 +483,7 @@ const CreateRoles = ({ onCancel, onRoleCreated }) => {
                 </label>
                 <textarea
                   id="role-description"
-                  rows="4"
+                  rows={4}
                   className="w-full px-3 py-2 border border-light-gray rounded-md focus:outline-none focus:ring-2 focus:ring-primary-orange text-input"
                   placeholder="Describe the purpose and scope of this role..."
                   value={formData.details.description}

@@ -92,7 +92,7 @@ const ResetPasswordPage = () => {
       try {
         // Use token here
         console.log('Reset token:', token);
-        dispatch(resetPassword({ token, password: formData.password }));
+        dispatch(resetPassword({ token, password: formData.password }) as any);
         // Simulating API call with token and new password
         // Example:
         // await resetPasswordAPI({ token, password: formData.password });
@@ -116,7 +116,7 @@ const ResetPasswordPage = () => {
             src="/icon.png"
             alt="DSIQ Logo"
             className="h-16 w-auto mx-auto mb-4"
-            onError={(e) => {
+            onError={(e: any) => {
               e.target.onerror = null;
               e.target.src = "/icon.png";
             }}
@@ -138,7 +138,7 @@ const ResetPasswordPage = () => {
                 className="!w-full !pr-10"
                 value={formData.password}
                 onChange={handleChange}
-                autocomplete="new-password"
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -178,7 +178,7 @@ const ResetPasswordPage = () => {
                 className="w-full pr-10"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                autocomplete="new-password"
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -195,9 +195,9 @@ const ResetPasswordPage = () => {
           </div>
 
           <Button
-            primary
             type="submit"
             className="w-full !bg-indigo-600 !text-white hover:!bg-indigo-700 mb-4"
+            {...({ primary: true } as any)}
           >
             Reset Password
           </Button>

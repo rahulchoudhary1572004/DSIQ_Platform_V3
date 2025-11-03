@@ -442,7 +442,7 @@ const Sidebar = ({ isOpen, selectedApp, toggleSidebar }) => {
         <div className="py-[3px] flex-grow">
           <div className="mb-[3px] py-[3px]">
             {mainMenuItems.map((item, index) => (
-              <div key={item.label} ref={el => (menuItemsRef.current[index] = el)}>
+              <div key={item.label} ref={(el: any) => (menuItemsRef.current[index] = el)}>
                 {isOpen ? (
                   <ExpandedMenuItem
                     item={item}
@@ -459,6 +459,7 @@ const Sidebar = ({ isOpen, selectedApp, toggleSidebar }) => {
                     onClick={(e) => handleIconClick(item, e)}
                     onHover={(e) => handleSectionHover(item, e)}
                     onLeave={handleSectionLeave}
+                    {...{onToggle: undefined, expanded: undefined} as any}
                   />
                 )}
               </div>
@@ -468,12 +469,13 @@ const Sidebar = ({ isOpen, selectedApp, toggleSidebar }) => {
 
         <div className="pb-3">
           {BOTTOM_MENU_ITEMS.map((item, index) => (
-            <div key={item.label} ref={el => (menuItemsRef.current[mainMenuItems.length + index] = el)}>
+            <div key={item.label} ref={(el: any) => (menuItemsRef.current[mainMenuItems.length + index] = el)}>
               {isOpen ? (
                 <ExpandedMenuItem
                   item={item}
                   active={activeItem}
                   onClick={handleItemClick}
+                  {...{onToggle: undefined, expanded: undefined} as any}
                 />
               ) : (
                 <MenuItem
@@ -483,6 +485,7 @@ const Sidebar = ({ isOpen, selectedApp, toggleSidebar }) => {
                   onClick={(e) => handleIconClick(item, e)}
                   onHover={(e) => handleSectionHover(item, e)}
                   onLeave={handleSectionLeave}
+                  {...{onToggle: undefined, expanded: undefined} as any}
                 />
               )}
             </div>

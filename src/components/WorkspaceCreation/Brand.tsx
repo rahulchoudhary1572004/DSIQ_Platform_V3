@@ -48,7 +48,7 @@ export default function Brand({
         return;
       }
 
-      const result = await fetchBrandsByCategories(selectedCategoriesFlat);
+      const result = await fetchBrandsByCategories(selectedCategoriesFlat as any);
       if (result.success) {
         cache[cacheKey] = result.data;
         setBrandsByCategory(result.data);
@@ -64,14 +64,14 @@ export default function Brand({
     fetchBrands();
   }, [selectedCategoriesFlat, activeBrandCategory]);
 
-  const handleBrandChange = (categoryId, brand) => {
+  const handleBrandChange = (categoryId: any, brand: any) => {
     setSelectedBrands((prev) => {
-      const categoryBrands = prev[categoryId] || [];
+      const categoryBrands = (prev as any)[categoryId] || [];
       const newBrands = { ...prev };
       if (categoryBrands.includes(brand)) {
-        newBrands[categoryId] = categoryBrands.filter((b) => b !== brand);
+        (newBrands as any)[categoryId] = categoryBrands.filter((b: any) => b !== brand);
       } else {
-        newBrands[categoryId] = [...categoryBrands, brand];
+        (newBrands as any)[categoryId] = [...categoryBrands, brand];
       }
       return newBrands;
     });
@@ -102,8 +102,8 @@ export default function Brand({
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Select Your Brands</h2>
       {selectedCategoriesFlat.some(
-        (categoryId) =>
-          !selectedBrands[categoryId] || selectedBrands[categoryId].length === 0
+        (categoryId: any) =>
+          !(selectedBrands as any)[categoryId] || (selectedBrands as any)[categoryId].length === 0
       ) && (
         <p className="text-sm text-red-500">
           **You must select at least one brand from each category.**
@@ -138,8 +138,8 @@ export default function Brand({
                   </div>
                   {expandedRetailers[retailerId] && (
                     <div className="pl-5 mt-2 space-y-2">
-                      {categoryIds.map((categoryId) => {
-                        const brandCount = (selectedBrands[categoryId] || []).length;
+                      {(categoryIds as any).map((categoryId: any) => {
+                        const brandCount = ((selectedBrands as any)[categoryId] || []).length;
                         return (
                           <div key={categoryId}>
                             <div
@@ -201,12 +201,11 @@ export default function Brand({
         {activeBrandCategory && (
           <div className="w-2/3 p-6 rounded-xl bg-white shadow-sm border border-light-gray">
             <div className="flex flex-wrap gap-2 mb-4">
-              {(selectedBrands[activeBrandCategory] || []).map((brand) => (
+              {((selectedBrands as any)[activeBrandCategory] || []).map((brand: any) => (
                 <SelectionTag
-                  key={brand}
                   label={brand}
                   onRemove={() => removeBrandTag(activeBrandCategory, brand)}
-                  className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200"
+                  {...{key: brand, className: "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200"} as any}
                 />
               ))}
             </div>

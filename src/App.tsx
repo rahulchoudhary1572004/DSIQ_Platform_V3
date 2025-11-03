@@ -75,10 +75,10 @@ const AppSettings = () => <div>App Settings Page</div>;
 // const Channels = () => <div>Channels Page</div>;
 // Error Boundary Component
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
   state = { hasError: false };
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: any) {
     return { hasError: true };
   }
 
@@ -92,7 +92,7 @@ class ErrorBoundary extends React.Component {
 
 const App = () => {
   const dispatch = useDispatch();
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
   const [hasWorkspace, setHasWorkspace] = useState(false);
 
   useEffect(() => {
@@ -103,7 +103,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const permissions = dispatch(initializePermissions());
+    const permissions = dispatch(initializePermissions() as any);
   }, []);
 
   return (
@@ -125,11 +125,11 @@ const App = () => {
                 <>
                   <Route
                     path="viewWorkspace"
-                    element={<ViewWorkspacesPage isLoggedIn={isLoggedIn} />}
+                    element={<ViewWorkspacesPage isLoggedIn={isLoggedIn} {...({} as any)} />}
                   />
                   <Route
                     path="viewWorkspace/ModifyWorkspace"
-                    element={<ModifyWorkspace isLoggedIn={isLoggedIn} />}
+                    element={<ModifyWorkspace isLoggedIn={isLoggedIn} {...({} as any)} />}
                   />
                   <Route
                     path="viewWorkspace/:name"
@@ -137,7 +137,7 @@ const App = () => {
                   />
                   <Route
                     path="profile"
-                    element={<Profile isLoggedIn={isLoggedIn} />}
+                    element={<Profile isLoggedIn={isLoggedIn} {...({} as any)} />}
                   />
                   {hasWorkspace && (
                     <Route
@@ -147,6 +147,7 @@ const App = () => {
                           hasWorkspace={hasWorkspace}
                           setHasWorkspace={setHasWorkspace}
                           isLoggedIn={isLoggedIn}
+                          {...({} as any)}
                         />
                       }
                     />
@@ -226,6 +227,7 @@ const App = () => {
                     hasWorkspace={hasWorkspace}
                     setHasWorkspace={setHasWorkspace}
                     isLoggedIn={isLoggedIn}
+                    {...({} as any)}
                   />
                 ) : (
                   <Navigate to="/login" />

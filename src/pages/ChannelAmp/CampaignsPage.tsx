@@ -18,6 +18,9 @@ const CampaignsPage = () => {
     group: [], // Enable grouping by default
   });
   const [selectedRows, setSelectedRows] = useState([]);
+  
+  // TODO: Replace with actual access token from authentication
+  const accessToken = "your-access-token";
 
   // Get URL parameters
   const searchParams = new URLSearchParams(location.search);

@@ -53,8 +53,8 @@ export default function Category({
       const hierarchy = categoriesByRetailer[retailerId]?.hierarchy || {};
       const pathsToExpand = new Set();
 
-      const findMatchingPaths = (categories, currentPath = []) => {
-        Object.entries(categories).forEach(([name, { children, data }]) => {
+      const findMatchingPaths = (categories: any, currentPath: any = []) => {
+        Object.entries(categories).forEach(([name, { children, data }]: [string, any]) => {
           const fullPath = [...currentPath, name];
           const pathString = fullPath.join(">");
 
@@ -160,9 +160,9 @@ export default function Category({
     return false;
   };
 
-  const hasMatchingDescendant = (categories, searchTerm) => {
+  const hasMatchingDescendant = (categories: any, searchTerm: string) => {
     if (searchTerm === "") return true;
-    return Object.entries(categories).some(([name, { children, data }]) => {
+    return Object.entries(categories).some(([name, { children, data }]: [string, any]) => {
       const currentMatches = categoryMatchesSearch(name, data, searchTerm);
       const childrenMatch =
         Object.keys(children).length > 0 && hasMatchingDescendant(children, searchTerm);
@@ -176,9 +176,9 @@ export default function Category({
     const searchTerm = categorySearches[activeRetailer] || "";
     if (!searchTerm) return hierarchy;
 
-    const filtered = {};
-    const filterCategories = (categories, parentPath = []) => {
-      Object.entries(categories).forEach(([name, { children, data }]) => {
+    const filtered: any = {};
+    const filterCategories = (categories: any, parentPath: any = []) => {
+      Object.entries(categories).forEach(([name, { children, data }]: [string, any]) => {
         const currentPath = [...parentPath, name].join(">");
         const matchesSearch = categoryMatchesSearch(name, data, searchTerm);
         const hasMatchingChildren = hasMatchingDescendant(children, searchTerm);
@@ -201,9 +201,9 @@ export default function Category({
     return filtered;
   }, [activeRetailer, categoriesByRetailer, categorySearches]);
 
-  const renderCategoryLevel = (categories, retailerId, level = 0, path = [], searchTerm = "") => {
+  const renderCategoryLevel = (categories: any, retailerId: any, level = 0, path: any = [], searchTerm = "") => {
     return Object.entries(categories)
-      .map(([name, { children, data }]) => {
+      .map(([name, { children, data }]: [string, any]) => {
         const currentPath = [...path, name].join(">");
         const isExpanded = expandedCategories[currentPath];
         const hasChildren = Object.keys(children).length > 0;

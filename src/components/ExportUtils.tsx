@@ -228,16 +228,16 @@ const ExportDialog = ({ isOpen, onClose, onExport, totalPages, currentPage, aggr
         <div className="space-y-2">
           <label className="text-xs font-semibold text-gray-700">Export Format</label>
           <CustomRadioGroup value={exportType} onChange={setExportType} name="exportType">
-            <CustomRadioItem value="excel"><span className="flex items-center gap-2"><span className="text-green-600 text-base">📊</span>Excel (.xlsx)</span></CustomRadioItem>
-            <CustomRadioItem value="csv"><span className="flex items-center gap-2"><span className="text-blue-600 text-base">📄</span>CSV (.csv)</span></CustomRadioItem>
-            <CustomRadioItem value="pdf"><span className="flex items-center gap-2"><span className="text-red-600 text-base">📋</span>PDF (.pdf)</span></CustomRadioItem>
+            <CustomRadioItem value="excel" name="exportType" selectedValue={exportType} onChange={setExportType}><span className="flex items-center gap-2"><span className="text-green-600 text-base">📊</span>Excel (.xlsx)</span></CustomRadioItem>
+            <CustomRadioItem value="csv" name="exportType" selectedValue={exportType} onChange={setExportType}><span className="flex items-center gap-2"><span className="text-blue-600 text-base">📄</span>CSV (.csv)</span></CustomRadioItem>
+            <CustomRadioItem value="pdf" name="exportType" selectedValue={exportType} onChange={setExportType}><span className="flex items-center gap-2"><span className="text-red-600 text-base">📋</span>PDF (.pdf)</span></CustomRadioItem>
           </CustomRadioGroup>
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-gray-700">Export Scope</label>
           <CustomRadioGroup value={exportScope} onChange={setExportScope} name="exportScope">
-            <CustomRadioItem value="current"><span className="flex items-center gap-2"><span className="text-blue-600 text-base">📄</span>Current page (Page {currentPage})</span></CustomRadioItem>
-            <CustomRadioItem value="all"><span className="flex items-center gap-2"><span className="text-purple-600 text-base">📚</span>All pages ({totalPages} pages)</span></CustomRadioItem>
+            <CustomRadioItem value="current" name="exportScope" selectedValue={exportScope} onChange={setExportScope}><span className="flex items-center gap-2"><span className="text-blue-600 text-base">📄</span>Current page (Page {currentPage})</span></CustomRadioItem>
+            <CustomRadioItem value="all" name="exportScope" selectedValue={exportScope} onChange={setExportScope}><span className="flex items-center gap-2"><span className="text-purple-600 text-base">📚</span>All pages ({totalPages} pages)</span></CustomRadioItem>
           </CustomRadioGroup>
         </div>
       </div>
@@ -246,7 +246,7 @@ const ExportDialog = ({ isOpen, onClose, onExport, totalPages, currentPage, aggr
 };
 
 // Enhanced Export Component
-const ExportUtils = ({ enableExport, columns, processedData, currentData, sort, page, aggregates = [] }) => {
+const ExportUtils = ({ enableExport, columns, processedData, currentData, sort, page, aggregates = [], onExport }: any) => {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [csvData, setCsvData] = useState([]);
@@ -347,7 +347,7 @@ const ExportUtils = ({ enableExport, columns, processedData, currentData, sort, 
           isOpen={dropdownOpen}
           onToggle={() => setDropdownOpen(!dropdownOpen)}
           trigger={
-            <CustomButton variant="export" className="gap-1 !px-1 !py-1.5 font-semibold text-sm tracking-tight hover:scale-105 sm:px-4 sm:py-2" size="sm">
+            <CustomButton onClick={() => setDropdownOpen(!dropdownOpen)} variant="export" className="gap-1 !px-1 !py-1.5 font-semibold text-sm tracking-tight hover:scale-105 sm:px-4 sm:py-2" size="sm">
               <ExportIcon className="transition-transform duration-150 group-hover:scale-110" />
               <span className="hidden sm:inline">Export Data</span>
               <span className="sm:hidden">Export</span>

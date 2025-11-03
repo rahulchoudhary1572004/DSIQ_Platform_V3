@@ -131,11 +131,11 @@ export default function Syndication() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [gridPage, setGridPage] = useState({ skip: 0, take: 10 });
-  const [gridFilter, setGridFilter] = useState({ logic: "and", filters: [] });
+  const [gridFilter, setGridFilter] = useState<any>({ logic: "and", filters: [] });
   const [activeTab, setActiveTab] = useState("status"); // status, readiness, templates
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const gridRef = useRef();
+  const gridRef = useRef<any>(null);
   
   const { fieldMappingTemplates } = useProductData();
 

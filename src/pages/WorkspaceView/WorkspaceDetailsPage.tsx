@@ -13,8 +13,8 @@ const Tooltip = ({ content, position = "top", children, delay = 200 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [mounted, setMounted] = useState(false);
-  const triggerRef = useRef(null);
-  const timeoutRef = useRef();
+  const triggerRef = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -115,10 +115,10 @@ export default function WorkspaceDetailPage() {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const actionsRef = useRef(null);
   const dispatch = useDispatch();
-  const { workspaceDetail, detailStatus: loading, detailError: error } = useSelector((state) => state.workspaceView);
+  const { workspaceDetail, detailStatus: loading, detailError: error } = useSelector((state: any) => state.workspaceView);
 
   useEffect(() => {
-    if (id) dispatch(fetchWorkspaceDetail(id));
+    if (id) dispatch(fetchWorkspaceDetail(id) as any);
   }, [dispatch, id]); 
 
   useEffect(() => {
@@ -175,11 +175,11 @@ export default function WorkspaceDetailPage() {
       }
     });
 
-    return Array.from(retailerMap.values()).map(retailer => ({
+    return Array.from(retailerMap.values()).map((retailer: any) => ({
       ...retailer,
-      categories: Array.from(retailer.categories.values()).map(category => ({
-        ...category,
-        brands: Array.from(category.brands)
+      categories: Array.from(retailer.categories.values()).map((category: any) => ({
+        ...(category as any),
+        brands: Array.from((category as any).brands)
       }))
     }));
   };
@@ -213,7 +213,7 @@ export default function WorkspaceDetailPage() {
         <h2 className="mt-4 text-2xl text-gray-900 font-semibold">Failed to load workspace</h2>
         <p className="mt-2 text-base text-gray-600">{error}</p>
         <button
-          onClick={() => dispatch(fetchWorkspaceDetail(id))}
+          onClick={() => dispatch(fetchWorkspaceDetail(id) as any)}
           className="mt-6 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           Retry

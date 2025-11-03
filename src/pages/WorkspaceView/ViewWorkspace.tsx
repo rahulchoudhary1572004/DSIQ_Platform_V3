@@ -38,12 +38,12 @@ const Tooltip = ({ content, position = "top", children, delay = 200 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [mounted, setMounted] = useState(false);
-  const triggerRef = useRef(null);
-  const timeoutRef = useRef();
+  const triggerRef = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
 
   useEffect(() => {
     setMounted(true);
-    return () => clearTimeout(timeoutRef.current);
+    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
   }, []);
 
   const calculatePosition = () => {
@@ -72,7 +72,7 @@ const Tooltip = ({ content, position = "top", children, delay = 200 }) => {
   };
 
   const handleMouseLeave = () => {
-    clearTimeout(timeoutRef.current);
+    timeoutRef.current && clearTimeout(timeoutRef.current);
     setIsVisible(false);
   };
 
@@ -139,10 +139,10 @@ const Tooltip = ({ content, position = "top", children, delay = 200 }) => {
   );
 };
 
-const formatDate = (dateString) => {
+const formatDate = (dateString: any) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  return isNaN(date)
+  return isNaN(date.getTime())
     ? "N/A"
     : date.toLocaleDateString("en-US", {
         year: "numeric",
@@ -396,21 +396,21 @@ export default function WorkspacesPage() {
   const archiveError = useSelector(selectArchiveError);
 
   useEffect(() => {
-    dispatch(fetchWorkspaces());
+    dispatch(fetchWorkspaces() as any);
   }, [dispatch]);
 
   const workspacesToDisplay = showArchived
-    ? [...(activeWorkspaces || []), ...(archivedWorkspaces || [])]
-    : activeWorkspaces || [];
+    ? [...((activeWorkspaces || []) as any[]), ...((archivedWorkspaces || []) as any[])]
+    : (activeWorkspaces || []) as any[];
 
-  const searchFilteredWorkspaces = workspacesToDisplay.filter((workspace) => {
+  const searchFilteredWorkspaces = workspacesToDisplay.filter((workspace: any) => {
     if (!workspace || typeof workspace !== "object") return false;
     return (
       (workspace.name || "")
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       (workspace.settings || []).some(
-        (setting) =>
+        (setting: any) =>
           (setting?.retailer?.retailer_name || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
@@ -421,8 +421,8 @@ export default function WorkspacesPage() {
     );
   });
 
-  const sortedWorkspaces = [...searchFilteredWorkspaces].sort((a, b) => {
-    let aValue, bValue;
+  const sortedWorkspaces = [...searchFilteredWorkspaces].sort((a: any, b: any) => {
+    let aValue: any, bValue: any;
 
     switch (sortBy) {
       case "name":
@@ -434,12 +434,12 @@ export default function WorkspacesPage() {
         bValue = (b.settings?.[0]?.retailer?.retailer_name || "").toLowerCase();
         break;
       case "dateCreated":
-        aValue = new Date(a.created_at || 0);
-        bValue = new Date(b.created_at || 0);
+        aValue = new Date(a.created_at || 0) as any;
+        bValue = new Date(b.created_at || 0) as any;
         break;
       case "dateModified":
-        aValue = new Date(a.updated_at || 0);
-        bValue = new Date(b.updated_at || 0);
+        aValue = new Date(a.updated_at || 0) as any;
+        bValue = new Date(b.updated_at || 0) as any;
         break;
       default:
         return 0;
@@ -456,22 +456,22 @@ export default function WorkspacesPage() {
 
   const groupedWorkspaces = (() => {
     if (groupBy === "category") {
-      return sortedWorkspaces.reduce((groups, workspace) => {
+      return sortedWorkspaces.reduce((groups: any, workspace: any) => {
         const categories = workspace.settings
-          ?.map((setting) => setting?.category?.name)
+          ?.map((setting: any) => setting?.category?.name)
           .filter(Boolean) || ["Uncategorized"];
-        categories.forEach((category) => {
+        categories.forEach((category: any) => {
           if (!groups[category]) groups[category] = [];
           groups[category].push(workspace);
         });
         return groups;
       }, {});
     } else if (groupBy === "retailer") {
-      return sortedWorkspaces.reduce((groups, workspace) => {
+      return sortedWorkspaces.reduce((groups: any, workspace: any) => {
         const retailers = workspace.settings
-          ?.map((setting) => setting?.retailer?.retailer_name)
+          ?.map((setting: any) => setting?.retailer?.retailer_name)
           .filter(Boolean) || ["No Retailer"];
-        retailers.forEach((retailer) => {
+        retailers.forEach((retailer: any) => {
           if (!groups[retailer]) groups[retailer] = [];
           groups[retailer].push(workspace);
         });
@@ -495,13 +495,13 @@ export default function WorkspacesPage() {
     navigate("/viewWorkspace/ModifyWorkspace/", { state: id });
   const handleCreateWorkspace = () => navigate("/workspaceCreate");
 
-  const handleArchiveToggle = async (id, currentArchiveStatus) => {
+  const handleArchiveToggle = async (id: any, currentArchiveStatus: any) => {
     try {
       setIsLoading(true);
-      await dispatch(
-        toggleWorkspaceArchive({ id, is_archive: !currentArchiveStatus })
-      ).unwrap();
-      dispatch(resetArchiveStatus());
+      await (dispatch(
+        toggleWorkspaceArchive({ id, is_archive: !currentArchiveStatus }) as any
+      ) as any).unwrap();
+      dispatch(resetArchiveStatus() as any);
     } catch (error) {
       console.error("Failed to toggle archive status:", error);
     } finally {
@@ -717,9 +717,9 @@ export default function WorkspacesPage() {
                 {/* Enhanced Workspace Grid */}
                 <div className="space-y-8">
                   {Object.entries(groupedWorkspaces).map(
-                    ([groupName, groupWorkspaces]) => {
+                    ([groupName, groupWorkspaces]: [string, any]) => {
                       const startIndex = (currentPage - 1) * itemsPerPage;
-                      const paginatedGroupWorkspaces = groupWorkspaces.slice(
+                      const paginatedGroupWorkspaces = (groupWorkspaces as any[]).slice(
                         startIndex,
                         startIndex + itemsPerPage
                       );
@@ -742,7 +742,7 @@ export default function WorkspacesPage() {
                                   {groupName}
                                 </h3>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-small font-medium bg-gradient-to-r from-primary-orange/20 to-accent-magenta/20 text-primary-orange border-primary-orange/30">
-                                  {groupWorkspaces.length}
+                                  {(groupWorkspaces as any[]).length}
                                 </span>
                               </div>
                               <div className="h-0.5 bg-gradient-to-r from-primary-orange/20 to-accent-magenta/20"></div>

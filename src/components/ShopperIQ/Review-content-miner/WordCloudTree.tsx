@@ -31,7 +31,7 @@ const WordCloudTree = ({
   const [initialLoad, setInitialLoad] = useState(true)
   const resizeTimeoutRef = useRef(null)
 
-  const currentWorkspace = useSelector((state) => state.workspaceView.currentWorkspace)
+  const currentWorkspace = useSelector((state: any) => state.workspaceView.currentWorkspace)
 
   const WORD_COLORS = [
     "#3B82F6",
@@ -193,18 +193,18 @@ const WordCloudTree = ({
         return
       }
 
-      const payload = { retailer_id: retailerIds, root_word: rootWord || selectedWord }
+      const payload: any = { retailer_id: retailerIds, root_word: rootWord || selectedWord }
       if (filters?.productTitle) {
-        payload.product_id = filters.productTitle
+        (payload as any).product_id = filters.productTitle
           .split(",")
-          .map((id) => id.trim())
+          .map((id: any) => id.trim())
           .filter(Boolean)
       }
       if (filters?.dateRange) {
         const start = new Date(filters.dateRange.start)
         const end = new Date(filters.dateRange.end)
-        if (start && end && !isNaN(start) && !isNaN(end)) {
-          payload.review_date_range = {
+        if (start && end && !isNaN(start as any) && !isNaN(end as any)) {
+          (payload as any).review_date_range = {
             start: start.toISOString().split("T")[0],
             end: end.toISOString().split("T")[0],
           }
@@ -214,7 +214,7 @@ const WordCloudTree = ({
         const min = Number(filters.rating.min)
         const max = Number(filters.rating.max)
         if (!isNaN(min) && !isNaN(max) && min <= max) {
-          payload.review_rating_range = { min, max }
+          (payload as any).review_rating_range = { min, max }
         }
       }
 
@@ -292,18 +292,18 @@ const WordCloudTree = ({
           return
         }
 
-        const payload = { retailer_id: retailerIds }
+        const payload: any = { retailer_id: retailerIds }
         if (filters?.productTitle) {
-          payload.product_id = filters.productTitle
+          (payload as any).product_id = filters.productTitle
             .split(",")
-            .map((id) => id.trim())
+            .map((id: any) => id.trim())
             .filter(Boolean)
         }
         if (filters?.dateRange) {
           const start = new Date(filters.dateRange.start)
           const end = new Date(filters.dateRange.end)
-          if (start && end && !isNaN(start) && !isNaN(end)) {
-            payload.review_date_range = {
+          if (start && end && !isNaN(start as any) && !isNaN(end as any)) {
+            (payload as any).review_date_range = {
               start: start.toISOString().split("T")[0],
               end: end.toISOString().split("T")[0],
             }
@@ -313,7 +313,7 @@ const WordCloudTree = ({
           const min = Number(filters.rating.min)
           const max = Number(filters.rating.max)
           if (!isNaN(min) && !isNaN(max) && min <= max) {
-            payload.review_rating_range = { min, max }
+            (payload as any).review_rating_range = { min, max }
           }
         }
 

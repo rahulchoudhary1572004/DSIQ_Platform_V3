@@ -413,22 +413,22 @@ const ViewManagementModal = ({
       )
     )
   );
-  const currentFields = columnsExceptActions.map((col) => col.field);
+  const currentFields = columnsExceptActions.map((col: any) => col.field);
   const availableColumns = allColumns.filter(
-    (col) => !currentFields.includes(col.field)
+    (col: any) => !currentFields.includes(col.field)
   );
-  const filteredAvailableColumns = availableColumns.filter((col) =>
+  const filteredAvailableColumns = availableColumns.filter((col: any) =>
     col.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddColumn = (field) => {
-    const colToAdd = allColumns.find((col) => col.field === field);
-    setTempViews((prev) =>
-      prev.map((view) => {
+  const handleAddColumn = (field: any) => {
+    const colToAdd = allColumns.find((col: any) => col.field === field);
+    setTempViews((prev: any) =>
+      prev.map((view: any) => {
         if (view.name === currentView) {
           const newCols = [
             ...columnsExceptActions,
-            { ...colToAdd, visible: true },
+            { ...(colToAdd as any), visible: true },
           ];
           if (actionsColumn) newCols.push(actionsColumn);
           return { ...view, columns: newCols };
@@ -515,7 +515,7 @@ const ViewManagementModal = ({
             />
             {search && filteredAvailableColumns.length > 0 && (
               <div className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg mt-1 z-10 max-h-40 overflow-y-auto">
-                {filteredAvailableColumns.map((col) => (
+                {filteredAvailableColumns.map((col: any) => (
                   <div
                     key={col.field}
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
@@ -805,7 +805,7 @@ const ProductCatalogPage = () => {
   );
 
   const processedData = process(processedProducts, {
-    filter: gridFilter,
+    filter: gridFilter as any,
     sort,
     group,
     skip: page.skip,
@@ -1085,14 +1085,14 @@ const ProductCatalogPage = () => {
           <Column
             {...commonProps}
             cell={productNameCell}
-            filterable={{ ui: (props) => filterInput(props, "Product") }}
+            filterable={{ ui: (props: any) => filterInput(props, "Product") } as any}
           />
         );
       case "sku":
         return (
           <Column
             {...commonProps}
-            filterable={{ ui: (props) => filterInput(props, "SKU") }}
+            filterable={{ ui: (props: any) => filterInput(props, "SKU") } as any}
           />
         );
       case "categoryInfo":
@@ -1101,14 +1101,14 @@ const ProductCatalogPage = () => {
             {...commonProps}
             cell={categoryCell}
             filterable={{
-              ui: (props) =>
+              ui: (props: any) =>
                 filterInput(
                   props,
                   "Category",
                   "select",
                   filterOptions.categories
                 ),
-            }}
+            } as any}
           />
         );
       case "brand":
@@ -1116,9 +1116,9 @@ const ProductCatalogPage = () => {
           <Column
             {...commonProps}
             filterable={{
-              ui: (props) =>
+              ui: (props: any) =>
                 filterInput(props, "Brand", "select", filterOptions.brands),
-            }}
+            } as any}
           />
         );
       case "channelsStatus":
@@ -1131,20 +1131,20 @@ const ProductCatalogPage = () => {
             {...commonProps}
             cell={completenessCell}
             filterable={{
-              ui: (props) =>
+              ui: (props: any) =>
                 filterInput(props, "Completeness", "select", [
                   "high",
                   "medium",
                   "low",
                 ]),
-            }}
+            } as any}
           />
         );
       case "lastModified":
         return (
           <Column
             {...commonProps}
-            filterable={{ ui: (props) => filterInput(props, "Date", "date") }}
+            filterable={{ ui: (props: any) => filterInput(props, "Date", "date") } as any}
           />
         );
       case "actions":
@@ -1162,8 +1162,8 @@ const ProductCatalogPage = () => {
     }
   };
 
-  const gridRef = useRef();
-  const pdfExportComponent = useRef(null);
+  const gridRef = useRef<any>(null);
+  const pdfExportComponent = useRef<any>(null);
 
   const handlePdfExport = () => {
     if (pdfExportComponent?.current) {
@@ -1173,7 +1173,7 @@ const ProductCatalogPage = () => {
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
-      <style jsx>{`
+      <style>{`
         .k-grid-content tr.k-grouping-row td {
           padding: 0.75rem 1rem;
           background-color: #f3f4f6;
@@ -1300,7 +1300,7 @@ const ProductCatalogPage = () => {
           <PDFExport
             ref={pdfExportComponent}
             margin={{ top: 0, left: 10, right: 10, bottom: 10 }}
-            paperSize={{ width: '2000px', height: '1400px' }}
+            paperSize={['2000px', '1400px'] as any}
             landscape={true}
           >
             <Grid 
@@ -1310,7 +1310,7 @@ const ProductCatalogPage = () => {
               filterable={true}
               sortable={true}
               groupable={true}
-              filter={gridFilter}
+              filter={gridFilter as any}
               sort={sort}
               group={group}
               onFilterChange={(e) => setGridFilter(e.filter)}

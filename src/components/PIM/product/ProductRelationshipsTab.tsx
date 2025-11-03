@@ -37,7 +37,7 @@ const ProductRelationshipsTab = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [relationshipsData, setRelationshipsData] = useState({});
-  const [gridFilter, setGridFilter] = useState({ logic: "and", filters: [] });
+  const [gridFilter, setGridFilter] = useState<any>({ logic: "and", filters: [] });
   const [sort, setSort] = useState([]);
   const [page, setPage] = useState({ skip: 0, take: 10 });
   
@@ -781,7 +781,7 @@ const ProductRelationshipsTab = ({
                                 {channel?.name}
                               </span>
                               <span className="text-xs text-gray-600">
-                                ({fields.length} field{fields.length !== 1 ? 's' : ''} required)
+                                ({(fields as any).length} field{(fields as any).length !== 1 ? 's' : ''} required)
                               </span>
                             </div>
                             {isExpanded ? (
@@ -792,7 +792,7 @@ const ProductRelationshipsTab = ({
                           </button>
                           {isExpanded && (
                             <div className="p-4 space-y-3 bg-white border-t border-gray-200">
-                              {fields.map(field => (
+                              {(fields as any).map((field: any) => (
                                 <div key={field.name} className="space-y-1.5">
                                   <div className="flex items-center justify-between">
                                     <label className="text-sm font-medium text-gray-700">

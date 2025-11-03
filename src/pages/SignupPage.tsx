@@ -142,7 +142,7 @@ const RegisterPage = () => {
     }
 
     try {
-      await dispatch(
+      await (dispatch(
         registerAdmin({
           first_name,
           last_name,
@@ -152,15 +152,15 @@ const RegisterPage = () => {
           password,
           country_id,
           role_id: 'admin',
-        })
-      ).unwrap();
+        }) as any
+      ) as any).unwrap();
 
-      await dispatch(
+      await (dispatch(
         loginUser({
           email: companyEmail,
           password
-        })
-      ).unwrap();
+        }) as any
+      ) as any).unwrap();
 
       setTimeout(() => {
         showToast.success('Admin account created successfully!');
@@ -333,14 +333,14 @@ const RegisterPage = () => {
                 dataItemKey="id"
                 value={selectedCountry}
                 onChange={handleCountryChange}
-                onKeyDown={handleComboBoxKeyDown}
                 filterable
                 onFilterChange={handleFilterChange}
                 itemRender={countryItemRender}
-                valueRender={countryValueRender}
+                valueRender={countryValueRender as any}
                 placeholder="Select country *"
                 className="w-full !border-light-gray !rounded-md focus:!ring-2 focus:!ring-primary-orange focus:!outline-none !text-sm !py-1 !px-3"
                 required
+                {...{onKeyDown: handleComboBoxKeyDown} as any}
               />
             </div>
 

@@ -88,9 +88,9 @@ export default function Retailer({ selectedRetailers, setSelectedRetailers }) {
 
   const allRetailers = Object.values(retailersByCountry).flat();
 
-  const getCountryCodeForRetailer = (retailerId) => {
-    const retailer = allRetailers.find((r) => r.id === retailerId);
-    return retailer?.country_iso3 || "US";
+  const getCountryCodeForRetailer = (retailerId: any) => {
+    const retailer = allRetailers.find((r: any) => r.id === retailerId);
+    return (retailer as any)?.country_iso3 || "US";
   };
 
   return (
@@ -106,15 +106,14 @@ export default function Retailer({ selectedRetailers, setSelectedRetailers }) {
         <>
           <div className="flex flex-wrap gap-2 mb-1">
             {selectedRetailers.map((retailerId) => {
-              const retailer = allRetailers.find((r) => r.id === retailerId);
+              const retailer = allRetailers.find((r: any) => r.id === retailerId);
               const countryCode = getCountryCodeForRetailer(retailerId);
               return (
                 <SelectionTag
-                  key={retailerId}
-                  label={retailer?.name || retailerId}
+                  label={(retailer as any)?.name || retailerId}
                   countryCode={countryCode}
                   onRemove={() => removeRetailerTag(retailerId)}
-                  className="bg-peach text-accent-magenta border border-light-gray hover:bg-cream"
+                  {...{key: retailerId, className: "bg-peach text-accent-magenta border border-light-gray hover:bg-cream"} as any}
                 />
               );
             })}

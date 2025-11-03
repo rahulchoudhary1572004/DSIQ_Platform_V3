@@ -71,21 +71,21 @@ const DraggableColumn = ({ column, index, moveColumn, isNonRemovable, listType }
 
   const [, drop] = useDrop({
     accept: ItemTypes.COLUMN,
-    hover(item, monitor) {
+    hover(item: any, monitor) {
   if (!ref.current) return;
 
-  const dragIndex = item.index;
+  const dragIndex = (item as any).index;
   const hoverIndex = index;
 
   // 👉 Allow cross-list drop (from available to visible)
-  const isSameList = item.listType === listType;
+  const isSameList = (item as any).listType === listType;
 
   if (isSameList && dragIndex === hoverIndex) return;
 
   const hoverBoundingRect = ref.current.getBoundingClientRect();
   const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
   const clientOffset = monitor.getClientOffset();
-  const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+  const hoverClientY = (clientOffset as any).y - hoverBoundingRect.top;
 
   if (isSameList) {
     if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
@@ -93,8 +93,8 @@ const DraggableColumn = ({ column, index, moveColumn, isNonRemovable, listType }
   }
 
   moveColumn(item, hoverIndex, listType);
-  item.index = hoverIndex;
-  item.listType = listType; // update the dragged item's list
+  (item as any).index = hoverIndex;
+  (item as any).listType = listType; // update the dragged item's list
 }
 
   });
@@ -103,7 +103,7 @@ const DraggableColumn = ({ column, index, moveColumn, isNonRemovable, listType }
 
   return (
     <div
-      ref={ref}
+      ref={ref as any}
       className={`group relative p-2 mb-2 border rounded-lg flex items-center justify-between transition-all duration-150 ${
         isNonRemovable
           ? "bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 cursor-not-allowed"
@@ -141,29 +141,29 @@ const DraggableColumn = ({ column, index, moveColumn, isNonRemovable, listType }
 };
 
 
-const AvailableColumnsDropZone = ({ tempVisibleColumns, tempAvailableColumns, setTempVisibleColumns, setTempAvailableColumns, nonRemovableColumns, moveColumn, searchTerm }) => {
+const AvailableColumnsDropZone = ({ tempVisibleColumns, tempAvailableColumns, setTempVisibleColumns, setTempAvailableColumns, nonRemovableColumns, moveColumn, searchTerm }: any) => {
   const [, dropRef] = useDrop({
     accept: ItemTypes.COLUMN,
-    drop: (item) => {
-      if (item.listType === "visible" && !nonRemovableColumns.includes(item.field)) {
-        setTempVisibleColumns((prevVisible) => prevVisible.filter((col) => col.field !== item.field));
-        setTempAvailableColumns((prevAvailable) => [
+    drop: (item: any) => {
+      if ((item as any).listType === "visible" && !nonRemovableColumns.includes((item as any).field)) {
+        setTempVisibleColumns((prevVisible: any) => prevVisible.filter((col: any) => col.field !== (item as any).field));
+        setTempAvailableColumns((prevAvailable: any) => [
           ...prevAvailable,
-          tempVisibleColumns.find((col) => col.field === item.field),
+          tempVisibleColumns.find((col: any) => col.field === (item as any).field),
         ]);
       }
     },
   });
 
   const filteredColumns = searchTerm
-    ? tempAvailableColumns.filter((column) =>
+    ? tempAvailableColumns.filter((column: any) =>
         column.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : tempAvailableColumns;
 
   return (
     <div
-      ref={dropRef}
+      ref={dropRef as any}
       className="border border-dashed border-gray-200 p-3 rounded-lg max-h-[400px] bg-gradient-to-b from-gray-50/10 to-white overflow-y-scroll"
     >
       {filteredColumns.length === 0 ? (
@@ -172,7 +172,7 @@ const AvailableColumnsDropZone = ({ tempVisibleColumns, tempAvailableColumns, se
           <p className="text-xs">{searchTerm ? "No matching columns" : "No available columns"}</p>
         </div>
       ) : (
-        filteredColumns.map((column, index) => (
+        filteredColumns.map((column: any, index: number) => (
           <DraggableColumn
             key={column.field}
             column={column}
@@ -187,28 +187,28 @@ const AvailableColumnsDropZone = ({ tempVisibleColumns, tempAvailableColumns, se
   );
 };
 
-const VisibleColumnsDropZone = ({ tempVisibleColumns, setTempVisibleColumns, setTempAvailableColumns, nonRemovableColumns, moveColumn, searchTerm }) => {
+const VisibleColumnsDropZone = ({ tempVisibleColumns, setTempVisibleColumns, setTempAvailableColumns, nonRemovableColumns, moveColumn, searchTerm, tempAvailableColumns }: any) => {
   const [, dropRef] = useDrop({
     accept: ItemTypes.COLUMN,
-    drop: (item) => {
-      if (item.listType === "available") {
-        const newAvailableColumns = tempAvailableColumns.filter((col) => col.field !== item.field);
-        const movedColumn = tempAvailableColumns.find((col) => col.field === item.field);
-        setTempVisibleColumns((prev) => [...prev, movedColumn]);
+    drop: (item: any) => {
+      if ((item as any).listType === "available") {
+        const newAvailableColumns = tempAvailableColumns.filter((col: any) => col.field !== (item as any).field);
+        const movedColumn = tempAvailableColumns.find((col: any) => col.field === (item as any).field);
+        setTempVisibleColumns((prev: any) => [...prev, movedColumn]);
         setTempAvailableColumns(newAvailableColumns);
       }
     },
   });
 
   const filteredColumns = searchTerm
-    ? tempVisibleColumns.filter((column) =>
+    ? tempVisibleColumns.filter((column: any) =>
         column.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : tempVisibleColumns;
 
   return (
     <div
-      ref={dropRef}
+      ref={dropRef as any}
       className="border border-dashed border-gray-200 p-3 rounded-lg max-h-[400px] bg-gradient-to-b from-green-50/10 to-white overflow-y-scroll"
     >
       {filteredColumns.length === 0 ? (

@@ -16,7 +16,7 @@ import '@progress/kendo-theme-default/dist/all.css';
 
 export default function SettingsPage() {
   const dispatch = useDispatch();
-  const { roles, loading: loadingRoles, error: rolesError, archiveFilter } = useSelector((state) => state.roles);
+  const { roles, loading: loadingRoles, error: rolesError, archiveFilter } = useSelector((state: any) => state.roles);
   const [activeSection, setActiveSection] = useState('');
   const [activeSubSection, setActiveSubSection] = useState('');
   const [expandedSections, setExpandedSections] = useState({
@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(fetchRoles(archiveFilter === 'archived'));
+    dispatch(fetchRoles(archiveFilter === 'archived') as any);
 
     // Restore saved navigation state on component mount
     const savedActiveSection = localStorage.getItem('settings-activeSection');
@@ -103,7 +103,7 @@ export default function SettingsPage() {
   };
 
   const handleRoleCreated = () => {
-    dispatch(fetchRoles(archiveFilter === 'archived'));
+    dispatch(fetchRoles(archiveFilter === 'archived') as any);
   };
 
   const renderContent = () => {
@@ -112,6 +112,7 @@ export default function SettingsPage() {
         <CreateRoles
           onCancel={() => setShowCreateRoleForm(false)}
           onRoleCreated={handleRoleCreated}
+          {...({} as any)}
         />
       );
     }

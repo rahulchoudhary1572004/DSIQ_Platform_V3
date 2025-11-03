@@ -44,14 +44,14 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+    const newErrors: any = {};
+    if (!(formData as any).first_name.trim()) (newErrors as any).first_name = 'First name is required';
+    if (!(formData as any).email.trim()) {
+      (newErrors as any).email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((formData as any).email)) {
+      (newErrors as any).email = 'Please enter a valid email';
     }
-    if (!formData.role_id) newErrors.role_id = 'Role is required';
+    if (!(formData as any).role_id) (newErrors as any).role_id = 'Role is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -95,12 +95,12 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
             <input
               type="text"
               name="first_name"
-              value={formData.first_name}
+              value={(formData as any).first_name}
               onChange={handleChange}
-              className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${errors.first_name ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
+              className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${(errors as any).first_name ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
               placeholder="Enter first name"
             />
-            {errors.first_name && <p className="mt-1 text-danger-red text-small">{errors.first_name}</p>}
+            {(errors as any).first_name && <p className="mt-1 text-danger-red text-small">{(errors as any).first_name}</p>}
           </div>
 
           <div className="mb-4">
@@ -120,28 +120,28 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
             <input
               type="email"
               name="email"
-              value={formData.email}
+              value={(formData as any).email}
               onChange={handleChange}
-              className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${errors.email ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
+              className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${(errors as any).email ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
               placeholder="Enter email address"
             />
-            {errors.email && <p className="mt-1 text-danger-red text-small">{errors.email}</p>}
+            {(errors as any).email && <p className="mt-1 text-danger-red text-small">{(errors as any).email}</p>}
           </div>
 
           <div className="mb-6">
             <label className="block text-dark-gray mb-2 text-table">Role*</label>
             <select
               name="role_id"
-              value={formData.role_id}
+              value={(formData as any).role_id}
               onChange={handleChange}
-              className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${errors.role_id ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
+              className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${(errors as any).role_id ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
             >
               <option value="">Select a role</option>
-              {Array.isArray(availableRoles) && availableRoles.map((role) => (
+              {Array.isArray(availableRoles) && availableRoles.map((role: any) => (
                 <option key={role.id} value={role.id}>{role.name}</option>
               ))}
             </select>
-            {errors.role_id && <p className="mt-1 text-danger-red text-small">{errors.role_id}</p>}
+            {(errors as any).role_id && <p className="mt-1 text-danger-red text-small">{(errors as any).role_id}</p>}
           </div>
 
           <div className="flex justify-end space-x-3">
