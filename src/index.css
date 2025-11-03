@@ -1,0 +1,229 @@
+@import "tailwindcss";
+@import "@progress/kendo-theme-default/dist/all.css";
+@config "../tailwind.config.js";
+
+
+
+@theme {
+  /* Font families */
+  --font-sans: '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif';
+
+  /* Color palette */
+  --color-primary-orange: #F27A56;
+  --color-accent-magenta: #9A1A3B;
+  --color-gradient-from: #D1442F;
+  --color-gradient-to: #E45A2B;
+  --color-dark-gray: #3C3D3D;
+  --color-gray: #646665;
+  --color-light-gray: #E5E5E5;
+  --color-white: #FFFFFF;
+  --color-info-blue: #177CF3;
+  --color-success-green: #1D7A34;
+  --color-warning-yellow: #FED83A;
+  --color-danger-red: #DE241E;
+  --color-peach: #FDE2CF;
+  --color-cream: #FFF8F4;
+  --z-index-navbar: 50;
+  --z-index-dropdown: 60;
+  --z-index-tooltip: 70;
+  --z-index-modal: 100;
+  /* Background images */
+  --bg-image-brand-gradient: linear-gradient(135deg, var(--color-gradient-from) 0%, var(--color-gradient-to) 100%);
+  --bg-image-light-gradient: linear-gradient(135deg, var(--color-peach) 0%, var(--color-cream) 100%);
+}
+
+/* Custom utilities */
+@utilities {
+
+  /* Background colors */
+  .bg-primary-orange {
+    background-color: var(--color-primary-orange)
+  }
+
+  .bg-accent-magenta {
+    background-color: var(--color-accent-magenta)
+  }
+
+  .bg-dark-gray {
+    background-color: var(--color-dark-gray)
+  }
+
+  .bg-light-gray {
+    background-color: var(--color-light-gray)
+  }
+
+  /* Gradients */
+  .bg-brand-gradient {
+    background-image: var(--bg-image-brand-gradient)
+  }
+
+  .bg-light-gradient {
+    background-image: var(--bg-image-light-gradient)
+  }
+
+  /* Typography utilities */
+  .font-sans {
+    font-family: var(--font-sans)
+  }
+
+  .text-h1 {
+    font-size: 3rem;
+    line-height: 3.5rem;
+    font-weight: 700;
+  }
+
+  .text-h2 {
+    font-size: 2rem;
+    line-height: 2.5rem;
+    font-weight: 700;
+  }
+
+  .text-h3 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 500;
+  }
+
+  .text-h1 {
+    font-size: var(--text-h1-size);
+    line-height: var(--text-h1-leading);
+    font-weight: var(--text-h1-weight);
+  }
+
+  .text-h2 {
+    font-size: var(--text-h2-size);
+    line-height: var(--text-h2-leading);
+    font-weight: var(--text-h2-weight);
+  }
+
+  .text-h3 {
+    font-size: var(--text-h3-size);
+    line-height: var(--text-h3-leading);
+    font-weight: var(--text-h3-weight);
+  }
+
+  .text-h4 {
+    font-size: var(--text-h4-size);
+    line-height: var(--text-h4-leading);
+    font-weight: var(--text-h4-weight);
+  }
+
+  .text-body {
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-leading);
+    font-weight: var(--text-body-weight);
+  }
+
+  .text-small {
+    font-size: var(--text-small-size);
+    line-height: var(--text-small-leading);
+    font-weight: var(--text-small-weight);
+  }
+
+  .text-button {
+    font-size: var(--text-button-size);
+    line-height: var(--text-button-leading);
+    font-weight: var(--text-button-weight);
+  }
+
+  .text-input {
+    font-size: var(--text-input-size);
+    line-height: var(--text-input-leading);
+    font-weight: var(--text-input-weight);
+  }
+
+  .text-table {
+    font-size: var(--text-table-size);
+    line-height: var(--text-table-leading);
+    font-weight: var(--text-table-weight);
+  }
+
+  .bg-brand-gradient {
+    background-image: var(--bg-gradient-brand);
+  }
+
+  .bg-light-gradient {
+    background-image: var(--bg-gradient-light);
+  }
+}
+
+
+/* Custom Kendo Dropdown Styles */
+.kendo-apps-dropdown .k-button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.k-grid .k-table-th,
+.k-grid td,
+.k-grid .k-table-td {
+  overflow: visible !important;
+}
+.apps-dropdown-popup {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background-color: white;
+  min-width: 240px;
+}
+
+.dark .apps-dropdown-popup {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.kendo-apps-dropdown .k-popup {
+  padding: 0.5rem;
+}
+
+.invisible-scrollbar {
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.invisible-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure tooltips and dropdowns appear above everything */
+body {
+  overflow-x: hidden;
+}
+
+/* Remove any overflow constraints that might clip the tooltips */
+/* Add this to your main container component */
+.main-container {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Add this to your existing file */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
