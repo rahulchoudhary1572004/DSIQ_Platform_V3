@@ -782,7 +782,6 @@ export default function Page() {
           productData={productData}
           setProductData={setProductData}
           picklistOptions={picklistOptions}
-          setPicklistOptions={setPicklistOptions}
           activeViewId={activeViewId}
           setActiveViewId={setActiveViewId}
           setCurrentPage={setCurrentPage}
@@ -792,12 +791,11 @@ export default function Page() {
       {currentPage === "config" && (
         <ConfigurationMode
           viewTemplates={viewTemplates}
-          setViewTemplates={setViewTemplates}
           activeViewId={activeViewId}
           picklistOptions={picklistOptions}
-          setPicklistOptions={setPicklistOptions}
           setCurrentPage={setCurrentPage}
           handleSaveChanges={handleSaveChanges}
+          {...{setViewTemplates, setPicklistOptions} as any}
         />
       )}
       {currentPage === "views" && (
@@ -814,11 +812,11 @@ export default function Page() {
           productData={productData}
           setProductData={setProductData}
           picklistOptions={picklistOptions}
-          setPicklistOptions={setPicklistOptions}
           activeViewId={activeViewId}
           setActiveViewId={setActiveViewId}
           setCurrentPage={setCurrentPage}
           handleSaveChanges={handleSaveChanges}
+          {...{setPicklistOptions} as any}
         />
     </div>
   );

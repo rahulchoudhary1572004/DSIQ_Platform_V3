@@ -212,9 +212,9 @@ export default function WorkspaceCreation() {
     isCheckingName,
   ]);
 
-  const isSubmitDisabled =
+  const isSubmitDisabled: boolean =
     !workspaceName ||
-    workspaceNameError ||
+    !!workspaceNameError ||
     !isNameAvailable ||
     isCheckingName ||
     selectedRetailers.length === 0 ||
@@ -225,8 +225,8 @@ export default function WorkspaceCreation() {
       const moduleId = getModuleIdByName("Workspace");
 
       const data = Object.entries(selectedCategories).flatMap(
-        ([retailerId, categoryIds]) =>
-          categoryIds.map((categoryId) => ({
+        ([retailerId, categoryIds]: [string, any]) =>
+          (categoryIds as any).map((categoryId: any) => ({
             category_id: categoryId,
             retailer_id: retailerId,
           }))

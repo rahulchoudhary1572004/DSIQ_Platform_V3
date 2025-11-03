@@ -7,7 +7,7 @@ import ReviewGrid from "../../components/ShopperIQ/Review-content-miner/ReviewGr
 
 const ReviewMinerPage = () => {
   const dispatch = useDispatch()
-  const currentWorkspace = useSelector((state) => state.workspaceView.currentWorkspace)
+  const currentWorkspace = useSelector((state: any) => state.workspaceView.currentWorkspace)
 
   const [filters, setFilters] = useState({
     retailer: "",
@@ -24,7 +24,7 @@ const ReviewMinerPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
-    dispatch(fetchWorkspaces())
+    dispatch(fetchWorkspaces() as any)
   }, [dispatch])
 
   useEffect(() => {

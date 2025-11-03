@@ -16,10 +16,10 @@ const dateRangeOptions = [
 
 const DateSelector = () => {
   const dispatch = useDispatch();
-  const value = useSelector((state) => state.dateRange); // Changed from state.user.dateRange
+  const value = useSelector((state: any) => state.dateRange); // Changed from state.user.dateRange
 
   // ✅ Fix: Function to safely parse date strings
-  const parseStringToDate = (date) => (date ? new Date(date) : null);
+  const parseStringToDate = (date: any) => (date ? new Date(date) : null);
 
   // ✅ Fix: Ensure only ISO strings are sent to Redux
   const calculateRange = (days) => {
@@ -63,8 +63,7 @@ const DateSelector = () => {
         <span>{value?.start && "Showing Data from:"}</span>
         <Button
           onClick={() => setIsExpanded(!isExpanded)}
-          look="outline"
-          style={{ width: "100%", marginTop: "12px" }}
+          {...{look: "outline", style: { width: "100%", marginTop: "12px" }} as any}
         >
           {value?.start && value?.end
             ? `${parseStringToDate(value.start).toLocaleDateString("en-GB")} - 
@@ -121,12 +120,11 @@ const DateSelector = () => {
                     <Button
                       key={option.label}
                       onClick={() => handleRangeSelection(option.days)}
-                      look="flat"
-                      style={{
+                      {...{look: "flat", style: {
                         justifyContent: "flex-start",
                         padding: "8px 16px",
                         width: "100%",
-                      }}
+                      }} as any}
                     >
                       {option.label}
                     </Button>

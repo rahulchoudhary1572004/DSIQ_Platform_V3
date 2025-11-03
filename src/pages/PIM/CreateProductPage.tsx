@@ -35,6 +35,7 @@ const CreateProductPage = () => {
       onCancel={handleCancel}
       onConfigure={handleConfigure}
       isEditMode={true}
+      onShowVersionHistory={() => {}}
       productId={null}
       pageTitle="Create New Product"
     />

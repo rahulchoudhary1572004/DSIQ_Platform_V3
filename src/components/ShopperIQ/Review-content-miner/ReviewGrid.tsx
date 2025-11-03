@@ -103,10 +103,10 @@ const filterReviews = (reviews, filters, selectedWord, treeData) => {
   return filteredData;
 };
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode; onReset: () => void }> {
   state = { hasError: false, error: null };
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: any) {
     return { hasError: true, error };
   }
 
@@ -236,6 +236,7 @@ const ReviewGrid = ({ filters, selectedWord, treeData }) => {
               showCheckboxColumn={false}
               selectedRows={selectedRows}
               setSelectedRows={setSelectedRows}
+              onRowClick={() => {}}
             />
           )}
         </div>

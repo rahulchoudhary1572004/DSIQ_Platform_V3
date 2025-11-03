@@ -56,7 +56,7 @@ const Breadcrumbs = () => {
 
           if (segment.match(/^\d+$/) && index > 0 && pathSegments[index - 1] === 'ModifyWorkspace') {
             return (
-              <li key={index} ref={el => itemsRef.current[index + 1] = el} className="flex items-center">
+              <li key={index} ref={(el: any) => itemsRef.current[index + 1] = el} className="flex items-center">
                 <ChevronRight className="w-3 h-3 text-gray md:w-[14px] md:h-[14px] lg:w-4 lg:h-4" />
                 <span className="ml-[6px] text-[10.5px] font-medium text-dark-gray md:ml-[7px] md:text-xs lg:ml-2 lg:text-sm">
                   {`Workspace ${segment}`}
@@ -66,7 +66,7 @@ const Breadcrumbs = () => {
           }
 
           return (
-            <li key={index} ref={el => itemsRef.current[index + 1] = el} className="flex items-center">
+            <li key={index} ref={(el: any) => itemsRef.current[index + 1] = el} className="flex items-center">
               <ChevronRight className="w-3 h-3 text-gray md:w-[14px] md:h-[14px] lg:w-4 lg:h-4" />
               {isLast ? (
                 <span className="ml-[6px] text-[10px] font-medium text-dark-gray md:ml-[7px] md:text-xs lg:ml-2 lg:text-xsm">

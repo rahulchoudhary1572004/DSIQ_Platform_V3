@@ -122,9 +122,7 @@ export default function SettingsPage() {
       case 'roles':
         return (
           <RolesManagement
-            onCreateRole={handleCreateRole}
-            loadingRoles={loadingRoles}
-            rolesError={rolesError}
+            {...{onCreateRole: handleCreateRole, loadingRoles, rolesError} as any}
           />
         );
       case 'activity-logs':
@@ -144,10 +142,10 @@ export default function SettingsPage() {
     navigate(-1);
   };
 
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
   return (
     <div>
-      <Navbar isLoggedIn={isLoggedIn} />
+      <Navbar {...{isLoggedIn} as any} />
       <div className="flex h-screen bg-cream font-sans">
         {/* Sidebar */}
         <div className="w-64 lg:w-72 xl:w-80 bg-white border-r border-light-gray overflow-y-auto flex-shrink-0 z-10">

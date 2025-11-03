@@ -8,7 +8,7 @@ const ProductDetailsPage = () => {
   const navigate = useNavigate()
   const { id } = useParams()
   const { viewTemplates, productData, picklistOptions } = useProductData()
-  const gridRef = useRef()
+  const gridRef = useRef<any>(null)
 
   const handleEdit = () => {
     navigate(`/${id}/edit`)

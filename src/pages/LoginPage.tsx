@@ -10,7 +10,7 @@ import AuthLayout from '../components/AuthLayout';
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state: any) => state.auth);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showReset, setShowReset] = useState(false);
@@ -33,7 +33,7 @@ const LoginPage = () => {
     }
 
     console.log('Dispatching loginUser...');
-    const resultAction = await dispatch(loginUser({ email, password }));
+    const resultAction = await dispatch(loginUser({ email, password }) as any);
 
     console.log('Result Action:', resultAction);
 
@@ -55,7 +55,7 @@ const LoginPage = () => {
     }
 
     setResetStatus('sending');
-    dispatch(forgotPassword(resetEmail));
+    dispatch(forgotPassword(resetEmail) as any);
     setTimeout(() => {
       setResetStatus('sent');
       showToast.success(`Password reset link sent to ${resetEmail}`, {

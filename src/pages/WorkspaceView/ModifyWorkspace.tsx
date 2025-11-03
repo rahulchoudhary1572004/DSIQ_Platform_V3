@@ -15,12 +15,12 @@ import {
   Edit3
 } from "lucide-react";
 
-const Tooltip = ({ content, position = "top", children, delay = 200 }) => {
+const Tooltip = ({ content, position = "top", children, delay = 200 }: any) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [mounted, setMounted] = useState(false);
-  const triggerRef = useRef(null);
-  const timeoutRef = useRef();
+  const triggerRef = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
 
   useEffect(() => {
     setMounted(true);

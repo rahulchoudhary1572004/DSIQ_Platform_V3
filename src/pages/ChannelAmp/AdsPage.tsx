@@ -604,6 +604,7 @@ const AdsPage = () => {
           setSelectedRows={setSelectedRows}
           nonRemovableColumns={nonRemovableColumns}
           aggregates={aggregates}
+          onRowClick={() => {}}
         />
       </div>
     </div>

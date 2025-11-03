@@ -40,7 +40,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onUpdatePassword, user }) => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-gray-100 text-gray-900 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-              minLength="6"
+              minLength={6}
             />
           </div>
           <div className="mb-4">
@@ -51,7 +51,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onUpdatePassword, user }) => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full bg-gray-100 text-gray-900 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-              minLength="6"
+              minLength={6}
             />
           </div>
           <div className="flex justify-end space-x-3">

@@ -414,7 +414,7 @@ export default function ProductViewMode({
                               const attributeData = {
                                 name: attr.name,
                                 value: productData[attr.id] || null,
-                              };
+                              } as any;
                               if (attr.type === "Picklist") {
                                 attributeData.options = picklistOptions[attr.id] || [];
                               }
