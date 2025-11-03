@@ -1,0 +1,206 @@
+import { Product, DigitalAsset, Collection } from "../../types/dam.types";
+
+// Products Array
+export const products: Product[] = [
+  {
+    id: 1,
+    name: "Wireless Headphones Pro",
+    sku: "WHP-001",
+    category: "Electronics",
+    status: "Active",
+    assetCount: 12,
+    thumbnail: "/placeholder.svg?height=60&width=60",
+  },
+  {
+    id: 2,
+    name: "Smart Watch Series X",
+    sku: "SWX-002",
+    category: "Wearables",
+    status: "Active",
+    assetCount: 8,
+    thumbnail: "/placeholder.svg?height=60&width=60",
+  },
+  {
+    id: 3,
+    name: "Bluetooth Speaker Mini",
+    sku: "BSM-003",
+    category: "Audio",
+    status: "Draft",
+    assetCount: 5,
+    thumbnail: "/placeholder.svg?height=60&width=60",
+  },
+  {
+    id: 4,
+    name: "Gaming Keyboard RGB",
+    sku: "GKR-004",
+    category: "Gaming",
+    status: "Active",
+    assetCount: 15,
+    thumbnail: "/placeholder.svg?height=60&width=60",
+  },
+  {
+    id: 5,
+    name: "Wireless Mouse Pro",
+    sku: "WMP-005",
+    category: "Accessories",
+    status: "Active",
+    assetCount: 7,
+    thumbnail: "/placeholder.svg?height=60&width=60",
+  },
+];
+
+// Digital Assets
+export const digitalAssets: Record<number, DigitalAsset[]> = {
+  1: [
+    {
+      id: 101,
+      name: "headphones-product-demo.mp4",
+      type: "video",
+      size: "15.2 MB",
+      sizeInBytes: 15955025,
+      duration: "0:45",
+      format: "MP4",
+      uploadDate: "2024-01-14",
+      uploadedBy: "Jane Smith",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
+    },
+    {
+      id: 102,
+      name: "headphones-hero-image.jpg",
+      type: "image",
+      size: "2.4 MB",
+      sizeInBytes: 2516582,
+      dimensions: "1920x1080",
+      format: "JPEG",
+      uploadDate: "2024-01-15",
+      uploadedBy: "John Doe",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=300&fit=crop",
+    },
+    {
+      id: 103,
+      name: "headphones-specifications.pdf",
+      type: "document",
+      size: "1.1 MB",
+      sizeInBytes: 1153434,
+      pages: 4,
+      format: "PDF",
+      uploadDate: "2024-01-13",
+      uploadedBy: "Mike Johnson",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail: null,
+    },
+    {
+      id: 104,
+      name: "headphones-lifestyle-1.jpg",
+      type: "image",
+      size: "3.1 MB",
+      sizeInBytes: 3250872,
+      dimensions: "2048x1536",
+      format: "JPEG",
+      uploadDate: "2024-01-12",
+      uploadedBy: "Sarah Wilson",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=300&fit=crop",
+    },
+    {
+      id: 105,
+      name: "headphones-unboxing.jpg",
+      type: "image",
+      size: "2.8 MB",
+      sizeInBytes: 2936012,
+      dimensions: "1800x1200",
+      format: "JPEG",
+      uploadDate: "2024-01-11",
+      uploadedBy: "Tom Brown",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=300&fit=crop",
+    },
+    {
+      id: 106,
+      name: "headphones-360-view.zip",
+      type: "archive",
+      size: "45.6 MB",
+      sizeInBytes: 47823028,
+      files: 36,
+      format: "ZIP",
+      uploadDate: "2024-01-10",
+      uploadedBy: "Alex Davis",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail: null,
+    },
+  ],
+  2: [
+    {
+      id: 201,
+      name: "smartwatch-hero.jpg",
+      type: "image",
+      size: "2.1 MB",
+      sizeInBytes: 2202009,
+      dimensions: "1920x1080",
+      format: "JPEG",
+      uploadDate: "2024-01-20",
+      uploadedBy: "Lisa Chen",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
+    },
+    {
+      id: 202,
+      name: "smartwatch-features.mp4",
+      type: "video",
+      size: "22.5 MB",
+      sizeInBytes: 23592959,
+      duration: "1:30",
+      format: "MP4",
+      uploadDate: "2024-01-19",
+      uploadedBy: "David Kim",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=400&h=300&fit=crop",
+    },
+  ],
+};
+
+// Mock Collections - CORRECTED
+export const mockCollections: Collection[] = [
+  {
+    id: 1,
+    name: "Marketing Assets",
+    assetCount: 24,
+    createdDate: "2024-01-10",
+    children: [
+      {
+        id: 2,
+        name: "Product Photos",
+        assetCount: 12,
+        createdDate: "2024-01-11",
+      },
+      {
+        id: 3,
+        name: "Promotional Videos",
+        assetCount: 12,
+        createdDate: "2024-01-12",
+      },
+    ],
+  },
+  {
+    id: 4,
+    name: "Social Media",
+    assetCount: 18,
+    createdDate: "2024-01-15",
+    children: [],
+  },
+  {
+    id: 5,
+    name: "Archived Assets",
+    assetCount: 8,
+    createdDate: "2024-01-16",
+    children: [],
+  },
+];

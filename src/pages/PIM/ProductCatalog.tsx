@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, FC, FormEvent, ChangeEvent, CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Grid3X3,
@@ -19,18 +19,176 @@ import {
   Settings,
   EyeOff,
   Columns,
+  Square,
+  CheckSquare,
+  FileText,
+  LucideIcon,
 } from "lucide-react";
-import { Grid, GridColumn as Column } from "@progress/kendo-react-grid";
-import { Slider, NumericTextBox } from "@progress/kendo-react-inputs";
-import { process } from "@progress/kendo-data-query";
+import { Grid, GridColumn as Column, GridCellProps, GridHeaderCellProps, GridPageChangeEvent, GridFilterChangeEvent, GridSortChangeEvent, GridGroupChangeEvent } from "@progress/kendo-react-grid";
+import { Slider, NumericTextBox, NumericTextBoxChangeEvent, SliderChangeEvent } from "@progress/kendo-react-inputs";
+import { process, State, CompositeFilterDescriptor, SortDescriptor, GroupDescriptor } from "@progress/kendo-data-query";
 import { mockProducts } from "../../data/mockData";
 import FloatingAddButton from "../../../helper_Functions/FloatingAddButton";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import ExportButton from "../../../helper_Functions/Export";
 import { PDFExport } from '@progress/kendo-react-pdf';
 
-const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
-  const [newProduct, setNewProduct] = useState({
+// Types and Interfaces
+interface FieldMappingTemplate {
+  id: number;
+  name: string;
+  platform: string;
+  fields: number;
+}
+
+interface EnhancedTemplate {
+  id: number;
+  name: string;
+  category: string;
+  retailers: string[];
+  fields: number;
+  createdDate: string;
+}
+
+interface NewProduct {
+  name: string;
+  category: string;
+  view: string;
+}
+
+interface Channel {
+  name: string;
+  status: string;
+  reason: string;
+  lastSync: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  sku: string;
+  category: string;
+  subcategory: string;
+  brand: string;
+  status: string;
+  completeness: number;
+  channels: Channel[];
+  lastModified: string;
+}
+
+interface ProcessedProduct extends Product {
+  productName: string;
+  categoryInfo: string;
+  completenessPercent: number;
+  channelsStatus: Channel[];
+}
+
+interface ViewColumn {
+  field: string;
+  title: string;
+  visible: boolean;
+  required: boolean;
+}
+
+interface View {
+  name: string;
+  columns: ViewColumn[];
+}
+
+interface Filters {
+  category: string;
+  brand: string;
+  status: string;
+  completeness: string;
+  syndicationStatus: string;
+}
+
+interface FilterOptions {
+  categories: string[];
+  brands: string[];
+  statuses: string[];
+}
+
+interface PageState {
+  skip: number;
+  take: number;
+}
+
+interface TemplateAssignment {
+  templateId: number;
+  templateName: string;
+  retailers: string[];
+  productCount: number;
+}
+
+interface StatItem {
+  title: string;
+  value: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+interface FilterField {
+  field: keyof Filters;
+  label: string;
+  options: string[];
+}
+
+// Mock templates data
+const fieldMappingTemplates: FieldMappingTemplate[] = [
+  { id: 1, name: "Amazon Standard Template", platform: "Amazon", fields: 15 },
+  { id: 2, name: "eBay Electronics Template", platform: "eBay", fields: 12 },
+  { id: 3, name: "Shopify General Template", platform: "Shopify", fields: 10 },
+  { id: 4, name: "Walmart Marketplace Template", platform: "Walmart", fields: 18 },
+];
+
+// Component Props Interfaces
+interface AddProductModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+}
+
+interface BulkTemplateModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedCount: number;
+  onApply: (assignment: TemplateAssignment) => void;
+}
+
+interface ProductFiltersProps {
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  showFilters: boolean;
+  setShowFilters: (show: boolean) => void;
+  filters: Filters;
+  setFilters: (filters: Filters) => void;
+  filterOptions: FilterOptions;
+  clearFilters: () => void;
+  currentView: string;
+  onViewChange: (viewName: string) => void;
+  views: View[];
+  onOpenViewManagement: () => void;
+}
+
+interface ViewManagementModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentView: string;
+  views: View[];
+  onViewChange: (viewName: string) => void;
+  onViewsUpdate: (views: View[]) => void;
+}
+
+interface PagerProps {
+  skip: number;
+  take: number;
+  total: number;
+  onPageChange?: (event: GridPageChangeEvent) => void;
+}
+
+const AddProductModal: FC<AddProductModalProps> = ({ isOpen, onClose, onSubmit }) => {
+  const [newProduct, setNewProduct] = useState<NewProduct>({
     name: "",
     category: "",
     view: "",
@@ -38,7 +196,7 @@ const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmit();
     setNewProduct({ name: "", category: "", view: "" });
@@ -60,7 +218,7 @@ const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
           Add New Product
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {["name", "category"].map((field) => (
+          {(["name", "category"] as const).map((field) => (
             <div key={field}>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {field === "name" ? "Product Name" : "Category"}
@@ -68,7 +226,7 @@ const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
               <input
                 type="text"
                 value={newProduct[field]}
-                onChange={(e) =>
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setNewProduct({ ...newProduct, [field]: e.target.value })
                 }
                 placeholder={`Enter ${
@@ -85,7 +243,7 @@ const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
             </label>
             <select
               value={newProduct.view}
-              onChange={(e) =>
+              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
                 setNewProduct({ ...newProduct, view: e.target.value })
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -122,7 +280,404 @@ const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
-const ProductCatalogHeader = () => (
+const BulkTemplateModal: FC<BulkTemplateModalProps> = ({ isOpen, onClose, selectedCount, onApply }) => {
+  const [step, setStep] = useState<number>(1);
+  const [selectedTemplate, setSelectedTemplate] = useState<EnhancedTemplate | null>(null);
+  const [selectedRetailers, setSelectedRetailers] = useState<string[]>([]);
+
+  const enhancedTemplates: EnhancedTemplate[] = [
+    {
+      id: 1,
+      name: "Amazon Standard Template",
+      category: "Automotive",
+      retailers: ["Amazon"],
+      fields: 15,
+      createdDate: "2025-10-15"
+    },
+    {
+      id: 2,
+      name: "Multi-Platform Electronics",
+      category: "Electronics",
+      retailers: ["Amazon", "eBay", "Walmart"],
+      fields: 12,
+      createdDate: "2025-10-20"
+    },
+    {
+      id: 3,
+      name: "Fashion Universal Template",
+      category: "Fashion",
+      retailers: ["Amazon", "Walmart", "Target", "Etsy"],
+      fields: 10,
+      createdDate: "2025-10-18"
+    },
+    {
+      id: 4,
+      name: "Walmart Marketplace Template",
+      category: "General",
+      retailers: ["Walmart"],
+      fields: 18,
+      createdDate: "2025-10-12"
+    }
+  ];
+
+  if (!isOpen) return null;
+
+  const handleTemplateSelect = (template: EnhancedTemplate) => {
+    setSelectedTemplate(template);
+    setSelectedRetailers([]);
+    setStep(2);
+  };
+
+  const handleRetailerToggle = (retailer: string) => {
+    setSelectedRetailers(prev => 
+      prev.includes(retailer)
+        ? prev.filter(r => r !== retailer)
+        : [...prev, retailer]
+    );
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setSelectedRetailers([]);
+  };
+
+  const handleClose = () => {
+    setStep(1);
+    setSelectedTemplate(null);
+    setSelectedRetailers([]);
+    onClose();
+  };
+
+  const handleApply = () => {
+    if (!selectedTemplate || selectedRetailers.length === 0) {
+      alert("Please select a template and at least one retailer");
+      return;
+    }
+
+    const assignment: TemplateAssignment = {
+      templateId: selectedTemplate.id,
+      templateName: selectedTemplate.name,
+      retailers: selectedRetailers,
+      productCount: selectedCount
+    };
+
+    onApply(assignment);
+    handleClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 animate-fadeIn"
+      style={{ backgroundColor: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(4px)" }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col animate-slideUp">
+        {/* Header with Gradient */}
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-6 sm:px-8 py-6 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            }}></div>
+          </div>
+
+          <div className="flex items-center justify-between relative">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl shadow-lg">
+                <FileText className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h2 id="modal-title" className="text-2xl font-bold text-white tracking-tight">
+                  Assign Field Mapping Template
+                </h2>
+                <p className="text-blue-100 text-sm mt-1 font-medium">
+                  {selectedCount} product{selectedCount !== 1 ? 's' : ''} selected
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleClose}
+              className="text-white/90 hover:text-white hover:bg-white/20 transition-all p-2.5 rounded-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label="Close modal"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="bg-gradient-to-b from-gray-50 to-white px-6 sm:px-8 py-5 border-b border-gray-200">
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+            {/* Step 1 Indicator */}
+            <div className={`flex items-center gap-2 sm:gap-3 transition-all duration-300 ${
+              step === 1 ? 'scale-105' : step > 1 ? 'scale-100' : 'scale-95 opacity-60'
+            }`}>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-base shadow-md transition-all duration-300 ${
+                step === 1 ? 'bg-blue-600 text-white shadow-blue-600/50 ring-4 ring-blue-600/20' : 
+                step > 1 ? 'bg-green-500 text-white shadow-green-500/50' : 
+                'bg-gray-200 text-gray-500'
+              }`}>
+                {step > 1 ? <CheckCircle className="w-6 h-6" strokeWidth={2.5} /> : '1'}
+              </div>
+              <div className="hidden sm:block">
+                <div className={`text-xs font-semibold uppercase tracking-wider ${
+                  step === 1 ? 'text-blue-600' : step > 1 ? 'text-green-600' : 'text-gray-400'
+                }`}>
+                  Step 1
+                </div>
+                <div className={`text-sm font-bold ${
+                  step === 1 ? 'text-gray-900' : 'text-gray-600'
+                }`}>
+                  Select Template
+                </div>
+              </div>
+            </div>
+            
+            {/* Connector Line */}
+            <div className="relative flex items-center">
+              <div className={`w-12 sm:w-20 h-1 rounded-full transition-all duration-500 ${
+                step > 1 ? 'bg-gradient-to-r from-green-500 to-blue-600' : 'bg-gray-300'
+              }`}>
+                {step > 1 && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 rounded-full animate-pulse"></div>
+                )}
+              </div>
+            </div>
+            
+            {/* Step 2 Indicator */}
+            <div className={`flex items-center gap-2 sm:gap-3 transition-all duration-300 ${
+              step === 2 ? 'scale-105' : 'scale-95 opacity-60'
+            }`}>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-base shadow-md transition-all duration-300 ${
+                step === 2 ? 'bg-blue-600 text-white shadow-blue-600/50 ring-4 ring-blue-600/20' : 'bg-gray-200 text-gray-500'
+              }`}>
+                2
+              </div>
+              <div className="hidden sm:block">
+                <div className={`text-xs font-semibold uppercase tracking-wider ${
+                  step === 2 ? 'text-blue-600' : 'text-gray-400'
+                }`}>
+                  Step 2
+                </div>
+                <div className={`text-sm font-bold ${
+                  step === 2 ? 'text-gray-900' : 'text-gray-600'
+                }`}>
+                  Select Retailers
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area with Smooth Transitions */}
+        <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 sm:py-8 bg-gray-50">
+          {/* Step 1: Template Selection */}
+          {step === 1 && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Choose a Field Mapping Template
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Select the template you want to apply to your products
+                </p>
+              </div>
+
+              <div className="grid gap-4">
+                {enhancedTemplates.map((template, index) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleTemplateSelect(template)}
+                    className="group w-full text-left p-5 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transform hover:-translate-y-1"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                            <FileText className="h-5 w-5 text-white" strokeWidth={2.5} />
+                          </div>
+                          <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate group-hover:text-blue-600 transition-colors">
+                            {template.name}
+                          </h4>
+                        </div>
+                        
+                        <div className="flex items-center flex-wrap gap-2 sm:gap-3 mb-3">
+                          <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-xs font-bold shadow-sm">
+                            {template.category}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                            <span className="font-bold text-gray-900">{template.fields}</span> fields
+                          </span>
+                          <span className="text-xs text-gray-400 hidden sm:inline">
+                            Created: {template.createdDate}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs text-gray-500 font-semibold">Available for:</span>
+                          {template.retailers.map((retailer) => (
+                            <span
+                              key={retailer}
+                              className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium border border-gray-200"
+                            >
+                              {retailer}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <ChevronDown className="flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-blue-600 transform -rotate-90 transition-all group-hover:translate-x-1" strokeWidth={2.5} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Retailer Selection */}
+          {step === 2 && selectedTemplate && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Select Retailers for Mapping
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Choose which retailers to apply this template to
+                </p>
+              </div>
+
+              {/* Selected Template Summary Card */}
+              <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <FileText className="h-6 w-6 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-gray-900 text-base truncate mb-1">
+                      {selectedTemplate.name}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap text-sm text-gray-600">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                        {selectedTemplate.category}
+                      </span>
+                      <span>•</span>
+                      <span className="font-semibold">{selectedTemplate.fields} fields</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Retailer Selection Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {selectedTemplate.retailers.map((retailer, index) => {
+                  const isSelected = selectedRetailers.includes(retailer);
+                  
+                  return (
+                    <button
+                      key={retailer}
+                      onClick={() => handleRetailerToggle(retailer)}
+                      className={`relative p-5 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transform hover:-translate-y-0.5 ${
+                        isSelected
+                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-500/20'
+                          : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                      }`}
+                      style={{ animationDelay: `${index * 75}ms` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex-shrink-0 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${
+                          isSelected 
+                            ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-600/30' 
+                            : 'border-gray-300 bg-white'
+                        }`}>
+                          {isSelected && <CheckCircle className="h-5 w-5 text-white" strokeWidth={3} />}
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <div className={`font-bold truncate transition-colors ${
+                            isSelected ? 'text-blue-700' : 'text-gray-900'
+                          }`}>
+                            {retailer}
+                          </div>
+                          <div className={`text-xs font-medium transition-colors ${
+                            isSelected ? 'text-blue-600' : 'text-gray-500'
+                          }`}>
+                            {isSelected ? 'Selected for mapping' : 'Click to select'}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selection Summary */}
+              {selectedRetailers.length > 0 && (
+                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl animate-fadeIn shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
+                      <CheckCircle className="h-6 w-6 text-white" strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <div className="font-bold text-green-900">
+                        {selectedRetailers.length} Retailer{selectedRetailers.length > 1 ? 's' : ''} Selected
+                      </div>
+                      <div className="text-sm text-green-700">
+                        {selectedRetailers.join(', ')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="px-6 sm:px-8 py-5 border-t-2 border-gray-200 bg-white flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <div>
+            {step === 2 && (
+              <button
+                onClick={handleBack}
+                className="px-5 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow focus:outline-none focus:ring-4 focus:ring-gray-500/20"
+              >
+                <ChevronDown className="h-4 w-4 transform rotate-90" strokeWidth={2.5} />
+                Back to Templates
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              onClick={handleClose}
+              className="px-6 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow focus:outline-none focus:ring-4 focus:ring-gray-500/20"
+            >
+              Cancel
+            </button>
+            
+            {step === 2 && (
+              <button
+                onClick={handleApply}
+                disabled={selectedRetailers.length === 0}
+                className={`px-6 py-2.5 rounded-xl font-bold text-white transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-blue-500/50 ${
+                  selectedRetailers.length === 0
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5'
+                }`}
+              >
+                <CheckCircle className="h-5 w-5" strokeWidth={2.5} />
+                Apply to {selectedCount} Product{selectedCount !== 1 ? 's' : ''}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProductCatalogHeader: FC = () => (
   <div className="flex justify-end items-center gap-4">
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Product Catalog</h1>
@@ -133,7 +688,7 @@ const ProductCatalogHeader = () => (
   </div>
 );
 
-const ProductFilters = ({
+const ProductFilters: FC<ProductFiltersProps> = ({
   searchTerm,
   setSearchTerm,
   showFilters,
@@ -160,7 +715,7 @@ const ProductFilters = ({
                 type="text"
                 placeholder="Search products, SKUs, brands..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -190,7 +745,7 @@ const ProductFilters = ({
             <div className="relative">
               <select
                 value={currentView}
-                onChange={(e) => onViewChange(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onViewChange(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none pr-8"
               >
                 {views.map((view) => (
@@ -213,7 +768,7 @@ const ProductFilters = ({
         {showFilters && (
           <div className="border-t pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              {[
+              {([
                 {
                   field: "category",
                   label: "Category",
@@ -234,14 +789,14 @@ const ProductFilters = ({
                   label: "Sync Status",
                   options: ["synced", "pending", "failed"],
                 },
-              ].map((filter) => (
+              ] as FilterField[]).map((filter) => (
                 <div key={filter.field}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {filter.label}
                   </label>
                   <select
                     value={filters[filter.field]}
-                    onChange={(e) =>
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
                       setFilters({ ...filters, [filter.field]: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -284,7 +839,7 @@ const ProductFilters = ({
   );
 };
 
-const ProductLegend = () => {
+const ProductLegend: FC = () => {
   const legendItems = [
     {
       icon: CheckCircle,
@@ -330,8 +885,8 @@ const ProductLegend = () => {
   );
 };
 
-const ProductStatsCards = () => {
-  const stats = [
+const ProductStatsCards: FC = () => {
+  const stats: StatItem[] = [
     { title: "Total Products", value: "1,247", icon: Grid3X3, color: "blue" },
     {
       title: "Active Products",
@@ -379,7 +934,7 @@ const ProductStatsCards = () => {
   );
 };
 
-const ViewManagementModal = ({
+const ViewManagementModal: FC<ViewManagementModalProps> = ({
   isOpen,
   onClose,
   currentView,
@@ -387,20 +942,20 @@ const ViewManagementModal = ({
   onViewChange,
   onViewsUpdate,
 }) => {
-  const [tempViews, setTempViews] = useState(views);
-  const [search, setSearch] = useState("");
+  const [tempViews, setTempViews] = useState<View[]>(views);
+  const [search, setSearch] = useState<string>("");
 
   if (!isOpen) return null;
 
   const currentViewData = tempViews.find((v) => v.name === currentView);
-  const columnsExceptActions = currentViewData.columns.filter(
+  const columnsExceptActions = currentViewData?.columns.filter(
     (col) => col.field !== "actions"
-  );
-  const actionsColumn = currentViewData.columns.find(
+  ) || [];
+  const actionsColumn = currentViewData?.columns.find(
     (col) => col.field === "actions"
   );
 
-  const allColumns = Array.from(
+  const allColumns: ViewColumn[] = Array.from(
     new Set(
       views.flatMap((v) =>
         v.columns
@@ -409,10 +964,12 @@ const ViewManagementModal = ({
             field: c.field,
             title: c.title,
             required: c.required,
+            visible: c.visible,
           }))
       )
     )
   );
+  
   const currentFields = columnsExceptActions.map((col) => col.field);
   const availableColumns = allColumns.filter(
     (col) => !currentFields.includes(col.field)
@@ -421,8 +978,10 @@ const ViewManagementModal = ({
     col.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddColumn = (field) => {
+  const handleAddColumn = (field: string) => {
     const colToAdd = allColumns.find((col) => col.field === field);
+    if (!colToAdd) return;
+    
     setTempViews((prev) =>
       prev.map((view) => {
         if (view.name === currentView) {
@@ -439,7 +998,7 @@ const ViewManagementModal = ({
     setSearch("");
   };
 
-  const handleRemoveColumn = (field) => {
+  const handleRemoveColumn = (field: string) => {
     setTempViews((prev) =>
       prev.map((view) => {
         if (view.name === currentView) {
@@ -456,7 +1015,7 @@ const ViewManagementModal = ({
     );
   };
 
-  const onDragEnd = (result) => {
+  const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     setTempViews((prev) =>
       prev.map((view) => {
@@ -469,7 +1028,7 @@ const ViewManagementModal = ({
           );
           const reordered = Array.from(optionalCols);
           const [removed] = reordered.splice(result.source.index, 1);
-          reordered.splice(result.destination.index, 0, removed);
+          reordered.splice(result.destination!.index, 0, removed);
           let newCols = [...requiredCols, ...reordered];
           if (actionsColumn) newCols.push(actionsColumn);
           return { ...view, columns: newCols };
@@ -510,7 +1069,7 @@ const ViewManagementModal = ({
               type="text"
               placeholder="Search a column"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             {search && filteredAvailableColumns.length > 0 && (
@@ -611,14 +1170,15 @@ const ViewManagementModal = ({
   );
 };
 
-const ProductCatalogPage = () => {
+const ProductCatalogPage: FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showViewManagementModal, setShowViewManagementModal] = useState(false);
-  const [filters, setFilters] = useState({
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showViewManagementModal, setShowViewManagementModal] = useState<boolean>(false);
+  const [showBulkTemplateModal, setShowBulkTemplateModal] = useState<boolean>(false);
+  const [filters, setFilters] = useState<Filters>({
     category: "",
     brand: "",
     status: "",
@@ -626,7 +1186,7 @@ const ProductCatalogPage = () => {
     syndicationStatus: "",
   });
 
-  const [views, setViews] = useState([
+  const [views, setViews] = useState<View[]>([
     {
       name: "Complete Product View",
       columns: [
@@ -737,14 +1297,14 @@ const ProductCatalogPage = () => {
       ],
     },
   ]);
-  const [currentView, setCurrentView] = useState("Complete Product View");
+  const [currentView, setCurrentView] = useState<string>("Complete Product View");
 
-  const [gridFilter, setGridFilter] = useState({ logic: "and", filters: [] });
-  const [sort, setSort] = useState([]);
-  const [group, setGroup] = useState([]);
-  const [page, setPage] = useState({ skip: 0, take: 10 });
+  const [gridFilter, setGridFilter] = useState<CompositeFilterDescriptor>({ logic: "and", filters: [] });
+  const [sort, setSort] = useState<SortDescriptor[]>([]);
+  const [group, setGroup] = useState<GroupDescriptor[]>([]);
+  const [page, setPage] = useState<PageState>({ skip: 0, take: 10 });
 
-  const filterOptions = useMemo(
+  const filterOptions = useMemo<FilterOptions>(
     () => ({
       categories: [...new Set(mockProducts.map((p) => p.category))],
       brands: [...new Set(mockProducts.map((p) => p.brand))],
@@ -753,7 +1313,7 @@ const ProductCatalogPage = () => {
     []
   );
 
-  const filteredProducts = useMemo(
+  const filteredProducts = useMemo<Product[]>(
     () =>
       mockProducts.filter((product) => {
         const matchesSearch =
@@ -792,7 +1352,7 @@ const ProductCatalogPage = () => {
     [searchTerm, filters]
   );
 
-  const processedProducts = useMemo(
+  const processedProducts = useMemo<ProcessedProduct[]>(
     () =>
       filteredProducts.map((product) => ({
         ...product,
@@ -812,7 +1372,7 @@ const ProductCatalogPage = () => {
     take: page.take,
   });
 
-  const currentViewColumns = useMemo(() => {
+  const currentViewColumns = useMemo<ViewColumn[]>(() => {
     const view = views.find((v) => v.name === currentView);
     if (!view) return [];
     const cols = view.columns.filter(
@@ -824,7 +1384,47 @@ const ProductCatalogPage = () => {
     return actionsCol ? [...cols, actionsCol] : cols;
   }, [views, currentView]);
 
-  const getChannelStatusColor = (status) => {
+  // Handle select all
+  const handleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filteredProducts.map(p => p.id));
+      setSelectedProducts(allIds);
+    } else {
+      setSelectedProducts(new Set());
+    }
+  }, [filteredProducts]);
+
+  // Handle individual product selection
+  const handleSelectProduct = useCallback((productId: number) => {
+    setSelectedProducts((prev) => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(productId)) {
+        newSelection.delete(productId);
+      } else {
+        newSelection.add(productId);
+      }
+      return newSelection;
+    });
+  }, []);
+
+  // Apply template to selected products
+  const handleApplyTemplate = (assignment: TemplateAssignment) => {
+    const template = fieldMappingTemplates.find(t => t.id === assignment.templateId);
+    console.log("Applying template:", template);
+    console.log("To products:", Array.from(selectedProducts));
+    
+    // Here you would make API call to update products
+    // Example: await updateProductsTemplate(Array.from(selectedProducts), templateId);
+    
+    // Show success message
+    alert(`Template "${template?.name}" assigned to ${selectedProducts.size} products successfully!`);
+    
+    // Reset selections
+    setSelectedProducts(new Set());
+    setShowBulkTemplateModal(false);
+  };
+
+  const getChannelStatusColor = (status: string): string => {
     switch (status) {
       case "synced":
         return "bg-green-100 text-green-800 border-green-200";
@@ -837,7 +1437,7 @@ const ProductCatalogPage = () => {
     }
   };
 
-  const getChannelStatusIcon = (status) => {
+  const getChannelStatusIcon = (status: string): JSX.Element => {
     switch (status) {
       case "synced":
         return <CheckCircle className="h-3 w-3" />;
@@ -850,24 +1450,26 @@ const ProductCatalogPage = () => {
     }
   };
 
-  const getCompletenessColor = (percentage) => {
+  const getCompletenessColor = (percentage: number): string => {
     if (percentage >= 90) return "text-green-600 bg-green-500";
     if (percentage >= 70) return "text-yellow-600 bg-yellow-500";
     return "text-red-600 bg-red-500";
   };
 
-  const MyPager = (props) => {
+  const MyPager: FC<PagerProps> = (props) => {
     const currentPage = Math.floor(props.skip / props.take) + 1;
     const totalPages = Math.ceil((props.total || 0) / props.take) || 1;
-    const handleChange = (event) =>
+    const handleChange = (event: NumericTextBoxChangeEvent | SliderChangeEvent) => {
+      const value = event.value ?? 1;
       props.onPageChange?.({
         target: { element: null, props },
-        skip: ((event.value ?? 1) - 1) * props.take,
+        skip: ((value as number) - 1) * props.take,
         take: props.take,
         syntheticEvent: event.syntheticEvent,
         nativeEvent: event.nativeEvent,
         targetEvent: { value: event.value },
-      });
+      } as GridPageChangeEvent);
+    };
     return (
       <div
         className="k-pager k-pager-md k-grid-pager"
@@ -899,7 +1501,33 @@ const ProductCatalogPage = () => {
     );
   };
 
-  const productNameCell = useCallback((props) => {
+  // Checkbox cell
+  const checkboxCell = useCallback((props: GridCellProps) => {
+    if (props.rowType === "groupHeader") return null;
+    if (!props.dataItem?.id) return <td></td>;
+
+    const isChecked = selectedProducts.has(props.dataItem.id);
+
+    return (
+      <td className="px-4 py-4">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSelectProduct(props.dataItem.id);
+          }}
+          className="focus:outline-none"
+        >
+          {isChecked ? (
+            <CheckSquare className="h-5 w-5 text-blue-600" />
+          ) : (
+            <Square className="h-5 w-5 text-gray-400" />
+          )}
+        </button>
+      </td>
+    );
+  }, [selectedProducts, handleSelectProduct]);
+
+  const productNameCell = useCallback((props: GridCellProps) => {
     if (props.rowType === "groupHeader") return null;
     if (!props.dataItem?.id) return <td>N/A</td>;
     return (
@@ -914,7 +1542,7 @@ const ProductCatalogPage = () => {
     );
   }, []);
 
-  const categoryCell = useCallback((props) => {
+  const categoryCell = useCallback((props: GridCellProps) => {
     if (props.rowType === "groupHeader") return null;
     if (!props.dataItem?.id) return <td>N/A</td>;
     return (
@@ -927,13 +1555,13 @@ const ProductCatalogPage = () => {
     );
   }, []);
 
-  const channelsCell = useCallback((props) => {
+  const channelsCell = useCallback((props: GridCellProps) => {
     if (props.rowType === "groupHeader") return null;
     if (!props.dataItem?.channels) return <td>N/A</td>;
     return (
       <td className="px-6 py-4">
         <div className="flex flex-wrap gap-2">
-          {props.dataItem.channels.map((channel) => (
+          {props.dataItem.channels.map((channel: Channel) => (
             <div key={channel.name} className="group relative">
               <span
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border cursor-help ${getChannelStatusColor(
@@ -962,7 +1590,7 @@ const ProductCatalogPage = () => {
     );
   }, []);
 
-  const completenessCell = useCallback((props) => {
+  const completenessCell = useCallback((props: GridCellProps) => {
     if (props.rowType === "groupHeader") return null;
     if (!props.dataItem?.completeness) return <td>N/A</td>;
     return (
@@ -992,7 +1620,7 @@ const ProductCatalogPage = () => {
     );
   }, []);
 
-  const actionsCell = useCallback((props) => {
+  const actionsCell = useCallback((props: GridCellProps) => {
     if (props.rowType === "groupHeader") return null;
     if (!props.dataItem?.id) return <td></td>;
     return (
@@ -1017,9 +1645,9 @@ const ProductCatalogPage = () => {
     );
   }, []);
 
-  const handleViewProduct = (productId) =>
+  const handleViewProduct = (productId: number) =>
     navigate(`/pim/products/${productId}`);
-  const handleEditProduct = (productId) =>
+  const handleEditProduct = (productId: number) =>
     navigate(`/pim/products/${productId}/edit`);
   const handleAddProduct = () => setShowAddModal(true);
   const handleCreateProduct = () => {
@@ -1036,10 +1664,15 @@ const ProductCatalogPage = () => {
     });
     setGridFilter({ logic: "and", filters: [] });
   };
-  const onViewChange = (viewName) => setCurrentView(viewName);
-  const onViewsUpdate = (updatedViews) => setViews(updatedViews);
+  const onViewChange = (viewName: string) => setCurrentView(viewName);
+  const onViewsUpdate = (updatedViews: View[]) => setViews(updatedViews);
 
-  const renderColumn = (column) => {
+  interface FilterUIProps {
+    value: string;
+    onChange: (value: string | null) => void;
+  }
+
+  const renderColumn = (column: ViewColumn) => {
     const commonProps = {
       field: column.field,
       title: column.title,
@@ -1047,7 +1680,7 @@ const ProductCatalogPage = () => {
         column.field !== "actions" && column.field !== "channelsStatus",
     };
 
-    const filterInput = (props, label, type = "text", options = []) => (
+    const filterInput = (props: FilterUIProps, label: string, type: string = "text", options: string[] = []) => (
       <div className="p-2">
         <label className="block mb-1 text-sm text-gray-700">
           Filter by {label}
@@ -1056,7 +1689,7 @@ const ProductCatalogPage = () => {
           <select
             className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={props.value || ""}
-            onChange={(e) =>
+            onChange={(e: ChangeEvent<HTMLSelectElement>) =>
               props.onChange(e.target.value === "" ? null : e.target.value)
             }
           >
@@ -1072,7 +1705,7 @@ const ProductCatalogPage = () => {
             type={type}
             className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={props.value || ""}
-            onChange={(e) => props.onChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => props.onChange(e.target.value)}
             placeholder={`Search ${label.toLowerCase()}...`}
           />
         )}
@@ -1085,14 +1718,14 @@ const ProductCatalogPage = () => {
           <Column
             {...commonProps}
             cell={productNameCell}
-            filterable={{ ui: (props) => filterInput(props, "Product") }}
+            filterable={{ ui: (props: FilterUIProps) => filterInput(props, "Product") }}
           />
         );
       case "sku":
         return (
           <Column
             {...commonProps}
-            filterable={{ ui: (props) => filterInput(props, "SKU") }}
+            filterable={{ ui: (props: FilterUIProps) => filterInput(props, "SKU") }}
           />
         );
       case "categoryInfo":
@@ -1101,7 +1734,7 @@ const ProductCatalogPage = () => {
             {...commonProps}
             cell={categoryCell}
             filterable={{
-              ui: (props) =>
+              ui: (props: FilterUIProps) =>
                 filterInput(
                   props,
                   "Category",
@@ -1116,7 +1749,7 @@ const ProductCatalogPage = () => {
           <Column
             {...commonProps}
             filterable={{
-              ui: (props) =>
+              ui: (props: FilterUIProps) =>
                 filterInput(props, "Brand", "select", filterOptions.brands),
             }}
           />
@@ -1131,7 +1764,7 @@ const ProductCatalogPage = () => {
             {...commonProps}
             cell={completenessCell}
             filterable={{
-              ui: (props) =>
+              ui: (props: FilterUIProps) =>
                 filterInput(props, "Completeness", "select", [
                   "high",
                   "medium",
@@ -1144,7 +1777,7 @@ const ProductCatalogPage = () => {
         return (
           <Column
             {...commonProps}
-            filterable={{ ui: (props) => filterInput(props, "Date", "date") }}
+            filterable={{ ui: (props: FilterUIProps) => filterInput(props, "Date", "date") }}
           />
         );
       case "actions":
@@ -1162,14 +1795,19 @@ const ProductCatalogPage = () => {
     }
   };
 
-  const gridRef = useRef();
-  const pdfExportComponent = useRef(null);
+  const gridRef = useRef<Grid>(null);
+  const pdfExportComponent = useRef<PDFExport>(null);
 
   const handlePdfExport = () => {
     if (pdfExportComponent?.current) {
       pdfExportComponent.current.save();
     }
   };
+
+  const allSelected = filteredProducts.length > 0 && 
+                     selectedProducts.size === filteredProducts.length;
+  const someSelected = selectedProducts.size > 0 && 
+                      selectedProducts.size < filteredProducts.length;
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
@@ -1229,6 +1867,39 @@ const ProductCatalogPage = () => {
           />
         </div>
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedProducts.size > 0 && (
+        <div className="bg-blue-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="font-semibold text-lg">
+              {selectedProducts.size} product{selectedProducts.size > 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={() => setSelectedProducts(new Set())}
+              className="text-blue-100 hover:text-white text-sm flex items-center gap-1 transition-colors"
+            >
+              <X className="h-4 w-4" />
+              Clear selection
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowBulkTemplateModal(true)}
+              className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <FileText className="h-4 w-4" />
+              Assign Template
+            </button>
+            <button className="px-4 py-2 bg-blue-700 text-white rounded-lg font-medium hover:bg-blue-800 transition-colors flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              Bulk Edit
+            </button>
+          </div>
+        </div>
+      )}
+
       <ProductStatsCards />
       <ProductFilters
         searchTerm={searchTerm}
@@ -1265,16 +1936,6 @@ const ProductCatalogPage = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">Products</h3>
-            {selectedProducts.length > 0 && (
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
-                  Bulk Edit ({selectedProducts.length})
-                </button>
-                <button className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
-                  Sync Selected
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -1313,14 +1974,14 @@ const ProductCatalogPage = () => {
               filter={gridFilter}
               sort={sort}
               group={group}
-              onFilterChange={(e) => setGridFilter(e.filter)}
-              onSortChange={(e) => setSort(e.sort)}
-              onGroupChange={(e) => setGroup(e.group)}
+              onFilterChange={(e: GridFilterChangeEvent) => setGridFilter(e.filter)}
+              onSortChange={(e: GridSortChangeEvent) => setSort(e.sort)}
+              onGroupChange={(e: GridGroupChangeEvent) => setGroup(e.group)}
               pageable={true}
               skip={page.skip}
               take={page.take}
               total={processedProducts.length || 0}
-              onPageChange={(e) => setPage(e.page)}
+              onPageChange={(e: GridPageChangeEvent) => setPage(e.page)}
               pager={MyPager}
               groupPanel={{
                 className: "bg-white p-3 mb-2 border border-gray-200 rounded",
@@ -1329,6 +1990,30 @@ const ProductCatalogPage = () => {
               }}
               className="border-none"
             >
+              {/* Checkbox Column */}
+              <Column
+                width="60px"
+                cell={checkboxCell}
+                headerCell={() => (
+                  <button
+                    onClick={() => handleSelectAll(!allSelected)}
+                    className="focus:outline-none p-2"
+                  >
+                    {allSelected ? (
+                      <CheckSquare className="h-5 w-5 text-blue-600" />
+                    ) : someSelected ? (
+                      <div className="h-5 w-5 border-2 border-blue-600 rounded bg-blue-100 flex items-center justify-center">
+                        <div className="h-2 w-2 bg-blue-600 rounded-sm"></div>
+                      </div>
+                    ) : (
+                      <Square className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                )}
+                filterable={false}
+                sortable={false}
+              />
+
               {currentViewColumns.map((column) => renderColumn(column))}
             </Grid>
           </PDFExport>
@@ -1340,6 +2025,12 @@ const ProductCatalogPage = () => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreateProduct}
+      />
+      <BulkTemplateModal
+        isOpen={showBulkTemplateModal}
+        onClose={() => setShowBulkTemplateModal(false)}
+        selectedCount={selectedProducts.size}
+        onApply={handleApplyTemplate}
       />
       <FloatingAddButton
         onClick={handleAddProduct}
