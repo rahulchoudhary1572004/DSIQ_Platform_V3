@@ -1,457 +1,412 @@
-import { useState, useMemo, FC, ChangeEvent } from "react";
+// components/DAM/DAM.tsx
+import React, { useState, useMemo, FC } from "react";
 import {
   HardDrive,
-  Upload,
-  Search,
   X,
   Download,
   Trash2,
   CheckSquare,
   Square,
-  ChevronLeft,
-  ChevronRight,
-  Sliders,
+  Folder as FolderIcon,
+  List,
+  LayoutGrid,
+  Plus,
+  Minus,
 } from "lucide-react";
-import FloatingAddButton from "../../../helper_Functions/FloatingAddButton";
+
+import DAMNavbar from "./DAMNavbar";
+import DAMSidebar from "./DAMSidebar";
 import DAMAssetCard from "./DAMAssetCard";
 import DAMSearchFilters from "./DAMSearchFilters";
 import DAMAssetDetail from "./DAMAssetDetail";
 import DAMUpload from "./DAMUpload";
 import DAMCollections from "./DAMCollections";
+
 import { DigitalAsset, Product, SearchFilters, Collection } from "../../types/dam.types";
 import { products, digitalAssets, mockCollections } from "./dam.data";
 
-type ViewMode = "grid" | "list";
-type SortBy = "name" | "date" | "size" | "type";
 type ActiveTab = "library" | "upload" | "collections";
+type ViewMode = "grid" | "list";
 
-const TAB_CONFIG: Record<ActiveTab, { label: string; icon?: string }> = {
-  library: { label: "Asset Library" },
-  upload: { label: "Upload Assets" },
-  collections: { label: "Collections" },
-};
+const formatCount = (n?: number | null) => (typeof n === "number" ? n : 0);
 
-const getStatusStyle = (status: string): string => {
-  const statusMap: Record<string, string> = {
-    Active: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-    Draft: "bg-amber-100 text-amber-700 border border-amber-200",
-    Archived: "bg-slate-100 text-slate-700 border border-slate-200",
-  };
-  return statusMap[status] || "bg-slate-100 text-slate-700 border border-slate-200";
-};
-
-// ============================================================================
-// PRODUCT CARD COMPONENT
-// ============================================================================
-interface ProductCardProps {
-  product: Product;
-  isSelected: boolean;
-  onClick: (product: Product | null) => void;
-}
-
-const ProductCard: FC<ProductCardProps> = ({ product, isSelected, onClick }) => (
-  <button
-    onClick={() => onClick(product)}
-    className={`w-full text-left px-3 py-2.5 rounded-lg flex flex-col transition-colors ${
-      isSelected
-        ? "bg-blue-600 text-white"
-        : "bg-white hover:bg-slate-50 border border-slate-200 text-slate-900"
-    }`}
-  >
-    <span className={`font-semibold text-sm truncate ${isSelected ? "text-white" : "text-slate-900"}`}>
-      {product.name}
-    </span>
-    <span className={`text-xs mt-0.5 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>
-      {product.sku}
-    </span>
-  </button>
-);
-
-// ============================================================================
-// COLLAPSIBLE SIDEBAR COMPONENT
-// ============================================================================
-interface SidebarProps {
-  products: Product[];
-  filteredProducts: Product[];
-  selectedProduct: Product | null;
-  productSearch: string;
-  isCollapsed: boolean;
-  onProductSearch: (search: string) => void;
-  onProductSelect: (product: Product | null) => void;
-  onToggleCollapse: () => void;
-}
-
-const Sidebar: FC<SidebarProps> = ({
-  products,
-  filteredProducts,
-  selectedProduct,
-  productSearch,
-  isCollapsed,
-  onProductSearch,
-  onProductSelect,
-  onToggleCollapse,
-}) => {
-  if (isCollapsed) {
-    return (
-      <aside className="w-16 bg-white shadow-sm flex flex-col items-center py-4 gap-4 transition-all duration-300 border-r border-slate-200">
-        <button
-          onClick={onToggleCollapse}
-          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          title="Expand sidebar"
-        >
-          <ChevronRight className="h-5 w-5 text-slate-600" />
-        </button>
-      </aside>
-    );
-  }
-
-  return (
-    <aside className="w-80 bg-white shadow-sm flex flex-col overflow-hidden transition-all duration-300 border-r border-slate-200">
-      <div className="px-5 py-4 flex-shrink-0 border-b border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-900">Products</h2>
-          <button
-            onClick={onToggleCollapse}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Collapse sidebar"
-          >
-            <ChevronLeft className="h-4 w-4 text-slate-600" />
-          </button>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={productSearch}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => onProductSearch(e.target.value)}
-            className="pl-10 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-          />
-        </div>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1 min-h-0">
-        <button
-          onClick={() => onProductSelect(null)}
-          className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
-            selectedProduct === null
-              ? "bg-blue-600 text-white"
-              : "bg-white hover:bg-slate-50 border border-slate-200 text-slate-900"
-          }`}
-        >
-          <div className="font-semibold text-sm">All Assets</div>
-          <div className="text-xs mt-1 opacity-70">Show all</div>
-        </button>
-
-        <div className="h-0.5 bg-slate-200 my-1"></div>
-
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-8 text-slate-500 text-sm">No products found</div>
-        ) : (
-          filteredProducts.map((product) => (
-            <div key={product.id} className="relative">
-              <ProductCard
-                product={product}
-                isSelected={selectedProduct?.id === product.id}
-                onClick={onProductSelect}
-              />
-              {selectedProduct?.id === product.id && (
-                <div className="absolute left-0 top-0 h-full w-1 bg-blue-600 rounded-r-full"></div>
-              )}
-            </div>
-          ))
-        )}
-      </nav>
-
-      <div className="px-5 py-4 border-t border-slate-200 bg-white flex-shrink-0">
-        <div className="text-xs text-slate-600">
-          <span className="font-semibold">{filteredProducts.length}</span> of{" "}
-          <span className="font-semibold">{products.length}</span> products
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-// ============================================================================
-// TAB NAVIGATION COMPONENT
-// ============================================================================
-interface TabNavProps {
-  activeTab: ActiveTab;
-  onTabChange: (tab: ActiveTab) => void;
-}
-
-const TabNav: FC<TabNavProps> = ({ activeTab, onTabChange }) => (
-  <div className="bg-white border-b border-slate-200 px-8 flex-shrink-0">
-    <div className="flex items-center gap-1">
-      {Object.entries(TAB_CONFIG).map(([key, { label }]) => (
-        <button
-          key={key}
-          onClick={() => onTabChange(key as ActiveTab)}
-          className={`px-5 py-3.5 font-semibold text-sm transition-all rounded-t-lg ${
-            activeTab === key
-              ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-b-2 border-transparent"
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-// ============================================================================
-// ASSET GRID COMPONENT
-// ============================================================================
+/* ===== AssetGrid ===== */
 interface AssetGridProps {
   assets: DigitalAsset[];
   selectedAssets: Set<number>;
+  viewMode: ViewMode;
+  cardSize: number;
   onSelectAsset: (assetId: number) => void;
   onPreviewAsset: (asset: DigitalAsset) => void;
   onDownloadAsset: (assetId: number) => void;
   onDeleteAsset: (assetId: number) => void;
+  onAddToCollection?: (asset: DigitalAsset) => void;
+  currentCollectionId?: number | null;
+  onRemoveFromCollection?: (collectionId: number, assetId: number) => void;
   isDetailModalOpen?: boolean;
 }
 
 const AssetGrid: FC<AssetGridProps> = ({
   assets,
   selectedAssets,
+  viewMode,
+  cardSize,
   onSelectAsset,
   onPreviewAsset,
   onDownloadAsset,
   onDeleteAsset,
+  onAddToCollection,
+  currentCollectionId = null,
+  onRemoveFromCollection,
   isDetailModalOpen = false,
-}) => (
-  <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 pb-8 ${isDetailModalOpen ? "opacity-50" : ""}`}>
-    {assets.map((asset) => (
-      <div key={asset.id} className={`relative group ${isDetailModalOpen ? "pointer-events-none" : ""}`}>
-        
-        <DAMAssetCard
-          asset={asset}
-          isSelected={selectedAssets.has(asset.id)}
-          onSelect={() => onSelectAsset(asset.id)}
-          onPreview={onPreviewAsset}
-          onDownload={onDownloadAsset}
-          onDelete={onDeleteAsset}
-          isDisabled={isDetailModalOpen}
-        />
-      </div>
-    ))}
-  </div>
-);
-
-// ============================================================================
-// EMPTY STATE COMPONENT
-// ============================================================================
-const EmptyState: FC = () => (
-  <div className="flex flex-col items-center justify-center h-full text-slate-400 py-20">
-    <div className="bg-slate-100 rounded-full p-6 mb-4">
-      <HardDrive className="h-16 w-16 text-slate-300" />
-    </div>
-    <h3 className="text-lg font-semibold mb-2 text-slate-900">No assets found</h3>
-    <p className="text-sm text-slate-500">Upload some assets to get started</p>
-  </div>
-);
-
-// ============================================================================
-// LIBRARY HEADER COMPONENT
-// ============================================================================
-interface LibraryHeaderProps {
-  selectedProduct: Product | null;
-  viewingCollectionId: number | null;
-  collections: Collection[];
-  sortedAssets: DigitalAsset[];
-  onFilterChange: (filters: SearchFilters) => void;
-}
-
-const LibraryHeader: FC<LibraryHeaderProps> = ({
-  selectedProduct,
-  viewingCollectionId,
-  collections,
-  sortedAssets,
-  onFilterChange,
 }) => {
-  const currentCollection = collections.find((c) => c.id === viewingCollectionId);
+  const gridStyle: React.CSSProperties = {
+    gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize * 30}px, 1fr))`,
+  };
 
-  return (
-    <header className="sticky top-0  bg-white border-b border-slate-200 px-8 py-6 shadow-sm flex-shrink-0 flex flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">
-          {viewingCollectionId ? currentCollection?.name : selectedProduct ? "Digital Asset Management" : "All Assets"}
-        </h1>
-        <p className="text-slate-600 text-sm">
-          {viewingCollectionId ? (
-            <>
-              Collection •{" "}
-              <span className="font-semibold text-slate-900">{currentCollection?.assetCount} items</span>
-            </>
-          ) : selectedProduct ? (
-            <>
-              Managing assets for{" "}
-              <span className="font-semibold text-slate-900">{selectedProduct.name}</span>
-              <span className="text-slate-400 mx-2">•</span>
-              <span className="text-slate-500">{selectedProduct.sku}</span>
-            </>
-          ) : (
-            <>Viewing <span className="font-semibold text-slate-900">all assets</span></>
-          )}
-        </p>
+  if (viewMode === "list") {
+    return (
+      <div className={`space-y-3 pb-12 transition-all duration-300 ${isDetailModalOpen ? "opacity-50 pointer-events-none" : ""}`}>
+        {/* LIST HEADER - LARGER */}
+        <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-white border border-slate-200/60 rounded-lg sticky top-0 text-sm font-semibold text-slate-700 mb-2">
+          <div className="col-span-1">Select</div>
+          <div className="col-span-1">Thumbnail</div>
+          <div className="col-span-3">Name</div>
+          <div className="col-span-2">Type</div>
+          <div className="col-span-2">Format</div>
+          <div className="col-span-2">Upload Date</div>
+          <div className="col-span-1">Action</div>
+        </div>
+
+        {/* LIST ROWS - LARGER HEIGHT */}
+        {assets.map((asset) => (
+          <div
+            key={asset.id}
+            className="grid grid-cols-12 gap-4 px-6 py-5 bg-white border border-slate-200/60 rounded-lg hover:shadow-md hover:border-slate-300 transition-all duration-200 group items-center"
+          >
+            {/* CHECKBOX */}
+            <div className="col-span-1 flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedAssets.has(asset.id)}
+                onChange={() => onSelectAsset(asset.id)}
+                className="w-5 h-5 rounded cursor-pointer accent-blue-600"
+              />
+            </div>
+
+            {/* THUMBNAIL */}
+            <div className="col-span-1 flex items-center">
+              <div className="w-14 h-14 rounded-lg bg-slate-100 flex-shrink-0" />
+            </div>
+
+            {/* NAME */}
+            <div className="col-span-3">
+              <p className="text-sm font-medium text-slate-900 truncate">{asset.name}</p>
+              <p className="text-xs text-slate-500 truncate">{asset.name}</p>
+            </div>
+
+            {/* TYPE */}
+            <div className="col-span-2">
+              <p className="text-sm text-slate-600">{asset.type || "Asset"}</p>
+            </div>
+
+            {/* FORMAT */}
+            <div className="col-span-2">
+              <p className="text-sm text-slate-600">{asset.format}</p>
+            </div>
+
+            {/* UPLOAD DATE */}
+            <div className="col-span-2">
+              <p className="text-sm text-slate-600">{asset.uploadDate}</p>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="col-span-1 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button
+                onClick={() => onDownloadAsset(asset.id)}
+                className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors duration-200"
+              >
+                <Download className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => onDeleteAsset(asset.id)}
+                className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600 transition-colors duration-200"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-    </header>
+    );
+  }
+
+  // GRID VIEW - DYNAMIC SIZE
+  return (
+    <div
+      className={`grid gap-6 pb-12 transition-all duration-300 ${isDetailModalOpen ? "opacity-50 pointer-events-none" : ""}`}
+      style={gridStyle}
+    >
+      {assets.map((asset) => (
+        <div key={asset.id} className="relative group will-change-contents">
+          <div className="relative bg-white border border-slate-200/60 rounded-xl shadow-sm overflow-hidden group-hover:shadow-lg group-hover:border-slate-300 transition-all duration-300">
+            <DAMAssetCard
+              asset={asset}
+              isSelected={selectedAssets.has(asset.id)}
+              onSelect={() => onSelectAsset(asset.id)}
+              onPreview={onPreviewAsset}
+              onDownload={onDownloadAsset}
+              onDelete={onDeleteAsset}
+              onAddToCollection={onAddToCollection}
+              isDisabled={isDetailModalOpen}
+            />
+
+            {currentCollectionId && onRemoveFromCollection && (
+              <div className="p-3 border-t border-slate-100/60 flex items-center justify-between gap-2 bg-slate-50/50">
+                <span className="text-xs text-slate-600 font-medium">In collection</span>
+                <button
+                  onClick={() => onRemoveFromCollection(currentCollectionId, asset.id)}
+                  className="px-3 py-1.5 text-xs bg-red-50/80 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-150 font-medium border border-red-200/50"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 
-// ============================================================================
-// LIBRARY TAB CONTENT COMPONENT
-// ============================================================================
-interface LibraryTabProps {
+/* ===== Empty State ===== */
+const EmptyState: FC = () => (
+  <div className="flex flex-col items-center justify-center h-full text-slate-400 py-20">
+    <div className="bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl p-8 mb-6 border border-slate-200/50">
+      <HardDrive className="h-16 w-16 text-slate-300 mx-auto" />
+    </div>
+    <h3 className="text-xl font-semibold mb-3 text-slate-900">No assets found</h3>
+    <p className="text-sm text-slate-500 max-w-xs text-center">
+      Upload some assets to get started and manage your digital library
+    </p>
+  </div>
+);
+
+/* ===== LibraryContent ===== */
+interface LibraryContentProps {
   selectedProduct: Product | null;
   viewingCollectionId: number | null;
   collections: Collection[];
   sortedAssets: DigitalAsset[];
   selectedAssets: Set<number>;
-  isDetailModalOpen?: boolean;
-  onFilterChange: (filters: SearchFilters) => void;
+  isDetailModalOpen: boolean;
+  viewMode: ViewMode;
+  cardSize: number;
+  onViewModeChange: (mode: ViewMode) => void;
+  onCardSizeChange: (size: number) => void;
   onSelectAll: () => void;
-  onSelectAsset: (assetId: number) => void;
+  onSelectAsset: (id: number) => void;
+  onClearSelection: () => void;
   onPreviewAsset: (asset: DigitalAsset) => void;
-  onDownloadAsset: (assetId: number) => void;
-  onDeleteAsset: (assetId: number) => void;
+  onDownloadAsset: (id: number) => void;
+  onDeleteAsset: (id: number) => void;
+  onAddToCollection: (asset: DigitalAsset) => void;
   onBulkDownload: () => void;
   onBulkDelete: () => void;
-  onClearSelection: () => void;
+  onAddSelectedToCollection: () => void;
+  currentCollectionId?: number | null;
+  onRemoveFromCollection?: (collectionId: number, assetId: number) => void;
 }
 
-const LibraryTab: FC<LibraryTabProps> = ({
+const LibraryContent: FC<LibraryContentProps> = ({
   selectedProduct,
   viewingCollectionId,
   collections,
   sortedAssets,
   selectedAssets,
-  onFilterChange,
+  isDetailModalOpen,
+  viewMode,
+  cardSize,
+  onViewModeChange,
+  onCardSizeChange,
   onSelectAll,
   onSelectAsset,
+  onClearSelection,
   onPreviewAsset,
   onDownloadAsset,
   onDeleteAsset,
+  onAddToCollection,
   onBulkDownload,
   onBulkDelete,
-  onClearSelection,
-  isDetailModalOpen = false,
+  onAddSelectedToCollection,
+  currentCollectionId,
+  onRemoveFromCollection,
 }) => {
-  const isAllSelected = selectedAssets.size === sortedAssets.length && sortedAssets.length > 0;
-  const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
+  const currentCollection = collections.find((c) => c.id === viewingCollectionId);
 
   return (
-    <>
-      <LibraryHeader
-        selectedProduct={selectedProduct}
-        viewingCollectionId={viewingCollectionId}
-        collections={collections}
-        sortedAssets={sortedAssets}
-        onFilterChange={onFilterChange}
-      />
+    <section className="flex-1 px-8 py-8 overflow-auto bg-gradient-to-b from-white to-slate-50">
+      {sortedAssets.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className={`flex flex-col h-full ${isDetailModalOpen ? "pointer-events-none opacity-50" : ""}`}>
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-slate-900">
+                {viewingCollectionId ? currentCollection?.name : selectedProduct ? selectedProduct.name : "All Assets"}
+              </h1>
+              <span className="px-3 py-1 text-sm bg-blue-100/70 text-blue-700 rounded-full font-medium">
+                {sortedAssets.length} items
+              </span>
+            </div>
+          </div>
 
-      <section className="flex-1 px-8 py-6 overflow-auto bg-slate-50">
-        {sortedAssets.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className={`flex flex-col h-full ${isDetailModalOpen ? "pointer-events-none opacity-50" : ""}`}>
-            {/* TOOLBAR WITH FILTER BUTTON */}
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={onSelectAll}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-all"
-                  title={isAllSelected ? "Deselect all" : "Select all"}
-                >
-                  {isAllSelected ? (
-                    <CheckSquare className="h-5 w-5 text-blue-600" />
-                  ) : (
-                    <Square className="h-5 w-5 text-slate-400 hover:text-slate-600" />
-                  )}
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">{sortedAssets.length}</span>
-                  <span className="text-sm text-slate-500">assets found</span>
-                </div>
-
-                {selectedAssets.size > 0 && (
-                  <div className="flex items-center gap-2 ml-2 pl-4 border-l border-slate-300">
-                    <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                      {selectedAssets.size} selected
-                    </span>
-                    <button
-                      onClick={onBulkDownload}
-                      className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-all flex items-center gap-1.5"
-                      title="Download selected"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span className="text-sm font-medium hidden sm:inline">Download</span>
-                    </button>
-                    <button
-                      onClick={onBulkDelete}
-                      className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-all flex items-center gap-1.5"
-                      title="Delete selected"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="text-sm font-medium hidden sm:inline">Delete</span>
-                    </button>
-                    <button
-                      onClick={onClearSelection}
-                      className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg transition-all"
-                      title="Clear selection"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* FILTERS BUTTON - RIGHT SIDE */}
+          {/* CONTROLS BAR - ALWAYS VISIBLE WITH SLIDER + PLUS/MINUS */}
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-200/50 flex-wrap gap-4">
+            {/* LEFT: SELECT & ACTIONS */}
+            <div className="flex items-center gap-6 flex-wrap">
               <button
-                onClick={() => setFiltersPanelOpen(true)}
-                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                onClick={onSelectAll}
+                className="p-2.5 hover:bg-slate-100 rounded-lg transition-colors duration-200"
               >
-                <Sliders className="h-4 w-4" />
-                Filters
+                {selectedAssets.size === sortedAssets.length && sortedAssets.length > 0 ? (
+                  <CheckSquare className="h-5 w-5 text-blue-600" />
+                ) : (
+                  <Square className="h-5 w-5 text-slate-400" />
+                )}
               </button>
+
+              {selectedAssets.size > 0 && (
+                <div className="flex items-center gap-3 pl-6 border-l border-slate-300 transition-all duration-200">
+                  <button
+                    onClick={onAddSelectedToCollection}
+                    className="p-2.5 hover:bg-green-50 text-green-600 rounded-lg flex items-center gap-1.5 transition-colors duration-200"
+                  >
+                    <FolderIcon className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={onBulkDownload}
+                    className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center gap-1.5 transition-colors duration-200"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={onBulkDelete}
+                    className="p-2.5 hover:bg-red-50 text-red-600 rounded-lg flex items-center gap-1.5 transition-colors duration-200"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={onClearSelection}
+                    className="p-2.5 hover:bg-slate-100 text-slate-500 rounded-lg transition-colors duration-200"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            <AssetGrid
-              assets={sortedAssets}
-              selectedAssets={selectedAssets}
-              onSelectAsset={onSelectAsset}
-              onPreviewAsset={onPreviewAsset}
-              onDownloadAsset={onDownloadAsset}
-              onDeleteAsset={onDeleteAsset}
-              isDetailModalOpen={isDetailModalOpen}
-            />
-          </div>
-        )}
-      </section>
+            {/* RIGHT: VIEW TOGGLE + SLIDER + PLUS/MINUS */}
+            <div className="flex items-center gap-4">
+              {/* VIEW TOGGLE */}
+              <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-lg transition-all duration-300">
+                <button
+                  onClick={() => onViewModeChange("grid")}
+                  className={`px-3 py-2 rounded-md flex items-center gap-1.5 transition-all duration-200 ${
+                    viewMode === "grid"
+                      ? "bg-white text-blue-600 shadow-sm border border-slate-200/50"
+                      : "text-slate-600 hover:bg-white/50"
+                  }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Grid</span>
+                </button>
 
-      {/* RIGHT SIDEBAR FILTERS */}
-      <DAMSearchFilters
-        assets={sortedAssets}
-        onFilterChange={onFilterChange}
-        isOpen={filtersPanelOpen}
-        onClose={() => setFiltersPanelOpen(false)}
-      />
-    </>
+                <button
+                  onClick={() => onViewModeChange("list")}
+                  className={`px-3 py-2 rounded-md flex items-center gap-1.5 transition-all duration-200 ${
+                    viewMode === "list"
+                      ? "bg-white text-blue-600 shadow-sm border border-slate-200/50"
+                      : "text-slate-600 hover:bg-white/50"
+                  }`}
+                  title="List View"
+                >
+                  <List className="h-4 w-4" />
+                  <span className="text-xs font-medium hidden sm:inline">List</span>
+                </button>
+              </div>
+
+              {/* SLIDER BAR WITH PLUS/MINUS BUTTONS */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-slate-100/80 rounded-lg transition-all duration-200">
+                {/* MINUS BUTTON */}
+                <button
+                  onClick={() => onCardSizeChange(Math.max(1, cardSize - 1))}
+                  disabled={cardSize <= 1}
+                  className="p-1.5 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-slate-600 transition-colors duration-200 flex-shrink-0"
+                  title="Smaller"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+
+                {/* SLIDER BAR */}
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={cardSize}
+                  onChange={(e) => onCardSizeChange(parseInt(e.target.value))}
+                  className="w-40 h-2 rounded-lg appearance-none cursor-pointer transition-all duration-200"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((cardSize - 1) / 9) * 100}%, #cbd5e1 ${((cardSize - 1) / 9) * 100}%, #cbd5e1 100%)`,
+                  }}
+                />
+
+                {/* PLUS BUTTON */}
+                <button
+                  onClick={() => onCardSizeChange(Math.min(10, cardSize + 1))}
+                  disabled={cardSize >= 10}
+                  className="p-1.5 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-slate-600 transition-colors duration-200 flex-shrink-0"
+                  title="Larger"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ASSETS GRID/LIST */}
+          <AssetGrid
+            assets={sortedAssets}
+            selectedAssets={selectedAssets}
+            viewMode={viewMode}
+            cardSize={cardSize}
+            onSelectAsset={onSelectAsset}
+            onPreviewAsset={onPreviewAsset}
+            onDownloadAsset={onDownloadAsset}
+            onDeleteAsset={onDeleteAsset}
+            onAddToCollection={onAddToCollection}
+            currentCollectionId={viewingCollectionId}
+            onRemoveFromCollection={onRemoveFromCollection}
+            isDetailModalOpen={isDetailModalOpen}
+          />
+        </div>
+      )}
+    </section>
   );
 };
 
-// ============================================================================
-// MAIN DAM PAGE COMPONENT
-// ============================================================================
+/* ===== MAIN DAM PAGE ===== */
 const DAMPage: FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(products[0]);
   const [selectedAssets, setSelectedAssets] = useState<Set<number>>(new Set());
   const [selectedAssetDetail, setSelectedAssetDetail] = useState<DigitalAsset | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [cardSize, setCardSize] = useState<number>(4);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     searchTerm: "",
     assetType: "all",
@@ -463,18 +418,31 @@ const DAMPage: FC = () => {
   const [collections, setCollections] = useState<Collection[]>(mockCollections);
   const [viewingCollectionId, setViewingCollectionId] = useState<number | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [showAddToCollectionModal, setShowAddToCollectionModal] = useState(false);
+  const [assetsPendingAdd, setAssetsPendingAdd] = useState<number[]>([]);
+  const [filtersPanelOpen, setFiltersPanelOpen] = useState<boolean>(false);
 
-  const currentAssets = selectedProduct
-    ? digitalAssets[selectedProduct.id] || []
-    : Object.values(digitalAssets).flat();
+  const allAssets = useMemo<DigitalAsset[]>(() => Object.values(digitalAssets).flat(), []);
+
+  const assetsInCurrentCollection = useMemo<DigitalAsset[]>(() => {
+    if (!viewingCollectionId) return [];
+    const col = collections.find((c) => c.id === viewingCollectionId);
+    if (!col || !col.children || col.children.length === 0) return [];
+    return col.children.map((id) => allAssets.find((a) => a.id === id)).filter(Boolean) as DigitalAsset[];
+  }, [viewingCollectionId, collections, allAssets]);
+
+  const currentAssets = useMemo<DigitalAsset[]>(() => {
+    if (viewingCollectionId) return assetsInCurrentCollection;
+    if (selectedProduct) return digitalAssets[selectedProduct.id] || [];
+    return allAssets;
+  }, [viewingCollectionId, assetsInCurrentCollection, selectedProduct, allAssets]);
 
   const filteredAssets = useMemo<DigitalAsset[]>(() => {
     return currentAssets.filter((asset) => {
-      const matchesSearch =
-        asset.name.toLowerCase().includes(searchFilters.searchTerm.toLowerCase()) ||
-        asset.format.toLowerCase().includes(searchFilters.searchTerm.toLowerCase());
+      const term = (searchFilters.searchTerm || "").toLowerCase();
+      const matchesSearch = asset.name.toLowerCase().includes(term) || asset.format.toLowerCase().includes(term);
       const matchesType = searchFilters.assetType === "all" || asset.type === searchFilters.assetType;
-      const assetDate = new Date(asset.uploadDate);
+      const assetDate = asset.uploadDate ? new Date(asset.uploadDate) : new Date(0);
       const matchesDateRange =
         (!searchFilters.dateRange.startDate || assetDate >= new Date(searchFilters.dateRange.startDate)) &&
         (!searchFilters.dateRange.endDate || assetDate <= new Date(searchFilters.dateRange.endDate));
@@ -487,13 +455,10 @@ const DAMPage: FC = () => {
     return [...filteredAssets].sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
   }, [filteredAssets]);
 
-  const filteredProducts = useMemo<Product[]>(() => {
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-        p.sku.toLowerCase().includes(productSearch.toLowerCase())
-    );
-  }, [productSearch]);
+  const filteredProducts = useMemo<Product[]>(
+    () => products.filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()) || p.sku.toLowerCase().includes(productSearch.toLowerCase())),
+    [productSearch]
+  );
 
   const handleProductSelect = (product: Product | null) => {
     setSelectedProduct(product);
@@ -502,22 +467,19 @@ const DAMPage: FC = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedAssets.size === sortedAssets.length) {
-      setSelectedAssets(new Set());
-    } else {
-      setSelectedAssets(new Set(sortedAssets.map((a) => a.id)));
-    }
+    if (selectedAssets.size === sortedAssets.length) setSelectedAssets(new Set());
+    else setSelectedAssets(new Set(sortedAssets.map((a) => a.id)));
   };
 
   const handleSelectAsset = (assetId: number) => {
-    const newSelected = new Set(selectedAssets);
-    newSelected.has(assetId) ? newSelected.delete(assetId) : newSelected.add(assetId);
-    setSelectedAssets(newSelected);
+    setSelectedAssets((prev) => {
+      const next = new Set(prev);
+      next.has(assetId) ? next.delete(assetId) : next.add(assetId);
+      return next;
+    });
   };
 
-  const handleClearSelection = () => {
-    setSelectedAssets(new Set());
-  };
+  const handleClearSelection = () => setSelectedAssets(new Set());
 
   const handleAssetPreview = (asset: DigitalAsset) => {
     setSelectedAssetDetail(asset);
@@ -525,30 +487,29 @@ const DAMPage: FC = () => {
   };
 
   const handleAssetDownload = (assetId: number) => {
-    const asset = sortedAssets.find((a) => a.id === assetId);
+    const asset = sortedAssets.find((a) => a.id === assetId) || allAssets.find((a) => a.id === assetId);
     if (asset) console.log("Downloading:", asset.name);
   };
 
   const handleAssetDelete = (assetId: number) => {
-    if (confirm("Delete this asset?")) {
-      setSelectedAssets((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(assetId);
-        return newSet;
-      });
-    }
+    if (!confirm("Delete this asset?")) return;
+    setSelectedAssets((prev) => {
+      const next = new Set(prev);
+      next.delete(assetId);
+      return next;
+    });
   };
 
   const handleBulkDownload = () => console.log("Downloading", selectedAssets.size, "assets");
   const handleBulkDelete = () => {
-    if (confirm(`Delete ${selectedAssets.size} selected assets?`)) {
-      setSelectedAssets(new Set());
-    }
+    if (!confirm(`Delete ${selectedAssets.size} selected assets?`)) return;
+    setSelectedAssets(new Set());
   };
 
   const handleCreateCollection = (name: string) => {
+    const id = Math.max(0, ...collections.map((c) => c.id)) + 1;
     const newCollection: Collection = {
-      id: Math.max(...collections.map((c) => c.id), 0) + 1,
+      id,
       name,
       assetCount: 0,
       createdDate: new Date().toISOString().split("T")[0],
@@ -558,13 +519,13 @@ const DAMPage: FC = () => {
   };
 
   const handleDeleteCollection = (collectionId: number) => {
+    if (!confirm("Delete collection?")) return;
     setCollections((prev) => prev.filter((c) => c.id !== collectionId));
+    if (viewingCollectionId === collectionId) setViewingCollectionId(null);
   };
 
   const handleRenameCollection = (collectionId: number, newName: string) => {
-    setCollections((prev) =>
-      prev.map((c) => (c.id === collectionId ? { ...c, name: newName } : c))
-    );
+    setCollections((prev) => prev.map((c) => (c.id === collectionId ? { ...c, name: newName } : c)));
   };
 
   const handleViewCollectionAssets = (collection: Collection) => {
@@ -572,48 +533,71 @@ const DAMPage: FC = () => {
     setActiveTab("library");
   };
 
-  const handleTabChange = (tab: ActiveTab) => {
-    setActiveTab(tab);
-    if (tab !== "library") {
-      setViewingCollectionId(null);
+  const handleAddAssetsToCollection = (collectionId: number) => {
+    if (!assetsPendingAdd || assetsPendingAdd.length === 0) {
+      setShowAddToCollectionModal(false);
+      return;
     }
+
+    setCollections((prev) =>
+      prev.map((c) => {
+        if (c.id !== collectionId) return c;
+        const existingSet = new Set<number>(
+          (c.children || [])
+            .map((id) => (typeof id === "number" ? id : Number(id)))
+            .filter((id) => !Number.isNaN(id))
+        );
+        for (const raw of assetsPendingAdd) {
+          const id = typeof raw === "number" ? raw : Number(raw);
+          if (!Number.isNaN(id)) existingSet.add(id);
+        }
+        const newChildren = Array.from(existingSet);
+        return { ...c, children: newChildren, assetCount: newChildren.length };
+      })
+    );
+
+    setAssetsPendingAdd([]);
+    setShowAddToCollectionModal(false);
   };
 
-  const handleToggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
+  const handleRemoveAssetFromCollection = (collectionId: number, assetId: number) => {
+    setCollections((prev) =>
+      prev.map((c) => {
+        if (c.id !== collectionId) return c;
+        const children = (c.children || []).filter((id) => id !== assetId);
+        return { ...c, children, assetCount: children.length };
+      })
+    );
+  };
+
+  const handleUpdateCollectionChildren = (collectionId: number, newChildren: number[]) => {
+    setCollections((prev) => prev.map((c) => (c.id === collectionId ? { ...c, children: newChildren, assetCount: newChildren.length } : c)));
+  };
+
+  const openAddToCollectionForAsset = (asset: DigitalAsset) => {
+    setAssetsPendingAdd([asset.id]);
+    setShowAddToCollectionModal(true);
+  };
+
+  const openAddSelectedToCollection = () => {
+    if (selectedAssets.size === 0) return;
+    setAssetsPendingAdd(Array.from(selectedAssets));
+    setShowAddToCollectionModal(true);
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "library":
-        return (
-          <LibraryTab
-            selectedProduct={selectedProduct}
-            viewingCollectionId={viewingCollectionId}
-            collections={collections}
-            sortedAssets={sortedAssets}
-            selectedAssets={selectedAssets}
-            isDetailModalOpen={isDetailModalOpen}
-            onFilterChange={setSearchFilters}
-            onSelectAll={handleSelectAll}
-            onSelectAsset={handleSelectAsset}
-            onPreviewAsset={handleAssetPreview}
-            onDownloadAsset={handleAssetDownload}
-            onDeleteAsset={handleAssetDelete}
-            onBulkDownload={handleBulkDownload}
-            onBulkDelete={handleBulkDelete}
-            onClearSelection={handleClearSelection}
-          />
-        );
       case "upload":
         return <DAMUpload />;
       case "collections":
         return (
           <DAMCollections
             collections={collections}
+            assets={allAssets}
             onCreateCollection={handleCreateCollection}
             onDeleteCollection={handleDeleteCollection}
             onRenameCollection={handleRenameCollection}
+            onUpdateCollectionChildren={handleUpdateCollectionChildren}
             onSelectCollection={handleViewCollectionAssets}
           />
         );
@@ -623,9 +607,15 @@ const DAMPage: FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 font-sans">
+      <DAMNavbar
+        selectedProduct={selectedProduct}
+        viewingCollectionId={viewingCollectionId}
+        collections={collections}
+      />
+
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar
+        <DAMSidebar
           products={products}
           filteredProducts={filteredProducts}
           selectedProduct={selectedProduct}
@@ -633,20 +623,111 @@ const DAMPage: FC = () => {
           isCollapsed={isSidebarCollapsed}
           onProductSearch={setProductSearch}
           onProductSelect={handleProductSelect}
-          onToggleCollapse={handleToggleSidebar}
+          onToggleCollapse={() => setIsSidebarCollapsed((s) => !s)}
+          activeTab={activeTab}
+          sortedAssets={sortedAssets}
+          selectedAssets={selectedAssets}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            if (tab !== "library") setViewingCollectionId(null);
+          }}
+          onFilterOpen={() => setFiltersPanelOpen(true)}
         />
 
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <TabNav activeTab={activeTab} onTabChange={handleTabChange} />
-          {renderTabContent()}
+          {activeTab === "library" ? (
+            <>
+              <LibraryContent
+                selectedProduct={selectedProduct}
+                viewingCollectionId={viewingCollectionId}
+                collections={collections}
+                sortedAssets={sortedAssets}
+                selectedAssets={selectedAssets}
+                isDetailModalOpen={isDetailModalOpen}
+                viewMode={viewMode}
+                cardSize={cardSize}
+                onViewModeChange={setViewMode}
+                onCardSizeChange={setCardSize}
+                onSelectAll={handleSelectAll}
+                onSelectAsset={handleSelectAsset}
+                onClearSelection={handleClearSelection}
+                onPreviewAsset={handleAssetPreview}
+                onDownloadAsset={handleAssetDownload}
+                onDeleteAsset={handleAssetDelete}
+                onAddToCollection={openAddToCollectionForAsset}
+                onBulkDownload={handleBulkDownload}
+                onBulkDelete={handleBulkDelete}
+                onAddSelectedToCollection={openAddSelectedToCollection}
+                currentCollectionId={viewingCollectionId}
+                onRemoveFromCollection={handleRemoveAssetFromCollection}
+              />
+
+              <DAMSearchFilters
+                assets={currentAssets}
+                onFilterChange={setSearchFilters}
+                isOpen={filtersPanelOpen}
+                onClose={() => setFiltersPanelOpen(false)}
+              />
+            </>
+          ) : (
+            <div className="flex-1 overflow-auto bg-gradient-to-b from-white to-slate-50">
+              {renderTabContent()}
+            </div>
+          )}
         </main>
       </div>
 
-      {/* <FloatingAddButton
-        onClick={() => setActiveTab("upload")}
-        label="Upload Assets"
-        icon={Upload}
-      /> */}
+      {showAddToCollectionModal && (
+        <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 border border-slate-200/50 z-50">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900">Add to collection</h3>
+              <button
+                onClick={() => {
+                  setShowAddToCollectionModal(false);
+                  setAssetsPendingAdd([]);
+                }}
+                className="text-slate-400 hover:text-slate-600 transition-colors duration-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-600 mb-6">
+              Add {assetsPendingAdd.length} asset{assetsPendingAdd.length > 1 ? "s" : ""} to a collection:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto mb-6">
+              {collections.length > 0 ? (
+                collections.map((col) => (
+                  <button
+                    key={col.id}
+                    onClick={() => handleAddAssetsToCollection(col.id)}
+                    className="w-full text-left px-4 py-4 bg-white border border-slate-200/60 rounded-xl hover:border-blue-400 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="font-semibold text-slate-900">{col.name}</div>
+                    <div className="text-xs text-slate-500 mt-1">{formatCount(col.assetCount)} items</div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-sm text-slate-500 col-span-2 py-8 text-center">
+                  No collections yet.
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowAddToCollectionModal(false);
+                setAssetsPendingAdd([]);
+              }}
+              className="w-full px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-lg font-medium transition-colors duration-200"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {isDetailModalOpen && selectedAssetDetail && (
         <DAMAssetDetail

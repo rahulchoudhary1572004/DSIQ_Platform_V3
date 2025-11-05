@@ -204,3 +204,30 @@ export const mockCollections: Collection[] = [
     children: [],
   },
 ];
+export const productCategories: ProductCategory[] = [
+  {
+    id: 1,
+    name: "Electronics",
+    products: [
+      { id: 1, name: "Laptop Pro 15", sku: "LP-001", category: "Electronics" },
+      { id: 2, name: "Smartphone XYZ", sku: "SP-002", category: "Electronics" },
+      { id: 3, name: "Wireless Headphones", sku: "WH-003", category: "Electronics" },
+    ],
+  },
+  {
+    id: 2,
+    name: "Clothing",
+    products: [
+      { id: 4, name: "Cotton T-Shirt", sku: "CT-004", category: "Clothing" },
+      { id: 5, name: "Denim Jeans", sku: "DJ-005", category: "Clothing" },
+    ],
+  },
+  {
+    id: 3,
+    name: "Furniture",
+    products: [
+      { id: 6, name: "Office Chair", sku: "OC-006", category: "Furniture" },
+      { id: 7, name: "Standing Desk", sku: "SD-007", category: "Furniture" },
+    ],
+  },
+];

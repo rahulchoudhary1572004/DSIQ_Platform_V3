@@ -45,3 +45,16 @@ export interface Collection {
   assetCount: number;
   createdDate: string;
 }
+export interface Collection {
+  id: number;
+  name: string;
+  assetCount: number;
+  createdDate: string;
+  children?: number[]; // <-- add this
+}
+export interface ProductCategory {
+  id: number;
+  name: string;
+  products: Product[];
+  isExpanded?: boolean;
+}

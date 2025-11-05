@@ -1,7 +1,17 @@
+// DAMAssetCard.tsx
 import { FC } from "react";
-import { Download, Trash2, Search, File, Archive as ArchiveIcon, FileText as DocumentIcon, Video as VideoIcon, Image as ImageIcon } from "lucide-react";
+import {
+  Download,
+  Trash2,
+  Search,
+  File,
+  Archive as ArchiveIcon,
+  FileText as DocumentIcon,
+  Video as VideoIcon,
+  Image as ImageIcon,
+  Folder,
+} from "lucide-react";
 import { DigitalAsset } from "../../types/dam.types";
-import { digitalAssets } from "./dam.data";
 
 type AssetType = "image" | "video" | "document" | "archive";
 
@@ -12,6 +22,7 @@ interface DAMAssetCardProps {
   onPreview: (asset: DigitalAsset) => void;
   onDownload: (assetId: number) => void;
   onDelete: (assetId: number) => void;
+  onAddToCollection?: (asset: DigitalAsset) => void;
   isDisabled?: boolean;
 }
 
@@ -37,15 +48,16 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
   onPreview,
   onDownload,
   onDelete,
+  onAddToCollection,
   isDisabled = false,
 }) => {
-  const { icon, style } = getAssetTypeStyle(asset.type as AssetType);
+  const assetType = (asset.type || "document") as AssetType;
+  const { icon, style } = getAssetTypeStyle(assetType);
 
-  // Get asset data from dam.data.ts
+  // Safe fallbacks
   const assetName = asset.name || "Untitled";
-  const assetId = asset.id || 0;
-  const assetUrl = asset.thumbnail || "https://placehold.co/400x300/F0F0F0/CCC?text=No+Image";
-  const assetType = asset.type || "document";
+  const assetId = asset.id ?? 0;
+  const assetUrl = asset.thumbnail || asset.url || "https://placehold.co/400x300/F0F0F0/CCC?text=No+Image";
   const assetFormat = asset.format || "???";
   const assetSize = asset.size || "0 MB";
   const assetUploadedBy = asset.uploadedBy || "Unknown";
@@ -119,6 +131,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
         >
           <Search className="h-5 w-5" />
         </button>
+
         <button
           onClick={() => onDownload(assetId)}
           className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
@@ -126,6 +139,16 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
         >
           <Download className="h-5 w-5" />
         </button>
+
+        {/* Add to collection */}
+        <button
+          onClick={() => onAddToCollection && onAddToCollection(asset)}
+          className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+          title="Add to collection"
+        >
+          <Folder className="h-5 w-5" />
+        </button>
+
         <button
           onClick={() => onDelete(assetId)}
           className="p-3 bg-white/20 text-white rounded-full hover:bg-red-500/50 transition-all hover:scale-105 active:scale-95"
@@ -154,10 +177,12 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
         >
           {assetName}
         </h3>
+
         <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
           <span className="font-medium text-slate-600 uppercase">{assetFormat}</span>
           <span>{assetSize}</span>
         </div>
+
         <div className="flex items-center justify-between text-xs text-slate-400">
           <span className="truncate" title={`Uploaded by ${assetUploadedBy}`}>
             {assetUploadedBy}
