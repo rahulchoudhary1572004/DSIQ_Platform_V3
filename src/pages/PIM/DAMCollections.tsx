@@ -1,12 +1,12 @@
+// components/DAM/DAMCollections.tsx - Figma Design + Samsung Animations + Apple Minimal
 import { FC, FormEvent, useMemo, useState } from "react";
-import { Folder, Plus, ChevronLeft, Trash2 } from "lucide-react";
+import { Folder, Plus, ChevronLeft, Trash2, Grid3x3 } from "lucide-react";
 import { Collection, DigitalAsset } from "../../types/dam.types";
 
 interface DAMCollectionsProps {
   collections: Collection[];
-  // accept the prop under either name: `assets` (what DAMPage passes) or `allAssets`
   assets?: DigitalAsset[];
-  allAssets?: DigitalAsset[]; // keep for compatibility if used elsewhere
+  allAssets?: DigitalAsset[];
   onCreateCollection: (name: string, parentId?: number) => void;
   onDeleteCollection: (collectionId: number) => void;
   onRenameCollection: (collectionId: number, newName: string) => void;
@@ -26,19 +26,15 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
   const [newCollectionName, setNewCollectionName] = useState("");
   const [viewingCollectionId, setViewingCollectionId] = useState<number | null>(null);
 
-  // use whichever prop is supplied; prefer `assets` (what DAMPage passes), fallback to `allAssets`
   const assetsSource = useMemo<DigitalAsset[]>(() => {
     return assets ?? allAssets ?? [];
   }, [assets, allAssets]);
 
-  // Build a numeric-id -> asset map so numeric/string id mismatches don't hide assets
   const assetsById = useMemo(() => {
     const map = new Map<number, DigitalAsset>();
     for (const a of assetsSource || []) {
       const key = typeof a.id === "number" ? a.id : Number(a.id);
-      if (!Number.isNaN(key)) {
-        map.set(key, a);
-      }
+      if (!Number.isNaN(key)) map.set(key, a);
     }
     return map;
   }, [assetsSource]);
@@ -57,17 +53,14 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
 
   const collectionToShow = collections.find((c) => c.id === viewingCollectionId) || null;
 
-  // Map the collection children (which might be numbers or numeric-strings) to actual asset objects
   const currentCollectionAssets = useMemo(() => {
     if (!viewingCollectionId) return [];
     const col = collections.find((c) => c.id === viewingCollectionId);
-    if (!col || !col.children || col.children.length === 0) return [];
-
+    if (!col?.children?.length) return [];
     return col.children
       .map((rawId) => {
         const id = typeof rawId === "number" ? rawId : Number(rawId);
-        if (Number.isNaN(id)) return undefined;
-        return assetsById.get(id);
+        return !Number.isNaN(id) ? assetsById.get(id) : undefined;
       })
       .filter((a): a is DigitalAsset => a !== undefined);
   }, [viewingCollectionId, collections, assetsById]);
@@ -75,7 +68,6 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
   const handleRemoveAsset = (assetId: number) => {
     if (!collectionToShow) return;
     if (confirm("Remove this asset from collection?")) {
-      // ensure we filter comparing numeric ids
       const updatedChildren = (collectionToShow.children ?? []).filter((raw) => {
         const numeric = typeof raw === "number" ? raw : Number(raw);
         return numeric !== assetId;
@@ -85,22 +77,22 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-auto bg-slate-50 p-8">
+    <div className="flex-1 overflow-auto bg-white p-10">
       {/* HEADER */}
-      <header className="mb-8 flex items-center justify-between">
+      <header className="mb-10 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          <h1 className="text-3xl font-light text-gray-900 mb-2">
             {viewingCollectionId ? collectionToShow?.name ?? "Collection" : "Collections"}
           </h1>
-          <p className="text-slate-600 text-sm">
-            {viewingCollectionId ? "Viewing assets in this collection" : "Organize your assets into groups."}
+          <p className="text-gray-600 text-xs font-medium uppercase tracking-wide">
+            {viewingCollectionId ? `${currentCollectionAssets.length} items` : `${collections.length} collections`}
           </p>
         </div>
 
         {viewingCollectionId ? (
           <button
             onClick={closeCollectionView}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-gray-700 rounded-lg hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 font-medium text-sm"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
@@ -108,7 +100,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
         ) : (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-300 font-semibold text-sm shadow-sm"
           >
             <Plus className="h-4 w-4" />
             New Collection
@@ -120,27 +112,45 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
       {!viewingCollectionId && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {collections.length === 0 && (
-            <div className="text-slate-500 text-center py-20 col-span-full">No collections created yet.</div>
+            <div className="col-span-full text-center py-20">
+              <Grid3x3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 font-light">No collections created yet.</p>
+            </div>
           )}
 
-          {collections.map((collection) => (
-            <div
+          {collections.map((collection, idx) => (
+            <button
               key={collection.id}
-              className="bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               onClick={() => openCollection(collection)}
+              className="group bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all duration-500 text-left cursor-pointer overflow-hidden"
+              style={{
+                animation: `slideUp 0.6s ease-out ${idx * 0.08}s both`
+              }}
             >
-              <div className="p-5 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Folder className="h-7 w-7 text-blue-600" />
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900 mb-1">{collection.name}</h3>
-                    <p className="text-sm text-slate-500">
-                      {collection.assetCount ?? collection.children?.length ?? 0} items
-                    </p>
-                  </div>
+              <style>{`
+                @keyframes slideUp {
+                  from {
+                    opacity: 0;
+                    transform: translateY(16px);
+                  }
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+              `}</style>
+              
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center group-hover:bg-gray-300 group-hover:scale-110 transition-all duration-500 shadow-sm">
+                  <Folder className="h-6 w-6 text-gray-600" />
                 </div>
               </div>
-            </div>
+              
+              <h3 className="text-base font-medium text-gray-900 mb-1">{collection.name}</h3>
+              <p className="text-xs text-gray-600 font-light">
+                {collection.assetCount ?? collection.children?.length ?? 0} items
+              </p>
+            </button>
           ))}
         </div>
       )}
@@ -151,46 +161,50 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
           {/* ASSETS GRID */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
             {currentCollectionAssets.length === 0 ? (
-              <div className="col-span-full bg-white border border-slate-200 rounded-lg shadow-sm p-10 text-center text-slate-500">
-                No assets in this collection.
+              <div className="col-span-full text-center py-20 bg-gray-50 rounded-lg border border-gray-200">
+                <Grid3x3 className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-600 text-sm font-light">No assets in this collection.</p>
               </div>
             ) : (
-              currentCollectionAssets.map((asset) => (
+              currentCollectionAssets.map((asset, idx) => (
                 <div
                   key={asset.id}
-                  className="relative bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-all"
+                  className="group relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-sm transition-all duration-500 aspect-[4/3] cursor-pointer transform"
+                  style={{
+                    animation: `fadeInScale 0.5s ease-out ${idx * 0.05}s both`
+                  }}
                 >
-                  {/* Smaller thumbnail */}
-                  <div className="aspect-[4/3] bg-slate-100 overflow-hidden">
-                    <img
-                      src={asset.thumbnail || asset.url || "https://placehold.co/400x300/F0F0F0/CCC?text=No+Image"}
-                      alt={asset.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) =>
-                        (e.currentTarget.src = "https://placehold.co/400x300/F0F0F0/CCC?text=Image+Error")
+                  <style>{`
+                    @keyframes fadeInScale {
+                      from {
+                        opacity: 0;
+                        transform: scale(0.92);
                       }
-                    />
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-2">
-                    <div className="text-xs font-medium text-slate-900 truncate">{asset.name}</div>
-                    <div className="text-[11px] text-slate-500 flex items-center justify-between mt-1.5">
-                      <span className="uppercase">{asset.format || "file"}</span>
-                      <span>{asset.size || "--"}</span>
-                    </div>
-                  </div>
-
-                  {/* Remove Button */}
+                      to {
+                        opacity: 1;
+                        transform: scale(1);
+                      }
+                    }
+                  `}</style>
+                  
+                  <img
+                    src={asset.thumbnail || asset.url || "https://placehold.co/400x300/F3F4F6/999?text=No+Image"}
+                    alt={asset.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-600"
+                    onError={(e) =>
+                      (e.currentTarget.src = "https://placehold.co/400x300/F3F4F6/999?text=Image+Error")
+                    }
+                  />
+                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemoveAsset(asset.id);
                     }}
                     title="Remove from collection"
-                    className="absolute top-2 right-2 bg-white/90 hover:bg-red-500 hover:text-white text-red-500 rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all duration-400 flex items-center justify-center opacity-0 hover:opacity-100"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-5 w-5 text-white transition-all duration-300" />
                   </button>
                 </div>
               ))
@@ -201,11 +215,43 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
 
       {/* CREATE COLLECTION MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center" onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Create New Collection</h3>
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-400"
+          onClick={() => setShowCreateModal(false)}
+          style={{
+            animation: `fadeIn 0.4s ease-out`
+          }}
+        >
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          `}</style>
+          
+          <div
+            className="bg-white rounded-xl p-8 w-full max-w-md shadow-2xl transition-all duration-500 transform"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              animation: `slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)`
+            }}
+          >
+            <style>{`
+              @keyframes slideDown {
+                from {
+                  opacity: 0;
+                  transform: translateY(-24px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+            `}</style>
+            
+            <h3 className="text-lg font-light text-gray-900 mb-6">Create New Collection</h3>
             <form onSubmit={handleCreate}>
-              <label htmlFor="collectionName" className="text-sm font-medium text-slate-700 mb-1 block">
+              <label htmlFor="collectionName" className="text-sm font-medium text-gray-700 mb-2 block">
                 Collection Name
               </label>
               <input
@@ -213,14 +259,22 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                 id="collectionName"
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-gray-100 transition-all duration-300 text-sm font-light"
                 autoFocus
+                placeholder="Collection name..."
               />
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200">
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-300 font-light text-sm"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-300 font-medium text-sm shadow-sm"
+                >
                   Create
                 </button>
               </div>

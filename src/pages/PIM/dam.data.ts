@@ -1,3 +1,4 @@
+// components/DAM/dam.data.tsx - FIXED with all exports
 import { Product, DigitalAsset, Collection } from "../../types/dam.types";
 
 // Products Array
@@ -165,69 +166,171 @@ export const digitalAssets: Record<number, DigitalAsset[]> = {
         "https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=400&h=300&fit=crop",
     },
   ],
+  3: [
+    {
+      id: 301,
+      name: "speaker-product.jpg",
+      type: "image",
+      size: "1.9 MB",
+      sizeInBytes: 1990656,
+      dimensions: "1920x1080",
+      format: "JPEG",
+      uploadDate: "2024-01-25",
+      uploadedBy: "Emma Wilson",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1589003077984-894e133814c9?w=400&h=300&fit=crop",
+    },
+    {
+      id: 302,
+      name: "speaker-demo.mp4",
+      type: "video",
+      size: "18.3 MB",
+      sizeInBytes: 19189227,
+      duration: "1:15",
+      format: "MP4",
+      uploadDate: "2024-01-24",
+      uploadedBy: "Chris Lee",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=300&fit=crop",
+    },
+    {
+      id: 303,
+      name: "speaker-specs.pdf",
+      type: "document",
+      size: "0.8 MB",
+      sizeInBytes: 838860,
+      pages: 2,
+      format: "PDF",
+      uploadDate: "2024-01-23",
+      uploadedBy: "Rachel Green",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail: null,
+    },
+    {
+      id: 304,
+      name: "speaker-sound-test.mp4",
+      type: "video",
+      size: "25.7 MB",
+      sizeInBytes: 26957824,
+      duration: "2:45",
+      format: "MP4",
+      uploadDate: "2024-01-22",
+      uploadedBy: "Mark Brown",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=300&fit=crop",
+    },
+    {
+      id: 305,
+      name: "speaker-packaging.jpg",
+      type: "image",
+      size: "2.3 MB",
+      sizeInBytes: 2411724,
+      dimensions: "1800x1200",
+      format: "JPEG",
+      uploadDate: "2024-01-21",
+      uploadedBy: "Nina Patel",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=400&h=300&fit=crop",
+    },
+  ],
+  4: [
+    {
+      id: 401,
+      name: "keyboard-hero.jpg",
+      type: "image",
+      size: "3.4 MB",
+      sizeInBytes: 3565158,
+      dimensions: "2560x1440",
+      format: "JPEG",
+      uploadDate: "2024-01-28",
+      uploadedBy: "Kevin Wu",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1587829191301-41f1b0bcc057?w=400&h=300&fit=crop",
+    },
+    {
+      id: 402,
+      name: "keyboard-features.mp4",
+      type: "video",
+      size: "31.2 MB",
+      sizeInBytes: 32726425,
+      duration: "2:30",
+      format: "MP4",
+      uploadDate: "2024-01-27",
+      uploadedBy: "Sophie Turner",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1587829191351-b8528f96c2a3?w=400&h=300&fit=crop",
+    },
+  ],
+  5: [
+    {
+      id: 501,
+      name: "mouse-product.jpg",
+      type: "image",
+      size: "1.7 MB",
+      sizeInBytes: 1782579,
+      dimensions: "1920x1080",
+      format: "JPEG",
+      uploadDate: "2024-02-01",
+      uploadedBy: "Oliver Hayes",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&h=300&fit=crop",
+    },
+    {
+      id: 502,
+      name: "mouse-demo.mp4",
+      type: "video",
+      size: "16.8 MB",
+      sizeInBytes: 17612389,
+      duration: "1:00",
+      format: "MP4",
+      uploadDate: "2024-01-31",
+      uploadedBy: "Julia Mitchell",
+      url: "/placeholder.svg?height=300&width=300",
+      thumbnail:
+        "https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&h=300&fit=crop",
+    },
+  ],
 };
 
-// Mock Collections - CORRECTED
-export const mockCollections: Collection[] = [
-  {
-    id: 1,
-    name: "Marketing Assets",
-    assetCount: 24,
-    createdDate: "2024-01-10",
-    children: [
-      {
-        id: 2,
-        name: "Product Photos",
-        assetCount: 12,
-        createdDate: "2024-01-11",
-      },
-      {
-        id: 3,
-        name: "Promotional Videos",
-        assetCount: 12,
-        createdDate: "2024-01-12",
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "Social Media",
-    assetCount: 18,
-    createdDate: "2024-01-15",
-    children: [],
-  },
-  {
-    id: 5,
-    name: "Archived Assets",
-    assetCount: 8,
-    createdDate: "2024-01-16",
-    children: [],
-  },
-];
+
+// Product Categories (if needed)
+interface ProductCategory {
+  id: number;
+  name: string;
+  products: Product[];
+}
+
 export const productCategories: ProductCategory[] = [
   {
     id: 1,
     name: "Electronics",
-    products: [
-      { id: 1, name: "Laptop Pro 15", sku: "LP-001", category: "Electronics" },
-      { id: 2, name: "Smartphone XYZ", sku: "SP-002", category: "Electronics" },
-      { id: 3, name: "Wireless Headphones", sku: "WH-003", category: "Electronics" },
-    ],
+    products: products.filter((p) => p.category === "Electronics"),
   },
   {
     id: 2,
-    name: "Clothing",
-    products: [
-      { id: 4, name: "Cotton T-Shirt", sku: "CT-004", category: "Clothing" },
-      { id: 5, name: "Denim Jeans", sku: "DJ-005", category: "Clothing" },
-    ],
+    name: "Wearables",
+    products: products.filter((p) => p.category === "Wearables"),
   },
   {
     id: 3,
-    name: "Furniture",
-    products: [
-      { id: 6, name: "Office Chair", sku: "OC-006", category: "Furniture" },
-      { id: 7, name: "Standing Desk", sku: "SD-007", category: "Furniture" },
-    ],
+    name: "Audio",
+    products: products.filter((p) => p.category === "Audio"),
+  },
+  {
+    id: 4,
+    name: "Gaming",
+    products: products.filter((p) => p.category === "Gaming"),
+  },
+  {
+    id: 5,
+    name: "Accessories",
+    products: products.filter((p) => p.category === "Accessories"),
   },
 ];

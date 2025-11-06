@@ -1,6 +1,6 @@
-// DAMSearchFilters.tsx
+// components/DAM/DAMSearchFilters_Design5.tsx - AI Autocomplete Style
 import { FC, useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { X, Search, Zap, Command } from "lucide-react";
 import { DigitalAsset, SearchFilters } from "../../types/dam.types";
 
 type AssetType = "image" | "video" | "document" | "archive";
@@ -14,83 +14,52 @@ interface DAMSearchFiltersState extends SearchFilters {
 }
 
 interface DAMSearchFiltersProps {
-  assets: DigitalAsset[]; // the filtered assets from parent (might be empty)
+  assets: DigitalAsset[];
   onFilterChange: (filters: DAMSearchFiltersState) => void;
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface CollapsibleSectionProps {
-  title: string;
-  count?: number;
-  isExpanded: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}
-
-const CollapsibleSection: FC<CollapsibleSectionProps> = ({ title, count, isExpanded, onToggle, children }) => (
-  <div className="border-b border-slate-200">
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
-    >
-      <div className="flex items-center gap-2">
-        <span className="font-semibold text-sm text-slate-900">{title}</span>
-        {count !== undefined && count > 0 && (
-          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-            {count}
-          </span>
-        )}
-      </div>
-      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-    </button>
-    {isExpanded && <div className="px-4 py-3 bg-slate-50 space-y-2 border-t border-slate-200">{children}</div>}
-  </div>
-);
-
 const DAMSearchFilters: FC<DAMSearchFiltersProps> = ({ assets, onFilterChange, isOpen, onClose }) => {
-  // filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [assetType, setAssetType] = useState<AssetType | "all">("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [fileSize, setFileSize] = useState<"small" | "medium" | "large" | "all">("all");
   const [uploadedBy, setUploadedBy] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [fileSize, setFileSize] = useState<"small" | "medium" | "large" | "all">("all");
-  const [views, setViews] = useState<"popular" | "recent" | "all">("all");
   const [hasDownloads, setHasDownloads] = useState(false);
+  const [views, setViews] = useState<"popular" | "recent" | "all">("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  const [expandedSections, setExpandedSections] = useState({
-    search: true,
-    type: true,
-    date: false,
-    member: false,
-    tags: false,
-    size: false,
-    stats: false,
-  });
-
-  // Keep last non-empty assets so we still show uploader/tag lists when current `assets` is empty
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const lastNonEmptyAssetsRef = useRef<DigitalAsset[] | null>(null);
+
   useEffect(() => {
     if (assets && assets.length > 0) lastNonEmptyAssetsRef.current = assets;
   }, [assets]);
 
   const dataSource = useMemo(() => {
-    // prefer current assets if non-empty, otherwise fallback to last-known non-empty assets
     return assets && assets.length > 0 ? assets : lastNonEmptyAssetsRef.current ?? [];
   }, [assets]);
 
-  // derive unique uploaders/tags from the dataSource (so they persist when `assets` is empty)
-  const uniqueUploaders = useMemo(() => Array.from(new Set(dataSource.map((a) => a.uploadedBy))).filter(Boolean), [dataSource]);
-  const uniqueTags = useMemo(() => Array.from(new Set(dataSource.flatMap((a) => a.tags || []))).filter(Boolean), [dataSource]);
+  const uniqueUploaders = useMemo(
+    () => Array.from(new Set(dataSource.map((a) => a.uploadedBy))).filter(Boolean),
+    [dataSource]
+  );
+  const uniqueTags = useMemo(
+    () => Array.from(new Set(dataSource.flatMap((a) => a.tags || []))).filter(Boolean),
+    [dataSource]
+  );
 
-  const toggleSection = useCallback((section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  }, []);
+  const suggestions = [
+    { icon: "📦", label: "Images only", action: () => setAssetType("image") },
+    { icon: "🎬", label: "Videos only", action: () => setAssetType("video") },
+    { icon: "⭐", label: "Favorites", action: () => setIsFavorite(true) },
+    { icon: "📥", label: "Downloaded only", action: () => setHasDownloads(true) },
+    { icon: "💾", label: "Large files", action: () => setFileSize("large") },
+  ];
 
-  // Inform parent whenever filters change
   useEffect(() => {
     const filters: DAMSearchFiltersState = {
       searchTerm,
@@ -131,230 +100,167 @@ const DAMSearchFilters: FC<DAMSearchFiltersProps> = ({ assets, onFilterChange, i
     views !== "all" ||
     hasDownloads;
 
-  const countActiveFilters = useMemo(() => {
-    return (
-      (searchTerm ? 1 : 0) +
-      (assetType !== "all" ? 1 : 0) +
-      (startDate ? 1 : 0) +
-      (endDate ? 1 : 0) +
-      (uploadedBy ? 1 : 0) +
-      tags.length +
-      (isFavorite ? 1 : 0) +
-      (fileSize !== "all" ? 1 : 0) +
-      (views !== "all" ? 1 : 0) +
-      (hasDownloads ? 1 : 0)
-    );
-  }, [searchTerm, assetType, startDate, endDate, uploadedBy, tags, isFavorite, fileSize, views, hasDownloads]);
-
   return (
     <>
-      {/* Backdrop */}
-      {isOpen && <div onClick={onClose} className="fixed inset-0 bg-black/20 z-30 pointer-events-auto" />}
+      {isOpen && <div onClick={onClose} className="fixed inset-0 bg-black/20 z-30" />}
 
-      {/* Right sidebar */}
-      <aside
-        className={`fixed top-0 right-0 h-screen w-96 bg-white border-l border-slate-200 shadow-2xl z-40 transform transition-transform duration-300 flex flex-col ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } overflow-hidden`}
+      <div
+        className={`fixed inset-x-0 top-20 mx-auto z-40 w-full max-w-3xl transition-all duration-300 ${
+          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+        }`}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="px-4 py-4 border-b border-slate-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="font-bold text-slate-900">Filters</h2>
-              {hasFilters && (
-                <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
-                  {countActiveFilters} Active
-                </span>
-              )}
-            </div>
-            <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
-              <X className="h-5 w-5 text-slate-600" />
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* 1. SEARCH */}
-          <CollapsibleSection title="Search" isExpanded={expandedSections.search} onToggle={() => toggleSection("search")}>
+        {/* Main Input */}
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5">
+          <div className="flex items-center gap-4">
+            <Search className="h-5 w-5 text-gray-400" />
             <input
+              autoFocus
               type="text"
-              placeholder="Asset name..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Search by name, type, or filter..."
+              className="flex-1 outline-none text-lg bg-transparent text-gray-900 placeholder-gray-400"
             />
-            {/* hint when there are no assets */}
-            {assets.length === 0 && <p className="text-xs text-slate-500 mt-2">No results — try removing filters.</p>}
-          </CollapsibleSection>
-
-          {/* 2. ASSET TYPE */}
-          <CollapsibleSection title="Asset Type" count={assetType !== "all" ? 1 : 0} isExpanded={expandedSections.type} onToggle={() => toggleSection("type")}>
-            <div className="space-y-1.5">
-              {[
-                { value: "all", label: "All Types" },
-                { value: "image", label: "Images" },
-                { value: "video", label: "Videos" },
-                { value: "document", label: "Documents" },
-                { value: "archive", label: "Archives" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setAssetType(opt.value as AssetType | "all")}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    assetType === opt.value ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-900 hover:border-blue-300"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </CollapsibleSection>
-
-          {/* 3. DATE RANGE */}
-          <CollapsibleSection title="Upload Date" count={startDate || endDate ? 1 : 0} isExpanded={expandedSections.date} onToggle={() => toggleSection("date")}>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">From</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">To</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </CollapsibleSection>
-
-          {/* 4. UPLOADER */}
-          <CollapsibleSection title="Uploaded By" count={uploadedBy ? 1 : 0} isExpanded={expandedSections.member} onToggle={() => toggleSection("member")}>
-            <div className="space-y-1.5 max-h-40 overflow-y-auto">
-              <button
-                onClick={() => setUploadedBy("")}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  uploadedBy === "" ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-900 hover:border-blue-300"
-                }`}
-              >
-                All Members
-              </button>
-
-              {uniqueUploaders.length === 0 ? (
-                <p className="text-xs text-slate-500 px-3 py-2">No uploaders available</p>
-              ) : (
-                uniqueUploaders.map((uploader) => (
-                  <button
-                    key={uploader}
-                    onClick={() => setUploadedBy(uploader)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      uploadedBy === uploader ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-900 hover:border-blue-300"
-                    }`}
-                  >
-                    {uploader}
-                  </button>
-                ))
-              )}
-            </div>
-          </CollapsibleSection>
-
-          {/* 5. TAGS */}
-          <CollapsibleSection title="Tags" count={tags.length} isExpanded={expandedSections.tags} onToggle={() => toggleSection("tags")}>
-            <div className="flex flex-wrap gap-2">
-              {uniqueTags.length === 0 ? (
-                <p className="text-xs text-slate-500">No tags available</p>
-              ) : (
-                uniqueTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => setTags(tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag])}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                      tags.includes(tag) ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700 border border-slate-300 hover:border-blue-300"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))
-              )}
-            </div>
-          </CollapsibleSection>
-
-          {/* 6. FILE SIZE */}
-          <CollapsibleSection title="File Size" count={fileSize !== "all" ? 1 : 0} isExpanded={expandedSections.size} onToggle={() => toggleSection("size")}>
-            <div className="space-y-1.5">
-              {[
-                { value: "all", label: "All Sizes" },
-                { value: "small", label: "Small (< 5MB)" },
-                { value: "medium", label: "Medium (5-50MB)" },
-                { value: "large", label: "Large (> 50MB)" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setFileSize(opt.value as "small" | "medium" | "large" | "all")}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    fileSize === opt.value ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-900 hover:border-blue-300"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </CollapsibleSection>
-
-          {/* 7. STATISTICS */}
-          <CollapsibleSection title="Statistics" count={isFavorite || views !== "all" || hasDownloads ? 1 : 0} isExpanded={expandedSections.stats} onToggle={() => toggleSection("stats")}>
-            <div className="space-y-2.5">
-              <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <input type="checkbox" checked={isFavorite} onChange={(e) => setIsFavorite(e.target.checked)} className="w-4 h-4 rounded accent-blue-600" />
-                <span className="text-sm font-medium text-slate-900">Favorites only</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <input type="checkbox" checked={hasDownloads} onChange={(e) => setHasDownloads(e.target.checked)} className="w-4 h-4 rounded accent-blue-600" />
-                <span className="text-sm font-medium text-slate-900">Downloaded</span>
-              </label>
-
-              <div>
-                <span className="text-xs font-semibold text-slate-600 block mb-1.5">Sort by:</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: "all", label: "All" },
-                    { value: "popular", label: "Popular" },
-                    { value: "recent", label: "Recent" },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setViews(opt.value as "popular" | "recent" | "all")}
-                      className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        views === opt.value ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700 border border-slate-300 hover:border-blue-300"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CollapsibleSection>
-        </div>
-
-        {/* Footer */}
-        {hasFilters && (
-          <div className="px-4 py-3 border-t border-slate-200 bg-slate-50 flex-shrink-0">
-            <button onClick={handleClearFilters} className="w-full px-3 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-semibold transition-all">
-              Clear All Filters
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-5 w-5" />
             </button>
           </div>
-        )}
-      </aside>
+
+          {/* Quick Suggestions */}
+          {showSuggestions && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 mb-3 uppercase">Quick Filters</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {suggestions.map((sug, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      sug.action();
+                      setShowSuggestions(false);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-sm font-medium text-gray-900 group"
+                  >
+                    <span>{sug.icon}</span>
+                    {sug.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Advanced Options */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-xs font-semibold text-gray-600 mb-3 uppercase">Filters</p>
+
+                {/* Type Selector */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">TYPE</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: "all", label: "All" },
+                      { value: "image", label: "Image" },
+                      { value: "video", label: "Video" },
+                      { value: "document", label: "Document" },
+                      { value: "archive", label: "Archive" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setAssetType(opt.value as AssetType | "all")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          assetType === opt.value
+                            ? "bg-gray-900 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Size Selector */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">SIZE</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: "all", label: "All" },
+                      { value: "small", label: "Small" },
+                      { value: "medium", label: "Medium" },
+                      { value: "large", label: "Large" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setFileSize(opt.value as "small" | "medium" | "large" | "all")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          fileSize === opt.value
+                            ? "bg-gray-900 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {uniqueTags.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">TAGS</p>
+                    <div className="flex flex-wrap gap-2">
+                      {uniqueTags.slice(0, 8).map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() =>
+                            setTags(tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag])
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            tags.includes(tag)
+                              ? "bg-gray-900 text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              {hasFilters && (
+                <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end">
+                  <button
+                    onClick={handleClearFilters}
+                    className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Keyboard Hint */}
+        <div className="mt-3 flex justify-center">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Command className="h-3 w-3" />
+            <span>Press ESC to close</span>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </>
   );
 };

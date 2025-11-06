@@ -1,9 +1,10 @@
+// types/dam.types.ts - COMPLETE & CLEAN
 export interface DigitalAsset {
   id: number;
   name: string;
   type: "image" | "video" | "document" | "audio" | "archive";
-  size: string;
-  sizeInBytes: number;
+  size: string; // Display size like "2.5 MB"
+  sizeInBytes: number; // Actual bytes
   format: string;
   uploadDate: string;
   uploadedBy: string;
@@ -27,6 +28,17 @@ export interface Product {
   thumbnail: string;
 }
 
+export interface Collection {
+  id: number;
+  name: string;
+  parentId: number | null; // For hierarchical folders
+  children?: number[]; // Asset IDs in this folder
+  assetCount?: number;
+  createdDate: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface SearchFilters {
   searchTerm: string;
   assetType: "all" | "image" | "video" | "document" | "audio" | "archive";
@@ -37,24 +49,30 @@ export interface SearchFilters {
   uploader: string;
 }
 
-export interface Collection {
-  children: any;
-  children: boolean;
-  id: number;
-  name: string;
-  assetCount: number;
-  createdDate: string;
-}
-export interface Collection {
-  id: number;
-  name: string;
-  assetCount: number;
-  createdDate: string;
-  children?: number[]; // <-- add this
-}
 export interface ProductCategory {
   id: number;
   name: string;
   products: Product[];
   isExpanded?: boolean;
+}
+
+export interface FileMetadata {
+  name: string;
+  description: string;
+  tags: string[];
+  uploadedBy: string;
+}
+
+export interface FileWithMetadata extends FileMetadata {
+  file: File;
+  status: "pending" | "editing" | "complete" | "uploading" | "error";
+  progress: number;
+  id: string;
+}
+
+export interface UploadState {
+  files: FileWithMetadata[];
+  selectedIdx: number | null;
+  isLoading: boolean;
+  error: string | null;
 }
