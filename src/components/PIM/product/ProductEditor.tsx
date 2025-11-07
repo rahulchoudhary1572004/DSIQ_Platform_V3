@@ -112,6 +112,8 @@ const ProductEditor = ({
                 onChange={(e) => updateProductData(attribute.id, e.target.checked)}
                 className="sr-only peer"
                 disabled={!isEditMode}
+                aria-label={attribute.name}
+                title={attribute.name}
               />
               <div className="w-full h-full bg-gray-200 rounded-full peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors duration-200"></div>
               <div className="absolute left-[1.6px] top-[1.6px] w-4 h-4 bg-white border border-gray-300 rounded-full transition-transform duration-200 peer-checked:translate-x-4"></div>
@@ -126,6 +128,8 @@ const ProductEditor = ({
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={baseClasses}
             disabled={!isEditMode}
+            aria-label={attribute.name}
+            title={attribute.name}
           >
             <option value="">Select an option</option>
             {(picklistOptions[attribute.id] || []).map((option) => (
@@ -144,6 +148,8 @@ const ProductEditor = ({
             className={baseClasses}
             step="any"
             disabled={!isEditMode}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
       case "Date":
@@ -154,6 +160,8 @@ const ProductEditor = ({
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={baseClasses}
             disabled={!isEditMode}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
       case "Text":
@@ -164,6 +172,8 @@ const ProductEditor = ({
             className={`${baseClasses} h-20 resize-none`}
             rows={3}
             disabled={!isEditMode}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
       case "Rich Text":
@@ -185,6 +195,8 @@ const ProductEditor = ({
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={baseClasses}
             disabled={!isEditMode}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
     }
@@ -257,13 +269,17 @@ const ProductEditor = ({
                       onChange={(e) => setTempTitle(e.target.value)}
                       className="text-2xl font-bold border-2 border-blue-500 px-3 py-2 rounded-md focus:outline-none"
                       autoFocus
+                      aria-label="Product title"
+                      title="Product title"
                     />
                     <button
                       onClick={() => {
                         updateProductData(1, tempTitle)
                         setEditingTitle(false)
                       }}
-                      className="h-8 w-8 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      className="flex items-center justify-center h-8 w-8 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      aria-label="Save title"
+                      title="Save title"
                     >
                       <Check className="w-4 h-4" />
                     </button>
@@ -272,7 +288,9 @@ const ProductEditor = ({
                         setTempTitle(productData[1]?.toString() || "")
                         setEditingTitle(false)
                       }}
-                      className="h-8 w-8 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-center h-8 w-8 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      aria-label="Cancel title edit"
+                      title="Cancel title edit"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -288,7 +306,9 @@ const ProductEditor = ({
                           setEditingTitle(true)
                           setTempTitle(productData[1]?.toString() || "")
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md"
+                        className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md"
+                        aria-label="Edit product title"
+                        title="Edit product title"
                       >
                         <Edit className="w-3 h-3" />
                       </button>
@@ -317,13 +337,17 @@ const ProductEditor = ({
                           }
                         }}
                         autoFocus
+                        aria-label="Product SKU"
+                        title="Product SKU"
                       />
                       <button
                         onClick={() => {
                           updateProductData(2, tempSku)
                           setEditingSku(false)
                         }}
-                        className="h-6 w-6 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        className="flex items-center justify-center h-6 w-6 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        aria-label="Save SKU"
+                        title="Save SKU"
                       >
                         <Check className="w-3 h-3" />
                       </button>
@@ -332,7 +356,9 @@ const ProductEditor = ({
                           setTempSku(productData[2]?.toString() || "")
                           setEditingSku(false)
                         }}
-                        className="h-6 w-6 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-center h-6 w-6 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        aria-label="Cancel SKU edit"
+                        title="Cancel SKU edit"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -343,12 +369,14 @@ const ProductEditor = ({
                       {isEditMode && (
                         <button
                           onClick={() => {
-                            setEditingSku(true)
-                            setTempSku(productData[2]?.toString() || "")
+                            setEditingTitle(true)
+                            setTempTitle(productData[1]?.toString() || "")
                           }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 p-0 hover:bg-gray-100 rounded-md"
+                          className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md"
+                          aria-label="Edit product title"
+                          title="Edit product title"
                         >
-                          <Edit className="w-2.5 h-2.5" />
+                          <Edit className="w-3 h-3" />
                         </button>
                       )}
                     </div>

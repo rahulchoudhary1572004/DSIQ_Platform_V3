@@ -19,113 +19,28 @@ import {
   Settings,
   EyeOff,
   Columns,
+  Image as ImageIcon,
 } from "lucide-react";
-import { Grid, GridColumn as Column } from "@progress/kendo-react-grid";
+import { Grid, GridColumn as Column, GridSelectionChangeEvent, GridHeaderSelectionChangeEvent } from "@progress/kendo-react-grid";
 import { Slider, NumericTextBox } from "@progress/kendo-react-inputs";
 import { process } from "@progress/kendo-data-query";
+import { SelectDescriptor } from "@progress/kendo-react-data-tools";
 import { mockProducts } from "../../data/mockData";
 import FloatingAddButton from "../../../helper_Functions/FloatingAddButton";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import ExportButton from "../../../helper_Functions/Export";
 import { PDFExport } from '@progress/kendo-react-pdf';
-
-const AddProductModal = ({ isOpen, onClose, onSubmit }) => {
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    category: "",
-    view: "",
-  });
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit();
-    setNewProduct({ name: "", category: "", view: "" });
-  };
-
-  return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: "rgba(60, 61, 61, 0.5)" }}
-    >
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl border border-gray-200">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          Add New Product
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {["name", "category"].map((field) => (
-            <div key={field}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {field === "name" ? "Product Name" : "Category"}
-              </label>
-              <input
-                type="text"
-                value={newProduct[field]}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, [field]: e.target.value })
-                }
-                placeholder={`Enter ${
-                  field === "name" ? "product name" : "category"
-                }`}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          ))}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              View Template
-            </label>
-            <select
-              value={newProduct.view}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, view: e.target.value })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="" disabled>
-                Select view template
-              </option>
-              <option value="default">Complete Product View</option>
-              <option value="customer-facing">Customer View</option>
-              <option value="inventory-warehouse">
-                Inventory & Warehouse View
-              </option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> Add More Details
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+import AddProductModal from "../../components/PIM/AddProductModal";
+import ProductStatsInfo from "../../components/PIM/ProductStatsInfo";
+import ViewManagementModal from "../../components/PIM/ViewManagementModal";
+import DigitalAssetsPanel from "../../components/PIM/DigitalAssetsPanel";
 
 const ProductCatalogHeader = () => (
-  <div className="flex justify-end items-center gap-4">
+  <div className="flex items-center gap-4">
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Product Catalog</h1>
+      <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+        Product Catalog
+        <ProductStatsInfo />
+      </h1>
       <p className="text-gray-600 mt-1">
         Manage your product information and syndication status
       </p>
@@ -142,9 +57,6 @@ const ProductFilters = ({
   setFilters,
   filterOptions,
   clearFilters,
-  currentView,
-  onViewChange,
-  views,
   onOpenViewManagement,
 }) => {
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
@@ -186,28 +98,7 @@ const ProductFilters = ({
               />
             </button>
           </div>
-          <div className="flex gap-3 items-center w-full md:w-auto">
-            <div className="relative">
-              <select
-                value={currentView}
-                onChange={(e) => onViewChange(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none pr-8"
-              >
-                {views.map((view) => (
-                  <option key={view.name} value={view.name}>
-                    {view.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-            </div>
-            <button
-              onClick={onOpenViewManagement}
-              className="px-4 py-2 border border-blue-500 text-blue-700 rounded-lg text-sm font-medium bg-blue-50 hover:bg-blue-100 flex items-center gap-2 shadow-sm"
-            >
-              <Columns className="h-4 w-4" /> Customize Columns
-            </button>
-          </div>
+
         </div>
 
         {showFilters && (
@@ -245,6 +136,8 @@ const ProductFilters = ({
                       setFilters({ ...filters, [filter.field]: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    aria-label={`Filter by ${filter.label}`}
+                    title={`Filter by ${filter.label}`}
                   >
                     <option value="">
                       All{" "}
@@ -330,294 +223,15 @@ const ProductLegend = () => {
   );
 };
 
-const ProductStatsCards = () => {
-  const stats = [
-    { title: "Total Products", value: "1,247", icon: Grid3X3, color: "blue" },
-    {
-      title: "Active Products",
-      value: "1,156",
-      icon: CheckCircle,
-      color: "green",
-    },
-    { title: "Syndicated", value: "892", icon: Upload, color: "blue" },
-    {
-      title: "Avg. Completeness",
-      value: "82%",
-      icon: AlertCircle,
-      color: "amber",
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      {stats.map((stat, i) => (
-        <div key={i} className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center bg-${stat.color}-100 text-${stat.color}-600`}
-            >
-              <stat.icon className="h-5 w-5" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-              <p
-                className={`text-2xl font-semibold ${
-                  stat.color === "green"
-                    ? "text-green-600"
-                    : stat.color === "amber"
-                    ? "text-amber-600"
-                    : "text-gray-900"
-                }`}
-              >
-                {stat.value}
-              </p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const ViewManagementModal = ({
-  isOpen,
-  onClose,
-  currentView,
-  views,
-  onViewChange,
-  onViewsUpdate,
-}) => {
-  const [tempViews, setTempViews] = useState(views);
-  const [search, setSearch] = useState("");
-
-  if (!isOpen) return null;
-
-  const currentViewData = tempViews.find((v) => v.name === currentView);
-  const columnsExceptActions = currentViewData.columns.filter(
-    (col) => col.field !== "actions"
-  );
-  const actionsColumn = currentViewData.columns.find(
-    (col) => col.field === "actions"
-  );
-
-  const allColumns = Array.from(
-    new Set(
-      views.flatMap((v) =>
-        v.columns
-          .filter((c) => c.field !== "actions")
-          .map((c) => ({
-            field: c.field,
-            title: c.title,
-            required: c.required,
-          }))
-      )
-    )
-  );
-  const currentFields = columnsExceptActions.map((col: any) => col.field);
-  const availableColumns = allColumns.filter(
-    (col: any) => !currentFields.includes(col.field)
-  );
-  const filteredAvailableColumns = availableColumns.filter((col: any) =>
-    col.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleAddColumn = (field: any) => {
-    const colToAdd = allColumns.find((col: any) => col.field === field);
-    setTempViews((prev: any) =>
-      prev.map((view: any) => {
-        if (view.name === currentView) {
-          const newCols = [
-            ...columnsExceptActions,
-            { ...(colToAdd as any), visible: true },
-          ];
-          if (actionsColumn) newCols.push(actionsColumn);
-          return { ...view, columns: newCols };
-        }
-        return view;
-      })
-    );
-    setSearch("");
-  };
-
-  const handleRemoveColumn = (field) => {
-    setTempViews((prev) =>
-      prev.map((view) => {
-        if (view.name === currentView) {
-          const newCols = view.columns.filter((col) => col.field !== field);
-          const colsNoActions = newCols.filter(
-            (col) => col.field !== "actions"
-          );
-          const actionsCol = newCols.find((col) => col.field === "actions");
-          if (actionsCol) colsNoActions.push(actionsCol);
-          return { ...view, columns: colsNoActions };
-        }
-        return view;
-      })
-    );
-  };
-
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-    setTempViews((prev) =>
-      prev.map((view) => {
-        if (view.name === currentView) {
-          const requiredCols = columnsExceptActions.filter(
-            (col) => col.required
-          );
-          const optionalCols = columnsExceptActions.filter(
-            (col) => !col.required
-          );
-          const reordered = Array.from(optionalCols);
-          const [removed] = reordered.splice(result.source.index, 1);
-          reordered.splice(result.destination.index, 0, removed);
-          let newCols = [...requiredCols, ...reordered];
-          if (actionsColumn) newCols.push(actionsColumn);
-          return { ...view, columns: newCols };
-        }
-        return view;
-      })
-    );
-  };
-
-  const saveChanges = () => {
-    onViewsUpdate(tempViews);
-    onClose();
-  };
-
-  return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: "rgba(60, 61, 61, 0.5)" }}
-    >
-      <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Customize Columns
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Add columns
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search a column"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {search && filteredAvailableColumns.length > 0 && (
-              <div className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg mt-1 z-10 max-h-40 overflow-y-auto">
-                {filteredAvailableColumns.map((col: any) => (
-                  <div
-                    key={col.field}
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
-                    onClick={() => handleAddColumn(col.field)}
-                  >
-                    {col.title}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Manage and reorder columns
-          </label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {columnsExceptActions
-              .filter((col) => col.required)
-              .map((col) => (
-                <span
-                  key={col.field}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded flex items-center text-sm font-medium cursor-default"
-                >
-                  {col.title}
-                </span>
-              ))}
-          </div>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="columns-droppable" direction="horizontal">
-              {(provided) => (
-                <div
-                  className="flex flex-wrap gap-2 min-h-[40px]"
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                >
-                  {columnsExceptActions
-                    .filter((col) => !col.required)
-                    .map((col, idx) => (
-                      <Draggable
-                        key={col.field}
-                        draggableId={col.field}
-                        index={idx}
-                      >
-                        {(provided) => (
-                          <span
-                            className="px-3 py-1 bg-gray-100 text-gray-800 rounded flex items-center text-sm font-medium cursor-move"
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                          >
-                            {col.title}
-                            <button
-                              className="ml-2 text-gray-400 hover:text-red-600"
-                              onClick={() => handleRemoveColumn(col.field)}
-                              title="Remove column"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </span>
-                        )}
-                      </Draggable>
-                    ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          {actionsColumn && (
-            <div className="mt-4 flex gap-2 items-center">
-              <span className="px-3 py-1 bg-gray-200 text-gray-800 rounded flex items-center text-sm font-medium cursor-not-allowed opacity-80">
-                {actionsColumn.title} (Always last)
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-3 pt-6 border-t">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={saveChanges}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
-          >
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const ProductCatalogPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [select, setSelect] = useState<SelectDescriptor>({});
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewManagementModal, setShowViewManagementModal] = useState(false);
+  const [showDigitalAssetsPanel, setShowDigitalAssetsPanel] = useState(false);
+  const [selectedProductForAssets, setSelectedProductForAssets] = useState<any>(null);
   const [filters, setFilters] = useState({
     category: "",
     brand: "",
@@ -664,80 +278,8 @@ const ProductCatalogPage = () => {
         },
         { field: "actions", title: "Actions", visible: true, required: true },
       ],
-    },
-    {
-      name: "Customer View",
-      columns: [
-        {
-          field: "productName",
-          title: "Product",
-          visible: true,
-          required: true,
-        },
-        { field: "sku", title: "SKU", visible: true, required: true },
-        {
-          field: "categoryInfo",
-          title: "Category",
-          visible: true,
-          required: false,
-        },
-        { field: "brand", title: "Brand", visible: true, required: false },
-        {
-          field: "completenessPercent",
-          title: "Completeness",
-          visible: true,
-          required: false,
-        },
-        { field: "actions", title: "Actions", visible: true, required: true },
-      ],
-    },
-    {
-      name: "Inventory & Warehouse View",
-      columns: [
-        {
-          field: "productName",
-          title: "Product",
-          visible: true,
-          required: true,
-        },
-        { field: "sku", title: "SKU", visible: true, required: true },
-        {
-          field: "categoryInfo",
-          title: "Category",
-          visible: true,
-          required: false,
-        },
-        { field: "brand", title: "Brand", visible: true, required: false },
-        {
-          field: "channelsStatus",
-          title: "Channels",
-          visible: true,
-          required: false,
-        },
-        {
-          field: "lastModified",
-          title: "Last Modified",
-          visible: true,
-          required: false,
-        },
-        { field: "actions", title: "Actions", visible: true, required: true },
-      ],
-    },
-    {
-      name: "Minimal View",
-      columns: [
-        {
-          field: "productName",
-          title: "Product",
-          visible: true,
-          required: true,
-        },
-        { field: "sku", title: "SKU", visible: true, required: true },
-        { field: "actions", title: "Actions", visible: true, required: true },
-      ],
-    },
+    }
   ]);
-  const [currentView, setCurrentView] = useState("Complete Product View");
 
   const [gridFilter, setGridFilter] = useState({ logic: "and", filters: [] });
   const [sort, setSort] = useState([]);
@@ -813,7 +355,7 @@ const ProductCatalogPage = () => {
   });
 
   const currentViewColumns = useMemo(() => {
-    const view = views.find((v) => v.name === currentView);
+    const view = views[0]; // Always use first view
     if (!view) return [];
     const cols = view.columns.filter(
       (col) => col.visible && col.field !== "actions"
@@ -822,7 +364,7 @@ const ProductCatalogPage = () => {
       (col) => col.visible && col.field === "actions"
     );
     return actionsCol ? [...cols, actionsCol] : cols;
-  }, [views, currentView]);
+  }, [views]);
 
   const getChannelStatusColor = (status) => {
     switch (status) {
@@ -870,8 +412,7 @@ const ProductCatalogPage = () => {
       });
     return (
       <div
-        className="k-pager k-pager-md k-grid-pager"
-        style={{ borderTop: "1px solid", borderTopColor: "inherit" }}
+        className="k-pager k-pager-md k-grid-pager border-t border-gray-300"
       >
         <div className="flex items-center justify-between p-2">
           <div className="flex-1">
@@ -969,14 +510,14 @@ const ProductCatalogPage = () => {
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-2 relative overflow-hidden">
               <div
-                className={`h-2 rounded-full ${
+                className={`h-2 rounded-full absolute left-0 top-0 ${
                   getCompletenessColor(props.dataItem.completeness).split(
                     " "
                   )[1]
                 }`}
-                style={{ width: `${props.dataItem.completeness}%` }}
+                {...{ style: { width: `${props.dataItem.completeness}%` } }}
               />
             </div>
           </div>
@@ -992,9 +533,63 @@ const ProductCatalogPage = () => {
     );
   }, []);
 
-  const actionsCell = useCallback((props) => {
+  const onSelectionChange = useCallback((event: GridSelectionChangeEvent) => {
+    console.log('Selection changed:', event.select); // Debug
+    setSelect(event.select);
+  }, []);
+
+  const onHeaderSelectionChange = useCallback((event: GridHeaderSelectionChangeEvent) => {
+    console.log('Header selection changed:', event.select); // Debug
+    setSelect(event.select);
+  }, []);
+
+  const selectedProducts = useMemo(() => {
+    console.log('Select object:', select); // Debug
+    if (!select || Object.keys(select).length === 0) {
+      console.log('No selection'); // Debug
+      return [];
+    }
+    // Get the selected IDs from the keys where value is true
+    const selectedIDs = Object.keys(select).filter(key => select[key] === true);
+    console.log('Selected IDs:', selectedIDs); // Debug
+    
+    if (selectedIDs.length === 0) {
+      console.log('Empty selection'); // Debug
+      return [];
+    }
+    const selected = processedProducts.filter(product => selectedIDs.includes(product.id));
+    console.log('Selected Products Count:', selected.length); // Debug log
+    return selected;
+  }, [processedProducts, select]);
+
+  const hasSelection = selectedProducts.length > 0;
+
+  // Not using useCallback here so it re-renders when selectedProducts changes
+  const actionsCell = (props) => {
     if (props.rowType === "groupHeader") return null;
     if (!props.dataItem?.id) return <td></td>;
+    
+    console.log('Rendering actions cell, hasSelection:', hasSelection); // Debug log
+    
+    // If multiple products are selected, show "Assign Field Mapping" button
+    if (hasSelection) {
+      return (
+        <td className="px-6 py-4">
+          <div className="flex justify-center">
+            <button
+              onClick={handleAssignFieldMapping}
+              className="px-3 py-1.5 text-xs border border-[#DD522C] text-[#DD522C] bg-[#FDE2CF] rounded-md hover:bg-[#F27A56] hover:text-white transition-colors font-medium flex items-center gap-1.5"
+              title="Assign Field Mapping"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Assign Field Mapping
+            </button>
+          </div>
+        </td>
+      );
+    }
+    
+    // Default actions when no products are selected
     return (
       <td className="px-6 py-4">
         <div className="flex justify-center gap-1">
@@ -1012,19 +607,52 @@ const ProductCatalogPage = () => {
           >
             <Edit className="h-4 w-4" />
           </button>
+          <button
+            onClick={() => handleViewAssets(props.dataItem)}
+            className="p-2 text-gray-400 hover:text-[#DD522C] hover:bg-[#FDE2CF] rounded-lg transition-colors"
+            title="Digital Assets"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </button>
         </div>
       </td>
     );
-  }, []);
+  };
+
+  const handleAssignFieldMapping = () => {
+    alert(`Assigning field mapping to ${selectedProducts.length} products`);
+    // TODO: Implement field mapping assignment
+  };
 
   const handleViewProduct = (productId) =>
     navigate(`/pim/products/${productId}`);
   const handleEditProduct = (productId) =>
     navigate(`/pim/products/${productId}/edit`);
+  const handleViewAssets = (product) => {
+    setSelectedProductForAssets(product);
+    setShowDigitalAssetsPanel(true);
+  };
   const handleAddProduct = () => setShowAddModal(true);
-  const handleCreateProduct = () => {
+  const handleCreateProduct = (data) => {
     setShowAddModal(false);
-    navigate("/pim/products/new");
+    
+    if (data.type === "bulk") {
+      // TODO: Navigate to bulk import page when implemented
+      console.log("Bulk import selected:", data);
+      alert("Bulk import feature coming soon!");
+      return;
+    }
+    
+    // Build query params for single product
+    const params = new URLSearchParams();
+    if (data.viewTemplateId) params.append("view", data.viewTemplateId);
+    if (data.selectedRetailers && data.selectedRetailers.length > 0) {
+      params.append("retailers", data.selectedRetailers.join(","));
+    }
+    if (data.productName) params.append("name", data.productName);
+    if (data.category) params.append("category", data.category);
+    
+    navigate(`/pim/products/new?${params.toString()}`);
   };
   const clearFilters = () => {
     setFilters({
@@ -1036,7 +664,6 @@ const ProductCatalogPage = () => {
     });
     setGridFilter({ logic: "and", filters: [] });
   };
-  const onViewChange = (viewName) => setCurrentView(viewName);
   const onViewsUpdate = (updatedViews) => setViews(updatedViews);
 
   const renderColumn = (column) => {
@@ -1059,6 +686,8 @@ const ProductCatalogPage = () => {
             onChange={(e) =>
               props.onChange(e.target.value === "" ? null : e.target.value)
             }
+            aria-label={`Filter by ${label}`}
+            title={`Filter by ${label}`}
           >
             <option value="">All {label}s</option>
             {options.map((option) => (
@@ -1210,7 +839,7 @@ const ProductCatalogPage = () => {
                 text: "Manage Views",
                 onClick: () => navigate("/pim/views"),
               },
-              { icon: Download, text: "Import" },
+              // { icon: Download, text: "Import" },
             ].map((btn, i) => (
               <button
                 key={i}
@@ -1220,16 +849,29 @@ const ProductCatalogPage = () => {
                 <btn.icon className="h-4 w-4" /> {btn.text}
               </button>
             ))}
-          <ExportButton
+          {/* <ExportButton
             data={processedProducts}
             columns={currentViewColumns}
             gridRef={gridRef}
             fileName="ProductCatalog"
             pdfExportComponent={pdfExportComponent}
-          />
+          /> */}
         </div>
       </div>
-      <ProductStatsCards />
+
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <span>
+          Showing {filteredProducts.length} of {mockProducts.length} products
+        </span>
+        <div className="flex items-center gap-4">
+          {Object.values(filters).filter(Boolean).length > 0 && (
+            <span>
+              {Object.values(filters).filter(Boolean).length} filter(s) applied
+            </span>
+          )}
+        </div>
+      </div>
+      
       <ProductFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -1239,42 +881,21 @@ const ProductCatalogPage = () => {
         setFilters={setFilters}
         filterOptions={filterOptions}
         clearFilters={clearFilters}
-        currentView={currentView}
-        onViewChange={onViewChange}
-        views={views}
         onOpenViewManagement={() => setShowViewManagementModal(true)}
       />
-
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <span>
-          Showing {filteredProducts.length} of {mockProducts.length} products
-        </span>
-        <div className="flex items-center gap-4">
-          <span>
-            Current View: <strong>{currentView}</strong>
-          </span>
-          {Object.values(filters).filter(Boolean).length > 0 && (
-            <span>
-              {Object.values(filters).filter(Boolean).length} filter(s) applied
-            </span>
-          )}
-        </div>
-      </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">Products</h3>
-            {selectedProducts.length > 0 && (
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
-                  Bulk Edit ({selectedProducts.length})
-                </button>
-                <button className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
-                  Sync Selected
-                </button>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowViewManagementModal(true)}
+                className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-md text-sm font-medium bg-white hover:bg-gray-50 flex items-center gap-2 transition-colors"
+              >
+                <Columns className="h-4 w-4" /> Customize Columns
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1305,8 +926,19 @@ const ProductCatalogPage = () => {
           >
             <Grid 
               ref={gridRef}
-              style={{ height: "600px", border: "none" }}
+              key={`grid-selection-${hasSelection}`}
+              style={{ height: "auto", border: "none" }}
               data={processedData}
+              dataItemKey="id"
+              selectable={{
+                enabled: true,
+                drag: false,
+                cell: false,
+                mode: 'multiple'
+              }}
+              select={select}
+              onSelectionChange={onSelectionChange}
+              onHeaderSelectionChange={onHeaderSelectionChange}
               filterable={true}
               sortable={true}
               groupable={true}
@@ -1329,6 +961,7 @@ const ProductCatalogPage = () => {
               }}
               className="border-none"
             >
+              <Column columnType="checkbox" width="50px" filterable={false} />
               {currentViewColumns.map((column) => renderColumn(column))}
             </Grid>
           </PDFExport>
@@ -1350,10 +983,16 @@ const ProductCatalogPage = () => {
       <ViewManagementModal
         isOpen={showViewManagementModal}
         onClose={() => setShowViewManagementModal(false)}
-        currentView={currentView}
+        currentView={views[0]?.name || "Default View"}
         views={views}
-        onViewChange={onViewChange}
+        onViewChange={() => {}} // No-op since we removed view switching
         onViewsUpdate={onViewsUpdate}
+      />
+      <DigitalAssetsPanel
+        isOpen={showDigitalAssetsPanel}
+        onClose={() => setShowDigitalAssetsPanel(false)}
+        productId={selectedProductForAssets?.id || ""}
+        productName={selectedProductForAssets?.productName || ""}
       />
     </div>
   );

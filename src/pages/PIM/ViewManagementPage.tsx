@@ -276,6 +276,8 @@ const ViewManagementPage = () => {
                 setNewViewData({ name: "", description: "", sourceViewId: "" })
               }}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              aria-label="Close modal"
+              title="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
@@ -309,6 +311,8 @@ const ViewManagementPage = () => {
                   onChange={(e) => setNewViewData({ ...newViewData, sourceViewId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  aria-label="Base template"
+                  title="Base template"
                 >
                   <option value="" disabled>
                     Select a template to copy from

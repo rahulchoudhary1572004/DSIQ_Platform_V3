@@ -15,6 +15,8 @@ const SelectionTag = ({ label, countryCode, onRemove }) => (
       <button
         onClick={onRemove}
         className="ml-1 text-blue-500 hover:text-blue-700 transition-colors"
+        aria-label="Remove selection"
+        title="Remove selection"
       >
         <X className="w-3 h-3" />
       </button>
@@ -568,6 +570,8 @@ const FieldMapping = ({
                               [activeRetailer]: e.target.value
                             }))
                           }}
+                          aria-label="Select category"
+                          title="Select category"
                         >
                           <option value="">Select category</option>
                           {(dummyRetailerCategories[getRetailerName(activeRetailer)] || []).map(cat => (
@@ -588,6 +592,8 @@ const FieldMapping = ({
                             onChange={(e) => {
                               // Handle template change logic here
                             }}
+                            aria-label="Select template"
+                            title="Select template"
                           >
                             <option value="">New Mapping</option>
                             <option value="automotive-basic">Automotive - Basic</option>
@@ -658,6 +664,8 @@ const FieldMapping = ({
                                     )
                                   }
                                   disabled={isReadOnly}
+                                  aria-label={`Map ${retailerField.name}`}
+                                  title={`Map ${retailerField.name}`}
                                 >
                                   <option value="">Select PIM field</option>
                                   {allPimFields.map(attr => (

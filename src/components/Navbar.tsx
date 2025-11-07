@@ -175,7 +175,7 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen, isLoggedIn, selectedApp, setS
   const displayApp = selectedApp || pinnedApp || defaultApp;
 
   return (
-    <nav ref={navRef} className={`flex h-12 items-center justify-between ${showMainNav ? "pr-3" : "px-[18px]"} bg-peach hover:bg-white transition-colors z-5 relative`}>
+    <nav ref={navRef} className={`flex h-12 items-center justify-between ${showMainNav ? "pr-3" : "px-[18px]"} bg-peach transition-colors z-5 relative`}>
       <div className="flex items-center space-x-[18px]">
         {isLoggedIn ? (
           !showMainNav ? (
