@@ -1,7 +1,8 @@
-// components/DAM/DAMAssetCard.tsx - Smooth with smooth transitions
+// components/DAM/DAMAssetCard.tsx - Ultra Smooth with Hover Preview
 import React, { FC, useState, useRef, useEffect } from "react";
 import { Download, Trash2, Eye, Folder, MoreVertical } from "lucide-react";
 import { DigitalAsset } from "../../types/dam.types";
+import DAMAssetPreview from "./DAMAssetPreview";
 
 interface DAMAssetCardProps {
   asset: DigitalAsset;
@@ -28,7 +29,11 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showHoverPreview, setShowHoverPreview] = useState(false);
+  const [cardRect, setCardRect] = useState<DOMRect | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,6 +50,36 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showMenu]);
+
+  // Hover preview handlers
+  const handleCardMouseEnter = () => {
+    if (isDisabled || imageError) return;
+    
+    hoverTimerRef.current = setTimeout(() => {
+      if (cardRef.current) {
+        setCardRect(cardRef.current.getBoundingClientRect());
+        setShowHoverPreview(true);
+      }
+    }, 1500); // 1.5 seconds delay
+  };
+
+  const handleCardMouseLeave = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    setShowHoverPreview(false);
+    setCardRect(null);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
 
   const getTypeColor = (type?: string) => {
     const colors: Record<string, string> = {
@@ -68,13 +103,18 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
 
   return (
     <div
-      className={`w-full h-80 flex flex-col overflow-hidden transition-opacity duration-300 ${
+      ref={cardRef}
+      className={`w-full h-80 flex flex-col overflow-visible transition-opacity duration-150 relative ${
         isDisabled ? "opacity-50 pointer-events-none" : ""
       }`}
       style={{
-        animation: "cardSlideIn 0.4s ease-out",
+        animation: "cardSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
+      onMouseEnter={handleCardMouseEnter}
+      onMouseLeave={handleCardMouseLeave}
     >
+      {/* Hover Preview */}
+      <DAMAssetPreview asset={asset} show={showHoverPreview} cardRect={cardRect} />
       {/* Image Container */}
       <div className="relative w-full h-48 overflow-hidden bg-slate-100 group flex-shrink-0">
         {!imageError ? (
@@ -82,7 +122,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
             src={asset.thumbnail}
             alt={asset.name}
             onError={() => setImageError(true)}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           />
         ) : (
           <div
@@ -94,19 +134,19 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
           </div>
         )}
 
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
 
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-150 flex items-center justify-center gap-3">
           <button
             onClick={() => onPreview(asset)}
-            className="p-2.5 bg-white/95 rounded-lg text-slate-700 hover:text-blue-600 transition-all duration-200 shadow-md hover:scale-110"
+            className="p-2.5 bg-white/95 rounded-lg text-slate-700 hover:text-blue-600 transition-all duration-100 shadow-md active:scale-95"
             title="Preview"
           >
             <Eye className="h-5 w-5" />
           </button>
           <button
             onClick={() => onDownload(asset.id)}
-            className="p-2.5 bg-white/95 rounded-lg text-slate-700 hover:text-green-600 transition-all duration-200 shadow-md hover:scale-110"
+            className="p-2.5 bg-white/95 rounded-lg text-slate-700 hover:text-green-600 transition-all duration-100 shadow-md active:scale-95"
             title="Download"
           >
             <Download className="h-5 w-5" />
@@ -143,7 +183,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
         <div className="flex items-center gap-2 pt-2 border-t border-white/30">
           <button
             onClick={onSelect}
-            className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-all duration-200 ${
+            className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-all duration-100 ${
               isSelected
                 ? "bg-blue-500 text-white shadow-md"
                 : "bg-white/60 text-slate-700 hover:bg-white/70"
@@ -155,7 +195,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
           {onAddToFolderClick && (
             <button
               onClick={() => onAddToFolderClick(asset)}
-              className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold transition-all duration-200 flex items-center gap-1 hover:scale-105"
+              className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold transition-all duration-100 flex items-center gap-1 active:scale-95"
               title="Add to folder"
             >
               <Folder className="h-3 w-3" />
@@ -166,7 +206,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
           <div ref={menuRef} className="relative flex-shrink-0">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1 hover:bg-white/50 rounded text-slate-600 hover:text-slate-700 transition-all duration-200"
+              className="p-1 hover:bg-white/50 rounded text-slate-600 hover:text-slate-700 transition-all duration-100"
             >
               <MoreVertical className="h-4 w-4" />
             </button>
@@ -175,7 +215,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
               <div
                 className="absolute bottom-full right-0 mb-1 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-white/40 overflow-hidden z-30 min-w-[140px]"
                 style={{
-                  animation: "menuSlideUp 0.2s ease-out",
+                  animation: "menuSlideUp 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
                 {onAddToCollection && (
@@ -184,7 +224,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
                       onAddToCollection(asset);
                       setShowMenu(false);
                     }}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2 transition-all duration-200 border-b border-white/20"
+                    className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2 transition-all duration-100 border-b border-white/20"
                   >
                     <Folder className="h-3 w-3 text-blue-600 flex-shrink-0" />
                     <span className="truncate">Collection</span>
@@ -195,7 +235,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
                     onDelete(asset.id);
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-slate-700 text-xs flex items-center gap-2 transition-all duration-200"
+                  className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-slate-700 text-xs flex items-center gap-2 transition-all duration-100"
                 >
                   <Trash2 className="h-3 w-3 text-red-600 flex-shrink-0" />
                   <span className="truncate">Delete</span>

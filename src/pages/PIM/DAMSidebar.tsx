@@ -419,11 +419,11 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
           }}
           onMouseEnter={() => setHoveredFolderId(node.id)}
           onMouseLeave={() => setHoveredFolderId(null)}
-          className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out cursor-grab active:cursor-grabbing ${
+          className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150 cursor-grab active:cursor-grabbing ${
             isDragged ? "opacity-50 bg-gray-100" : ""
           } ${
             isDropTarget
-              ? "bg-blue-100 border-2 border-blue-400 ring-2 ring-blue-200/50 scale-[1.02]"
+              ? "bg-blue-100 border-2 border-blue-400 ring-2 ring-blue-200/50"
               : isSelected
                 ? "bg-blue-50 border border-blue-300 shadow-sm"
                 : isHovered
@@ -438,8 +438,8 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
           }}
         >
           {/* Drag Handle */}
-          <div className={`p-0 flex-shrink-0 transition-all duration-300 cursor-grab ${
-            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          <div className={`p-0 flex-shrink-0 transition-opacity duration-150 cursor-grab ${
+            isHovered ? "opacity-100" : "opacity-0"
           }`}>
             <GripVertical className="h-3.5 w-3.5 text-gray-400" />
           </div>
@@ -450,11 +450,11 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
               e.stopPropagation();
               toggleFolder(node.id);
             }}
-            className="p-0 flex-shrink-0 transition-all duration-300"
+            className="p-0 flex-shrink-0"
           >
             {node.children && node.children.length > 0 ? (
               <ChevronDown
-                className={`h-4 w-4 transform transition-transform duration-300 text-gray-500 ${
+                className={`h-4 w-4 transform transition-transform duration-200 text-gray-500 ${
                   node.isExpanded ? "rotate-0" : "-rotate-90"
                 }`}
               />
@@ -464,8 +464,8 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
           </button>
 
           {/* Icon */}
-          <FolderIcon className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${
-            isSelected ? "text-blue-600 scale-110" : "text-amber-500"
+          <FolderIcon className={`h-4 w-4 flex-shrink-0 transition-colors duration-150 ${
+            isSelected ? "text-blue-600" : "text-amber-500"
           }`} />
 
           {/* Name */}
@@ -478,11 +478,11 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
                 if (e.key === "Enter") renameFolder(node.id, e.currentTarget.value);
                 if (e.key === "Escape") setRenamingId(null);
               }}
-              className="flex-1 px-2 py-1 text-sm bg-white border-2 border-blue-400 rounded-md outline-none focus:ring-2 focus:ring-blue-300/50 transition-all duration-200"
+              className="flex-1 px-2 py-1 text-sm bg-white border-2 border-blue-400 rounded-md outline-none focus:ring-2 focus:ring-blue-300/50"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className={`flex-1 truncate font-medium transition-all duration-300 ${
+            <span className={`flex-1 truncate font-medium ${
               isSelected ? "text-blue-900" : "text-gray-700"
             }`}>
               {node.name}
@@ -490,15 +490,15 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
           )}
 
           {/* Actions */}
-          <div className={`flex items-center gap-1 transition-all duration-300 flex-shrink-0 ${
-            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          <div className={`flex items-center gap-1 transition-opacity duration-150 flex-shrink-0 ${
+            isHovered ? "opacity-100" : "opacity-0"
           }`}>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 createFolder(node.id);
               }}
-              className="p-1.5 hover:bg-blue-200/60 rounded-md transition-all duration-200 hover:scale-110"
+              className="p-1.5 hover:bg-blue-200/60 rounded-md transition-colors duration-150"
               title="New subfolder"
             >
               <Plus className="h-3.5 w-3.5 text-blue-600" />
@@ -508,7 +508,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
                 e.stopPropagation();
                 setRenamingId(node.id);
               }}
-              className="p-1.5 hover:bg-gray-300/60 rounded-md transition-all duration-200 hover:scale-110"
+              className="p-1.5 hover:bg-gray-300/60 rounded-md transition-colors duration-150"
               title="Rename"
             >
               <Edit2 className="h-3.5 w-3.5 text-gray-600" />
@@ -518,7 +518,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
                 e.stopPropagation();
                 deleteFolder(node.id);
               }}
-              className="p-1.5 hover:bg-red-200/60 rounded-md transition-all duration-200 hover:scale-110"
+              className="p-1.5 hover:bg-red-200/60 rounded-md transition-colors duration-150"
               title="Delete"
             >
               <Trash2 className="h-3.5 w-3.5 text-red-600" />
@@ -527,7 +527,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
 
           {/* Asset Count */}
           {node.assetIds && node.assetIds.length > 0 && (
-            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold transition-all duration-300 flex-shrink-0 ${
+            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
               isSelected
                 ? "bg-blue-200 text-blue-800"
                 : "bg-gray-200 text-gray-700"
@@ -548,10 +548,16 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
 
   if (isCollapsed) {
     return (
-      <aside className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-6 gap-8 transition-all duration-500">
+      <aside 
+        className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-6 gap-8 flex-shrink-0"
+        style={{ 
+          transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          willChange: 'width'
+        }}
+      >
         <button
           onClick={onToggleCollapse}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-110"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150"
           title="Expand"
         >
           <ChevronRight className="h-5 w-5 text-gray-500" />
@@ -562,7 +568,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
             <button
               key={key}
               onClick={() => onTabChange(key as ActiveTab)}
-              className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+              className={`p-2 rounded-lg transition-colors duration-150 ${
                 activeTab === key
                   ? "bg-gray-950 text-white shadow-md"
                   : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
@@ -578,14 +584,20 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
   }
 
   return (
-    <aside className="w-80 bg-white flex flex-col border-r border-gray-200 transition-all duration-500">
+    <aside 
+      className="w-80 bg-white flex flex-col border-r border-gray-200 flex-shrink-0"
+      style={{ 
+        transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        willChange: 'width'
+      }}
+    >
       {/* HEADER */}
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-2xl font-light text-gray-950">DAM</h2>
           <button
             onClick={onToggleCollapse}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-110"
+            className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-150"
             title="Collapse"
           >
             <ChevronLeft className="h-4 w-4 text-gray-500" />
@@ -600,20 +612,20 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
           <button
             key={key}
             onClick={() => onTabChange(key as ActiveTab)}
-            className={`w-full px-4 py-3 rounded-lg flex items-start justify-between transition-all duration-300 group ${
+            className={`w-full px-4 py-3 rounded-lg flex items-start justify-between transition-colors duration-150 group ${
               activeTab === key
                 ? "bg-gray-950 text-white shadow-md"
                 : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             <div className="flex items-start gap-3 flex-1 text-left">
-              <span className={`transition-transform duration-300 ${activeTab === key ? "scale-110" : ""}`}>
+              <span className="flex-shrink-0">
                 {icon}
               </span>
               <div>
                 <p className="text-sm font-medium">{label}</p>
                 <p
-                  className={`text-xs mt-0.5 transition-colors duration-300 ${
+                  className={`text-xs mt-0.5 ${
                     activeTab === key ? "text-gray-300" : "text-gray-500"
                   }`}
                 >
@@ -622,7 +634,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
               </div>
             </div>
             {activeTab === key && (
-              <ArrowRight className="h-4 w-4 opacity-60 transition-all duration-300 group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 opacity-60 transition-transform duration-150 group-hover:translate-x-1" />
             )}
           </button>
         ))}
@@ -633,8 +645,8 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
         <>
           {/* SEARCH + CREATE */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-1 bg-gray-50 rounded-lg px-3 py-2 transition-all duration-300 hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-400/50">
-              <SearchIcon className="h-4 w-4 text-gray-400 transition-colors duration-300" />
+            <div className="flex items-center gap-2 flex-1 bg-gray-50 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-400/50">
+              <SearchIcon className="h-4 w-4 text-gray-400" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -644,7 +656,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
             </div>
             <button
               onClick={() => createFolder(null)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-blue-100 rounded-lg transition-all duration-300 hover:scale-110"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-blue-100 rounded-lg transition-colors duration-150"
               title="New folder"
             >
               <Plus className="h-4 w-4" />
@@ -673,16 +685,16 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
       {/* FOOTER */}
       <div className="px-6 py-5 border-t border-gray-200">
         <div className="space-y-4">
-          <div className="transition-all duration-300">
+          <div>
             <p className="text-xs font-medium text-gray-600 mb-2">ASSETS</p>
-            <p className="text-2xl font-light text-gray-950 transition-all duration-300">
+            <p className="text-2xl font-light text-gray-950">
               {sortedAssets.length}
             </p>
           </div>
           {selectedAssets.size > 0 && (
             <div className="pt-4 border-t border-gray-200 animate-fade-in">
               <p className="text-xs text-gray-600">
-                <span className="font-medium text-gray-950 transition-all duration-300">
+                <span className="font-medium text-gray-950">
                   {selectedAssets.size}
                 </span>{" "}
                 selected
@@ -696,31 +708,30 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(-2px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
 
         @keyframes slideDown {
           from {
             opacity: 0;
-            transform: translateY(-4px) scale(0.98);
+            max-height: 0;
           }
           to {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            max-height: 500px;
           }
         }
 
         .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
+          animation: fadeIn 0.2s ease-out;
         }
 
         .animation-reveal {
-          animation: slideDown 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: slideDown 0.2s ease-out;
+          overflow: hidden;
         }
       `}</style>
     </aside>

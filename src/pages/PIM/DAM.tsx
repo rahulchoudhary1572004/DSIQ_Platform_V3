@@ -66,7 +66,7 @@ const AssetGrid: FC<AssetGridProps> = ({
   if (viewMode === "list") {
     return (
       <div
-        className={`space-y-3 pb-12 transition-all duration-300 ${
+        className={`space-y-3 pb-12 transition-opacity duration-200 ${
           isDetailModalOpen ? "opacity-50 pointer-events-none" : ""
         }`}
       >
@@ -83,7 +83,7 @@ const AssetGrid: FC<AssetGridProps> = ({
         {assets.map((asset) => (
           <div
             key={asset.id}
-            className="grid grid-cols-12 gap-4 px-6 py-5 bg-white/40 backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-white/60 hover:shadow-xl transition-all duration-300 group items-center"
+            className="grid grid-cols-12 gap-4 px-6 py-5 bg-white/40 backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-white/60 hover:shadow-xl transition-all duration-200 group items-center"
           >
             <div className="col-span-1 flex items-center">
               <input
@@ -137,15 +137,15 @@ const AssetGrid: FC<AssetGridProps> = ({
 
   return (
     <div
-      className={`grid gap-6 pb-12 transition-all duration-300 ${
+      className={`grid gap-6 pb-12 transition-opacity duration-200 ${
         isDetailModalOpen ? "opacity-50 pointer-events-none" : ""
       }`}
       style={gridStyle}
     >
       {assets.map((asset) => (
-        <div key={asset.id} className="relative group will-change-contents">
-          <div className="absolute inset-0 bg-gray-200/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="relative bg-white/40 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg overflow-hidden group-hover:shadow-2xl group-hover:border-white/40 transition-all duration-300">
+        <div key={asset.id} className="relative group">
+          <div className="absolute inset-0 bg-gray-200/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          <div className="relative bg-white/40 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg overflow-visible group-hover:shadow-2xl group-hover:border-white/40 transition-all duration-200">
             <DAMAssetCard
               asset={asset}
               isSelected={selectedAssets.has(asset.id)}
@@ -724,7 +724,7 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
         />
       </div>
 
-      <div className="flex flex-1 overflow-hidden trans">
+      <div className="flex flex-1 overflow-hidden">
         <DAMSidebar
           isCollapsed={isSidebarCollapsed}
           activeTab={activeTab}
@@ -738,7 +738,6 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
           }}
           onToggleCollapse={() => setIsSidebarCollapsed((s) => !s)}
           onFolderSelect={handleFolderSelect2}
-          onFilterOpen={() => setFiltersPanelOpen(true)}
         />
 
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">

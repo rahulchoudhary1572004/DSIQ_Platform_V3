@@ -1,6 +1,6 @@
-// components/DAM/DAMAssetDetail_Design10.tsx - Apple Mastery of Space (Taller)
+// Design: Ultra Fast - Lightning Speed ⚡ (No Blur)
 import { FC, useState, useEffect, useRef } from "react";
-import { X, Download, Trash2, File, FileText as DocumentIcon, Clock, User, Share2, Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
+import { X, Download, Trash2, Clock, User, Share2, Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { DigitalAsset } from "../../types/dam.types";
 
 interface DAMAssetDetailProps {
@@ -19,6 +19,7 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [volume, setVolume] = useState(1);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -43,13 +44,6 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
     }
   };
 
-  const handleSeek = (time: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
-  };
-
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
@@ -67,11 +61,25 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    if (isPlaying) {
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
+  }, []);
+
   return (
     <div
-      className="relative w-full h-full bg-black rounded-2xl overflow-hidden group cursor-pointer"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => showControls && setShowControls(false)}
+      className="relative w-full h-full bg-black rounded-lg overflow-hidden group cursor-pointer"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setShowControls(false)}
     >
       <video
         ref={videoRef}
@@ -83,69 +91,63 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
         onLoadedMetadata={handleLoadedMetadata}
       />
 
-      {/* Center Play Button */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <button
           onClick={handlePlayPause}
-          className="pointer-events-auto w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center hover:bg-white/30 transition-all duration-300 group-hover:scale-110"
+          className="pointer-events-auto w-16 h-16 rounded-full bg-white/5 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/15 transition-colors duration-100 active:scale-95"
         >
           {isPlaying ? (
-            <Pause className="h-8 w-8 text-white ml-1" fill="white" />
+            <Pause className="h-6 w-6 text-white ml-1" fill="white" />
           ) : (
-            <Play className="h-8 w-8 text-white ml-1" fill="white" />
+            <Play className="h-6 w-6 text-white ml-1" fill="white" />
           )}
         </button>
       </div>
 
-      {/* Controls Bar - Bottom */}
       <div
-        className={`absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 ${
+        className={`absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-100 ${
           showControls ? "opacity-100" : "opacity-0"
         }`}
       >
-        {/* Progress Bar */}
-        <div className="px-6 pt-6 pb-2">
-          <div className="h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer group/bar">
+        <div className="px-4 pt-4 pb-1">
+          <div className="h-0.5 bg-white/10 rounded-full overflow-hidden cursor-pointer group/bar">
             <div
-              className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-100 group-hover/bar:h-1.5"
+              className="h-full bg-blue-400 transition-all duration-50"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="px-6 py-4 flex items-center justify-between">
-          {/* Left Controls */}
-          <div className="flex items-center gap-3">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-0.5">
             <button
               onClick={handlePlayPause}
-              className="p-2 hover:bg-white/20 rounded-lg transition-all text-white"
+              className="p-1.5 hover:bg-white/10 transition-colors duration-100 text-white rounded"
             >
               {isPlaying ? (
-                <Pause className="h-4 w-4" fill="white" />
+                <Pause className="h-3 w-3" fill="white" />
               ) : (
-                <Play className="h-4 w-4 ml-0.5" fill="white" />
+                <Play className="h-3 w-3 ml-0.5" fill="white" />
               )}
             </button>
 
-            <button className="p-2 hover:bg-white/20 rounded-lg transition-all text-white">
-              <SkipBack className="h-4 w-4" />
+            <button className="p-1.5 hover:bg-white/10 transition-colors duration-100 text-white rounded">
+              <SkipBack className="h-3 w-3" />
             </button>
 
-            <button className="p-2 hover:bg-white/20 rounded-lg transition-all text-white">
-              <SkipForward className="h-4 w-4" />
+            <button className="p-1.5 hover:bg-white/10 transition-colors duration-100 text-white rounded">
+              <SkipForward className="h-3 w-3" />
             </button>
 
-            {/* Volume */}
-            <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-1 ml-1 pl-1 border-l border-white/10">
               <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-all text-white"
+                className="p-1.5 hover:bg-white/10 transition-colors duration-100 text-white rounded"
               >
                 {isMuted ? (
-                  <VolumeX className="h-4 w-4" />
+                  <VolumeX className="h-3 w-3" />
                 ) : (
-                  <Volume2 className="h-4 w-4" />
+                  <Volume2 className="h-3 w-3" />
                 )}
               </button>
               <input
@@ -155,21 +157,19 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
                 step="0.05"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="w-20 h-1 bg-white/20 rounded-full cursor-pointer accent-blue-500"
+                className="w-12 h-0.5 bg-white/10 rounded-full cursor-pointer accent-blue-400 appearance-none"
               />
             </div>
           </div>
 
-          {/* Time Display */}
           <div className="flex items-center gap-1 text-white text-xs font-medium">
             <span>{formatTime(currentTime)}</span>
-            <span className="text-white/40">/</span>
+            <span className="text-white/30">/</span>
             <span>{formatTime(duration)}</span>
           </div>
 
-          {/* Right Controls */}
-          <button className="p-2 hover:bg-white/20 rounded-lg transition-all text-white">
-            <Maximize className="h-4 w-4" />
+          <button className="p-1.5 hover:bg-white/10 transition-colors duration-100 text-white rounded">
+            <Maximize className="h-3 w-3" />
           </button>
         </div>
       </div>
@@ -190,7 +190,7 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
     if (isOpen) {
       setIsVisible(true);
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300);
+      const timer = setTimeout(() => setIsVisible(false), 150);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -209,20 +209,18 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
           />
         );
       case "video":
-        return (
-          <PremiumVideoPlayer src={asset.url} />
-        );
+        return <PremiumVideoPlayer src={asset.url} />;
       case "document":
         return (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-white">
-            <div className="text-6xl font-light text-gray-300 mb-4">📄</div>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="text-5xl font-light text-gray-300 mb-3">📄</div>
             <p className="text-gray-400 text-xs tracking-wide font-light">DOCUMENT</p>
           </div>
         );
       default:
         return (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-white">
-            <div className="text-6xl font-light text-gray-300 mb-4">📦</div>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="text-5xl font-light text-gray-300 mb-3">📦</div>
             <p className="text-gray-400 text-xs tracking-wide font-light">FILE</p>
           </div>
         );
@@ -234,7 +232,7 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
     value,
   }) =>
     value ? (
-      <div className="grid grid-cols-4 gap-4 py-5 border-b border-gray-100 last:border-0">
+      <div className="grid grid-cols-4 gap-4 py-4 border-b border-gray-100 last:border-0">
         <div className="col-span-1">
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">{label}</p>
         </div>
@@ -246,112 +244,99 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-40 flex items-center justify-center p-4 transition-colors`}
+      className="fixed inset-0 z-40 flex items-center justify-center p-4"
       style={{
-        backgroundColor: isVisible ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0)",
-        transitionDuration: "500ms",
-        backdropFilter: `blur(${isVisible ? 30 : 0}px)`,
-        WebkitBackdropFilter: `blur(${isVisible ? 30 : 0}px)`,
+        backgroundColor: isVisible ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0)",
+        transitionDuration: "40ms",
+        transitionProperty: "background-color",
+        transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
       }}
       onClick={onClose}
     >
       <div
-        className={`relative z-50 bg-white rounded-3xl overflow-hidden w-full max-w-7xl h-[32rem] flex border border-gray-200/50 transition-all`}
+        className="relative z-50 bg-white rounded-2xl overflow-hidden w-full max-w-6xl h-[30rem] flex border border-gray-200/40"
         style={{
           opacity: isVisible ? 1 : 0,
-          transform: isVisible ? "translateY(0px) scale(1)" : "translateY(60px) scale(0.88)",
-          transitionDuration: "600ms",
-          transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+          transform: isVisible ? "translateY(0px) scale(1)" : "translateY(20px) scale(0.97)",
+          transitionDuration: "50ms",
+          transitionProperty: "opacity, transform",
+          transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
           boxShadow: isVisible
-            ? "0 50px 100px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1)"
-            : "0 20px 40px rgba(0,0,0,0.1)",
+            ? "0 20px 60px rgba(0,0,0,0.08)"
+            : "0 10px 30px rgba(0,0,0,0.05)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button - Top Right */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-10 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-900 bg-white/70 hover:bg-white rounded-full transition-all duration-300 border border-gray-200/50"
+          className="absolute top-4 right-4 z-10 w-7 h-7 flex items-center justify-center text-gray-500 hover:text-gray-700 bg-gray-100/70 hover:bg-gray-100 rounded-full transition-colors duration-100 border-0"
         >
-          <X className="h-5 w-5 font-light" strokeWidth={1.5} />
+          <X className="h-4 w-4 font-light" strokeWidth={1.5} />
         </button>
 
-        {/* LEFT: Image/Video - Expansive Taller */}
-        <div className="w-2/5 h-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
-          <div className="p-12 w-full h-full flex items-center justify-center">
+        <div className="w-2/5 h-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden border-r border-gray-100">
+          <div className="p-8 w-full h-full flex items-center justify-center">
             <DetailPreview />
           </div>
         </div>
 
-        {/* RIGHT: Information - Spacious */}
         <div className="w-3/5 h-full flex flex-col overflow-hidden bg-white">
-          {/* Header - Large Typography */}
-          <div className="px-12 pt-10 pb-8 flex-shrink-0 border-b border-gray-100">
-            <h1 className="text-3xl font-light text-gray-900 line-clamp-2 break-words leading-tight tracking-tight">
+          <div className="px-10 pt-8 pb-6 flex-shrink-0 border-b border-gray-100">
+            <h1 className="text-2xl font-light text-gray-900 line-clamp-2 break-words leading-tight tracking-tight">
               {asset.name}
             </h1>
-            <div className="flex items-center gap-4 mt-6">
+            <div className="flex items-center gap-3 mt-4">
               <span className="text-xs text-gray-600 uppercase font-medium tracking-wider">
                 {asset.type ? asset.type.charAt(0).toUpperCase() + asset.type.slice(1) : "Asset"}
               </span>
-              <span className="w-1 h-1 rounded-full bg-gray-300" />
+              <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
               <span className="text-xs text-gray-600 uppercase font-medium tracking-wider">
                 {asset.format?.toUpperCase()}
               </span>
             </div>
           </div>
 
-          {/* Scrollable Content - Maximum Space */}
-          <div className="flex-1 overflow-y-auto px-12 py-8 space-y-10">
-            {/* Details Grid */}
+          <div className="flex-1 overflow-y-auto px-10 py-6 space-y-8">
             <div>
-              <p className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-6">
-                Details
-              </p>
+              <p className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-4">Details</p>
               <div className="space-y-0">
                 <DetailRow label="Size" value={asset.size} />
                 <DetailRow label="Dimensions" value={asset.dimensions} />
               </div>
             </div>
 
-            {/* Upload Info */}
             <div>
-              <p className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-6">
-                Upload Information
-              </p>
+              <p className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-4">Upload Information</p>
               <div className="space-y-0">
-                <div className="grid grid-cols-4 gap-4 py-5 border-b border-gray-100">
+                <div className="grid grid-cols-4 gap-4 py-4 border-b border-gray-100">
                   <div className="col-span-1">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">By</p>
                   </div>
                   <div className="col-span-3 flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-400" />
+                    <User className="h-3 w-3 text-gray-400" />
                     <p className="text-sm text-gray-900 font-medium">{asset.uploadedBy}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-4 py-5">
+                <div className="grid grid-cols-4 gap-4 py-4">
                   <div className="col-span-1">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Date</p>
                   </div>
                   <div className="col-span-3 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gray-400" />
+                    <Clock className="h-3 w-3 text-gray-400" />
                     <p className="text-sm text-gray-900 font-medium">{asset.uploadDate}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Tags */}
             {asset.tags && asset.tags.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-6">
-                  Tags
-                </p>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-4">Tags</p>
+                <div className="flex flex-wrap gap-1.5">
                   {asset.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                      className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium transition-colors duration-100 hover:bg-gray-200"
                     >
                       {tag}
                     </span>
@@ -361,11 +346,10 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
             )}
           </div>
 
-          {/* Action Buttons - Minimalist */}
-          <div className="px-12 py-8 border-t border-gray-100 flex gap-3 flex-shrink-0">
+          <div className="px-10 py-6 border-t border-gray-100 flex gap-2 flex-shrink-0">
             <button
               onClick={() => onDownload(asset.id)}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700 transition-all duration-300 active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors duration-100 active:scale-95"
             >
               <Download className="h-4 w-4" />
               Get
@@ -375,16 +359,53 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
                 onDelete(asset.id);
                 onClose();
               }}
-              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 active:scale-95"
+              className="px-3 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-100 active:scale-95"
             >
               <Trash2 className="h-4 w-4" />
             </button>
-            <button className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300">
+            <button className="px-3 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-100 active:scale-95">
               <Share2 className="h-4 w-4" />
             </button>
           </div>
         </div>
       </div>
+
+      <style>{`
+        input[type="range"] {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 2px;
+          border-radius: 1px;
+          background: rgba(255, 255, 255, 0.1);
+          outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #60a5fa;
+          cursor: pointer;
+          transition: background 0.15s, transform 0.15s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #60a5fa;
+          cursor: pointer;
+          border: none;
+          transition: background 0.15s, transform 0.15s;
+        }
+        input[type="range"]::-moz-range-thumb:hover {
+          transform: scale(1.15);
+        }
+      `}</style>
     </div>
   );
 };
