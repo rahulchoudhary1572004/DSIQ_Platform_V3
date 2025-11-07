@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   Search,
@@ -103,6 +101,8 @@ export default function ProductDetailView({
                 type="checkbox"
                 checked={Boolean(value)}
                 onChange={(e) => updateProductData(attribute.id, e.target.checked)}
+                aria-label={attribute.name}
+                title={attribute.name}
                 className="sr-only peer"
               />
               <div className="w-full h-full bg-gray-200 rounded-full peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors duration-200"></div>
@@ -116,6 +116,8 @@ export default function ProductDetailView({
           <select
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={`${baseClasses}`}
           >
             <option value="">Select an option</option>
@@ -132,6 +134,8 @@ export default function ProductDetailView({
             type="number"
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={baseClasses}
             step="any"
           />
@@ -142,6 +146,8 @@ export default function ProductDetailView({
             type="date"
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={baseClasses}
           />
         )
@@ -150,6 +156,8 @@ export default function ProductDetailView({
           <textarea
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={`${baseClasses} h-20 resize-none`}
             rows={3}
           />
@@ -159,6 +167,8 @@ export default function ProductDetailView({
           <textarea
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={`${baseClasses} h-26 resize-none`}
             rows={5}
             placeholder="Enter rich text content..."
@@ -170,6 +180,8 @@ export default function ProductDetailView({
             type="text"
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={baseClasses}
           />
         )
@@ -255,7 +267,11 @@ export default function ProductDetailView({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">7/5/2023</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button className="text-gray-600 hover:text-gray-900">
+                      <button 
+                        className="text-gray-600 hover:text-gray-900"
+                        aria-label="Edit product PMA-SUE-003"
+                        title="Edit product"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
                     </td>
@@ -270,7 +286,11 @@ export default function ProductDetailView({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">6/20/2023</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button className="text-gray-600 hover:text-gray-900">
+                      <button 
+                        className="text-gray-600 hover:text-gray-900"
+                        aria-label="Edit product ADI-ULT-002"
+                        title="Edit product"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
                     </td>
@@ -285,7 +305,11 @@ export default function ProductDetailView({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5/15/2023</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button className="text-gray-600 hover:text-gray-900">
+                      <button 
+                        className="text-gray-600 hover:text-gray-900"
+                        aria-label="Edit product NKE-AIR-001"
+                        title="Edit product"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
                     </td>
@@ -811,6 +835,8 @@ export default function ProductDetailView({
                   <input
                     value={tempTitle}
                     onChange={(e) => setTempTitle(e.target.value)}
+                    aria-label="Product title"
+                    title="Product title"
                     className="text-2xl font-bold border-2 border-blue-500 px-3 py-2 rounded-md focus:outline-none"
                     autoFocus
                   />
@@ -819,7 +845,9 @@ export default function ProductDetailView({
                       updateProductData(1, tempTitle)
                       setEditingTitle(false)
                     }}
-                    className="h-8 w-8 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    aria-label="Save product title"
+                    title="Save product title"
+                    className="h-8 w-8 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
                   >
                     <Check className="w-4 h-4" />
                   </button>
@@ -828,7 +856,9 @@ export default function ProductDetailView({
                       setTempTitle(productData[1] || "")
                       setEditingTitle(false)
                     }}
-                    className="h-8 w-8 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    aria-label="Cancel editing title"
+                    title="Cancel editing title"
+                    className="h-8 w-8 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -841,7 +871,9 @@ export default function ProductDetailView({
                       setEditingTitle(true)
                       setTempTitle(productData[1] || "")
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md"
+                    aria-label="Edit product title"
+                    title="Edit product title"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center"
                   >
                     <Edit className="w-3 h-3" />
                   </button>
@@ -857,6 +889,8 @@ export default function ProductDetailView({
                     <input
                       value={tempSku}
                       onChange={(e) => setTempSku(e.target.value)}
+                      aria-label="Product SKU"
+                      title="Product SKU"
                       className="h-6 px-2 border border-blue-500 rounded-md focus:outline-none"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -875,7 +909,9 @@ export default function ProductDetailView({
                         updateProductData(2, tempSku)
                         setEditingSku(false)
                       }}
-                      className="h-6 w-6 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      aria-label="Save SKU"
+                      title="Save SKU"
+                      className="h-6 w-6 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
                     >
                       <Check className="w-3 h-3" />
                     </button>
@@ -884,7 +920,9 @@ export default function ProductDetailView({
                         setTempSku(productData[2] || "")
                         setEditingSku(false)
                       }}
-                      className="h-6 w-6 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      aria-label="Cancel editing SKU"
+                      title="Cancel editing SKU"
+                      className="h-6 w-6 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -897,7 +935,9 @@ export default function ProductDetailView({
                         setEditingSku(true)
                         setTempSku(productData[2] || "")
                       }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 p-0 hover:bg-gray-100 rounded-md"
+                      aria-label="Edit SKU"
+                      title="Edit SKU"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center"
                     >
                       <Edit className="w-2.4 h-2.4" />
                     </button>
@@ -1093,6 +1133,8 @@ export default function ProductDetailView({
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => toggleSection(section.id)}
+                              aria-label={`Toggle section ${section.title}`}
+                              title={`Toggle section ${section.title}`}
                               className="p-1.6 hover:bg-gray-200 rounded-md transition-colors"
                             >
                               {expandedSections[section.id] ? (

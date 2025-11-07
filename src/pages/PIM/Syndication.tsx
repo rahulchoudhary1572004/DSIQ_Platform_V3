@@ -98,8 +98,7 @@ const MyPager = (props) => {
     });
   return (
     <div
-      className="k-pager k-pager-md k-grid-pager"
-      style={{ borderTop: "1px solid", borderTopColor: "inherit" }}
+      className="k-pager k-pager-md k-grid-pager border-t border-gray-300"
     >
       <div className="flex items-center justify-between p-2">
         <div className="flex-1">
@@ -411,7 +410,11 @@ export default function Syndication() {
                         </span>
                       </div>
                     </div>
-                    <button className="text-gray-400 hover:text-gray-600">
+                    <button 
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Configure template"
+                      title="Configure template"
+                    >
                       <Settings className="w-4 h-4" />
                     </button>
                   </div>

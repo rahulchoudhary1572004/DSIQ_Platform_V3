@@ -100,6 +100,8 @@ export default function ProductViewMode({
                 onChange={(e) =>
                   updateProductData(attribute.id, e.target.checked)
                 }
+                aria-label={attribute.name}
+                title={attribute.name}
                 className="sr-only peer"
               />
               <div className="w-full h-full bg-gray-200 rounded-full peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors duration-200"></div>
@@ -115,6 +117,8 @@ export default function ProductViewMode({
           <select
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={`${baseClasses}`}
           >
             <option value="">Select an option</option>
@@ -131,6 +135,8 @@ export default function ProductViewMode({
             type="number"
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={baseClasses}
             step="any"
           />
@@ -141,6 +147,8 @@ export default function ProductViewMode({
             type="date"
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={baseClasses}
           />
         );
@@ -149,6 +157,8 @@ export default function ProductViewMode({
           <textarea
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={`${baseClasses} h-20 resize-none`}
             rows={3}
           />
@@ -169,6 +179,8 @@ export default function ProductViewMode({
             type="text"
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
+            aria-label={attribute.name}
+            title={attribute.name}
             className={baseClasses}
           />
         );
@@ -237,6 +249,8 @@ export default function ProductViewMode({
                     <input
                       value={tempTitle}
                       onChange={(e) => setTempTitle(e.target.value)}
+                      aria-label="Product title"
+                      title="Product title"
                       className="text-2xl font-bold border-2 border-blue-500 px-3 py-2 rounded-md focus:outline-none"
                       autoFocus
                     />
@@ -245,7 +259,9 @@ export default function ProductViewMode({
                         updateProductData(1, tempTitle);
                         setEditingTitle(false);
                       }}
-                      className="h-8 w-8 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      aria-label="Save product title"
+                      title="Save product title"
+                      className="h-8 w-8 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
                     >
                       <Check className="w-4 h-4" />
                     </button>
@@ -254,7 +270,9 @@ export default function ProductViewMode({
                         setTempTitle(productData[1] || "");
                         setEditingTitle(false);
                       }}
-                      className="h-8 w-8 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      aria-label="Cancel editing title"
+                      title="Cancel editing title"
+                      className="h-8 w-8 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -269,7 +287,9 @@ export default function ProductViewMode({
                         setEditingTitle(true);
                         setTempTitle(productData[1] || "");
                       }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md"
+                      aria-label="Edit product title"
+                      title="Edit product title"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center"
                     >
                       <Edit className="w-3 h-3" />
                     </button>
@@ -285,6 +305,8 @@ export default function ProductViewMode({
                       <input
                         value={tempSku}
                         onChange={(e) => setTempSku(e.target.value)}
+                        aria-label="Product SKU"
+                        title="Product SKU"
                         className="h-6 px-2 border border-blue-500 rounded-md focus:outline-none"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -303,7 +325,9 @@ export default function ProductViewMode({
                           updateProductData(2, tempSku);
                           setEditingSku(false);
                         }}
-                        className="h-6 w-6 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        aria-label="Save SKU"
+                        title="Save SKU"
+                        className="h-6 w-6 p-0 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
                       >
                         <Check className="w-3 h-3" />
                       </button>
@@ -312,7 +336,9 @@ export default function ProductViewMode({
                           setTempSku(productData[2] || "");
                           setEditingSku(false);
                         }}
-                        className="h-6 w-6 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        aria-label="Cancel editing SKU"
+                        title="Cancel editing SKU"
+                        className="h-6 w-6 p-0 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -327,7 +353,9 @@ export default function ProductViewMode({
                           setEditingSku(true);
                           setTempSku(productData[2] || "");
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 p-0 hover:bg-gray-100 rounded-md"
+                        aria-label="Edit SKU"
+                        title="Edit SKU"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center"
                       >
                         <Edit className="w-2.4 h-2.4" />
                       </button>
@@ -452,6 +480,8 @@ export default function ProductViewMode({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => toggleSection(section.id)}
+                        aria-label={`Toggle section ${section.title}`}
+                        title={`Toggle section ${section.title}`}
                         className="p-1.6 hover:bg-gray-200 rounded-md transition-colors"
                       >
                         {expandedSections[section.id] ? (

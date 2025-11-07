@@ -292,7 +292,9 @@ export default function ConfigurationMode({
                             </button>
                             <button
                               onClick={() => deleteSection(section.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md"
+                              aria-label={`Delete section ${section.title}`}
+                              title={`Delete section ${section.title}`}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md flex items-center justify-center"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -378,6 +380,8 @@ export default function ConfigurationMode({
                         <div className="flex items-center gap-2 flex-1">
                           <button
                             onClick={() => toggleSection(section.id)}
+                            aria-label={`Toggle section ${section.title}`}
+                            title={`Toggle section ${section.title}`}
                             className="p-1.6 hover:bg-gray-200 rounded-md transition-colors"
                           >
                             {expandedSections[section.id] ? (
@@ -402,6 +406,8 @@ export default function ConfigurationMode({
                                 )
                               );
                             }}
+                            aria-label="Section title"
+                            title="Section title"
                             className="text-lg font-bold border-none shadow-none p-0 h-auto bg-transparent flex-1 focus:outline-none"
                           />
                         </div>
@@ -411,7 +417,9 @@ export default function ConfigurationMode({
                           </span>
                           <button
                             onClick={() => deleteSection(section.id)}
-                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors"
+                            aria-label={`Delete section ${section.title}`}
+                            title={`Delete section ${section.title}`}
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors flex items-center justify-center"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -459,13 +467,17 @@ export default function ConfigurationMode({
                                             onChange={(e) =>
                                               updateAttribute(section.id, attribute.id, { name: e.target.value })
                                             }
+                                            aria-label={`Field name for ${attribute.name}`}
+                                            title="Field name"
                                             className="font-semibold border-none shadow-none p-0 h-auto bg-transparent text-sm w-full focus:outline-none"
                                             placeholder="Field name"
                                           />
                                         </div>
                                         <button
                                           onClick={() => deleteAttribute(section.id, attribute.id)}
-                                          className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 h-6 w-6 p-0 rounded-md hover:bg-red-50"
+                                          aria-label={`Delete field ${attribute.name}`}
+                                          title={`Delete field ${attribute.name}`}
+                                          className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 h-6 w-6 p-0 rounded-md hover:bg-red-50 flex items-center justify-center"
                                         >
                                           <Trash2 className="w-3 h-3" />
                                         </button>
@@ -481,6 +493,8 @@ export default function ConfigurationMode({
                                             onChange={(e) =>
                                               updateAttribute(section.id, attribute.id, { type: e.target.value })
                                             }
+                                            aria-label={`Field type for ${attribute.name}`}
+                                            title="Field type"
                                             className="w-full h-7 text-xs border border-gray-300 rounded-md px-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                           >
                                             <option value="String">Text</option>
@@ -507,6 +521,8 @@ export default function ConfigurationMode({
                                                     required: e.target.checked,
                                                   })
                                                 }
+                                                aria-label={`Mark ${attribute.name} as required`}
+                                                title={`Mark ${attribute.name} as required`}
                                                 className="sr-only peer"
                                               />
                                               <div className="w-full h-full bg-gray-200 rounded-full peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors duration-200"></div>
@@ -523,7 +539,9 @@ export default function ConfigurationMode({
                                             {attribute.type === "Picklist" && (
                                               <button
                                                 onClick={() => openPicklistOptions(attribute.id)}
-                                                className="h-6 px-2 text-xs border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                aria-label={`Configure picklist options for ${attribute.name}`}
+                                                title="Configure picklist options"
+                                                className="h-6 px-2 text-xs border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors flex items-center justify-center"
                                               >
                                                 <Settings className="w-3 h-3" />
                                               </button>
@@ -613,6 +631,7 @@ export default function ConfigurationMode({
                   value={newOption}
                   onChange={(e) => setNewOption(e.target.value)}
                   placeholder="Enter new option"
+                  title="Enter new picklist option"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -656,7 +675,9 @@ export default function ConfigurationMode({
                                   </div>
                                   <button
                                     onClick={() => removePicklistOption(index)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-md"
+                                    aria-label={`Remove option ${option}`}
+                                    title={`Remove option ${option}`}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-md flex items-center justify-center"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </button>

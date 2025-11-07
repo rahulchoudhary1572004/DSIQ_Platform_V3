@@ -488,6 +488,8 @@ const EnhancedProductDetailPage = () => {
                 checked={Boolean(value)}
                 onChange={(e) => updateProductData(attribute.id, e.target.checked)}
                 className="sr-only peer"
+                aria-label={attribute.name}
+                title={attribute.name}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
@@ -501,6 +503,8 @@ const EnhancedProductDetailPage = () => {
               value={value}
               onChange={(e) => updateProductData(attribute.id, e.target.value)}
               className={`${baseClasses} flex-1`}
+              aria-label={attribute.name}
+              title={attribute.name}
             >
               <option value="">Select an option</option>
               {(picklistOptions[attribute.id] || []).map((option) => (
@@ -511,7 +515,9 @@ const EnhancedProductDetailPage = () => {
             </select>
             <button
               onClick={() => openPicklistOptions(attribute.id)}
-              className="flex-shrink-0 px-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="flex items-center justify-center flex-shrink-0 px-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              aria-label="Configure picklist options"
+              title="Configure picklist options"
             >
               <Settings className="h-4 w-4" />
             </button>
@@ -525,6 +531,8 @@ const EnhancedProductDetailPage = () => {
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={baseClasses}
             step="any"
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
       case "Date":
@@ -534,6 +542,8 @@ const EnhancedProductDetailPage = () => {
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={baseClasses}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
       case "Text":
@@ -543,6 +553,8 @@ const EnhancedProductDetailPage = () => {
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={`${baseClasses} h-24 resize-none`}
             rows={3}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
       case "Rich Text":
@@ -562,6 +574,8 @@ const EnhancedProductDetailPage = () => {
             value={value}
             onChange={(e) => updateProductData(attribute.id, e.target.value)}
             className={baseClasses}
+            aria-label={attribute.name}
+            title={attribute.name}
           />
         )
     }
@@ -631,7 +645,9 @@ const EnhancedProductDetailPage = () => {
                               </button>
                               <button
                                 onClick={() => deleteSection(section.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity mr-3 h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity mr-3 h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                aria-label={`Delete ${section.title} section`}
+                                title={`Delete ${section.title} section`}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -714,6 +730,8 @@ const EnhancedProductDetailPage = () => {
                                 )
                               }}
                               className="text-xl font-bold border-none shadow-none p-0 h-auto bg-transparent flex-1 focus:outline-none"
+                              aria-label="Section title"
+                              title="Section title"
                             />
                           </div>
                           <div className="flex items-center gap-3">
@@ -722,7 +740,9 @@ const EnhancedProductDetailPage = () => {
                             </span>
                             <button
                               onClick={() => deleteSection(section.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
+                              className="flex items-center justify-center h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
+                              aria-label={`Delete ${section.title} section`}
+                              title={`Delete ${section.title} section`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -770,7 +790,9 @@ const EnhancedProductDetailPage = () => {
                                           </div>
                                           <button
                                             onClick={() => deleteAttribute(section.id, attribute.id)}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 h-8 w-8 p-0 rounded-lg hover:bg-red-50"
+                                            className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 h-8 w-8 p-0 rounded-lg hover:bg-red-50"
+                                            aria-label={`Delete ${attribute.name} field`}
+                                            title={`Delete ${attribute.name} field`}
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </button>
@@ -785,6 +807,8 @@ const EnhancedProductDetailPage = () => {
                                                 updateAttribute(section.id, attribute.id, { type: e.target.value })
                                               }
                                               className="w-full h-9 text-sm border border-gray-300 rounded-lg px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                              aria-label="Field type"
+                                              title="Field type"
                                             >
                                               <option value="String">Text</option>
                                               <option value="Number">Number</option>
@@ -811,6 +835,8 @@ const EnhancedProductDetailPage = () => {
                                                     })
                                                   }
                                                   className="sr-only peer"
+                                                  aria-label="Required field"
+                                                  title="Required field"
                                                 />
                                                 <div className="w-full h-full bg-gray-200 rounded-full peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors duration-200"></div>
                                                 <div className="absolute left-[2px] top-[2px] w-5 h-5 bg-white border border-gray-300 rounded-full transition-transform duration-200 peer-checked:translate-x-5"></div>
@@ -826,7 +852,9 @@ const EnhancedProductDetailPage = () => {
                                               {attribute.type === "Picklist" && (
                                                 <button
                                                   onClick={() => openPicklistOptions(attribute.id)}
-                                                  className="h-8 px-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                  className="flex items-center justify-center h-8 px-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                  aria-label="Configure picklist options"
+                                                  title="Configure picklist options"
                                                 >
                                                   <Settings className="w-4 h-4" />
                                                 </button>
@@ -1021,16 +1049,22 @@ const EnhancedProductDetailPage = () => {
                         if (e.key === "Escape") handleTitleCancel()
                       }}
                       autoFocus
+                      aria-label="Product title"
+                      title="Product title"
                     />
                     <button
                       onClick={handleTitleSave}
-                      className="h-10 w-10 p-0 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="flex items-center justify-center h-10 w-10 p-0 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      aria-label="Save title"
+                      title="Save title"
                     >
                       <Check className="w-5 h-5" />
                     </button>
                     <button
                       onClick={handleTitleCancel}
-                      className="h-10 w-10 p-0 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-center h-10 w-10 p-0 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      aria-label="Cancel title edit"
+                      title="Cancel title edit"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1040,7 +1074,9 @@ const EnhancedProductDetailPage = () => {
                     <h1 className="text-3xl font-bold text-gray-900">{productData[1] || "Untitled Product"}</h1>
                     <button
                       onClick={handleTitleEdit}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
+                      className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
+                      aria-label="Edit product title"
+                      title="Edit product title"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -1063,16 +1099,22 @@ const EnhancedProductDetailPage = () => {
                           if (e.key === "Escape") handleSkuCancel()
                         }}
                         autoFocus
+                        aria-label="Product SKU"
+                        title="Product SKU"
                       />
                       <button
                         onClick={handleSkuSave}
-                        className="h-8 w-8 p-0 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="flex items-center justify-center h-8 w-8 p-0 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        aria-label="Save SKU"
+                        title="Save SKU"
                       >
                         <Check className="w-4 h-4" />
                       </button>
                       <button
                         onClick={handleSkuCancel}
-                        className="h-8 w-8 p-0 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-center h-8 w-8 p-0 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        aria-label="Cancel SKU edit"
+                        title="Cancel SKU edit"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1082,7 +1124,9 @@ const EnhancedProductDetailPage = () => {
                       <span className="font-semibold">{productData[2] || "No SKU"}</span>
                       <button
                         onClick={handleSkuEdit}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-lg"
+                        className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-gray-100 rounded-lg"
+                        aria-label="Edit product SKU"
+                        title="Edit product SKU"
                       >
                         <Edit className="w-3 h-3" />
                       </button>
@@ -1225,7 +1269,9 @@ const EnhancedProductDetailPage = () => {
                                   </div>
                                   <button
                                     onClick={() => removePicklistOption(index)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg"
+                                    className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg"
+                                    aria-label={`Remove ${option} option`}
+                                    title={`Remove ${option} option`}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>

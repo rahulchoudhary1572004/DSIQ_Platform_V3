@@ -96,6 +96,8 @@ export default function ViewsListPage({ viewTemplates, setCurrentPage, onConfigu
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              aria-label="Filter views"
+              title="Filter views"
             >
               <option value="all">All Views</option>
               <option value="default">Default Views</option>
@@ -173,6 +175,8 @@ export default function ViewsListPage({ viewTemplates, setCurrentPage, onConfigu
                         setShowCreateDialog(true)
                       }}
                       className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      aria-label="Duplicate view"
+                      title="Duplicate view"
                     >
                       <Copy className="w-4 h-4" />
                     </button>
@@ -184,6 +188,8 @@ export default function ViewsListPage({ viewTemplates, setCurrentPage, onConfigu
                           }
                         }}
                         className="flex items-center justify-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        aria-label="Delete view"
+                        title="Delete view"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -252,6 +258,8 @@ export default function ViewsListPage({ viewTemplates, setCurrentPage, onConfigu
                   value={selectedSourceView}
                   onChange={(e) => setSelectedSourceView(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  aria-label="Select base template"
+                  title="Select base template"
                 >
                   <option value="">Select a view to copy from</option>
                   {viewTemplates.map((view) => (
