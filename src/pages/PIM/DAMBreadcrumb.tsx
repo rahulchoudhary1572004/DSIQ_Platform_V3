@@ -1,6 +1,6 @@
-// components/DAM/DAMBreadcrumb.tsx - Apple Minimalist (Fixed for Folders)
+// components/DAM/DAMBreadcrumb.tsx - APPLE DESIGN
 import React, { FC, useState, useEffect } from "react";
-import { Home, Upload as UploadIcon, Folder as FolderIcon, ChevronRight } from "lucide-react";
+import { ChevronRight, Home } from "lucide-react";
 import { Product } from "../../types/dam.types";
 
 type ActiveTab = "library" | "upload" | "folders";
@@ -15,7 +15,6 @@ interface DAMBreadcrumbProps {
 
 interface BreadcrumbItem {
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
   onClick: () => void;
   active: boolean;
 }
@@ -67,27 +66,23 @@ const DAMBreadcrumb: FC<DAMBreadcrumbProps> = ({
     const items: BreadcrumbItem[] = [
       {
         label: "Home",
-        icon: Home,
         onClick: () => {
           onNavigateHome();
           onTabChange("library");
         },
-        active:
-          !selectedProduct && !viewingFolderId && activeTab === "library",
+        active: !selectedProduct && !viewingFolderId && activeTab === "library",
       },
     ];
 
     if (activeTab === "upload") {
       items.push({
         label: "Upload",
-        icon: UploadIcon,
         onClick: () => onTabChange("upload"),
         active: true,
       });
     } else if (activeTab === "folders") {
       items.push({
         label: "Folders",
-        icon: FolderIcon,
         onClick: () => onTabChange("folders"),
         active: !viewingFolderId,
       });
@@ -95,7 +90,6 @@ const DAMBreadcrumb: FC<DAMBreadcrumbProps> = ({
       if (viewingFolderId) {
         items.push({
           label: viewingFolderId,
-          icon: FolderIcon,
           onClick: () => {},
           active: true,
         });
@@ -104,21 +98,18 @@ const DAMBreadcrumb: FC<DAMBreadcrumbProps> = ({
       if (viewingFolderId) {
         items.push({
           label: "Folders",
-          icon: FolderIcon,
           onClick: () => onTabChange("folders"),
           active: false,
         });
 
         items.push({
           label: viewingFolderId,
-          icon: FolderIcon,
           onClick: () => {},
           active: true,
         });
       } else if (selectedProduct) {
         items.push({
           label: selectedProduct.name,
-          icon: FolderIcon,
           onClick: () => {},
           active: true,
         });
@@ -130,41 +121,42 @@ const DAMBreadcrumb: FC<DAMBreadcrumbProps> = ({
 
   const breadcrumbItems = getBreadcrumbItems();
 
+  if (!shouldShow) return null;
+
   return (
     <nav
-      className={`fixed top-20 left-0 right-0 px-8 transition-all duration-400 ease-out pointer-events-none z-40 ${
+      className={`fixed top-20 right-8 flex transition-all duration-400 ease-out pointer-events-none ${
         isVisible && shouldShow
           ? "opacity-100 translate-y-0"
           : "opacity-0 -translate-y-3"
       }`}
     >
-      {/* Ultra Minimalist Breadcrumb */}
-      <div className="flex items-center gap-0.5 text-sm pointer-events-auto">
+      {/* APPLE DESIGN */}
+      <div className="inline-flex items-center gap-2 text-sm pointer-events-auto">
         {breadcrumbItems.map((item, index) => {
-          const IconComponent = item.icon;
           const isLast = index === breadcrumbItems.length - 1;
 
           return (
-            <div key={index} className="flex items-center gap-0.5">
+            <div key={index} className="flex items-center gap-2">
               <button
                 onClick={item.onClick}
                 disabled={isLast}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all duration-200 font-medium text-sm ${
+                className={`px-3 py-2 transition-colors duration-200 text-sm whitespace-nowrap ${
                   item.active
-                    ? "text-gray-900 bg-gray-50/80 hover:bg-gray-100"
+                    ? "text-gray-900 font-semibold"
                     : isLast
-                      ? "text-gray-600 cursor-default"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50/60 cursor-pointer"
+                      ? "text-gray-500 cursor-default"
+                      : "text-gray-600 hover:text-gray-900 cursor-pointer"
                 }`}
               >
-                <IconComponent className="h-3.5 w-3.5 flex-shrink-0" />
-                <span className="hidden sm:inline truncate max-w-xs">
+                {index === 0 && <Home className="h-4 w-4 inline mr-1" />}
+                <span className="truncate max-w-[120px] sm:max-w-[180px] md:max-w-xs">
                   {item.label}
                 </span>
               </button>
 
               {!isLast && (
-                <ChevronRight className="h-3.5 w-3.5 text-gray-300 flex-shrink-0 mx-0.5" />
+                <ChevronRight className="h-4 w-4 text-gray-300 flex-shrink-0" />
               )}
             </div>
           );

@@ -1,4 +1,4 @@
-// components/DAM/DAM.tsx - Complete Enhanced Version
+// components/DAM/DAM.tsx - COMPLETE with Folder Search Popup
 import React, { useState, useMemo, FC } from "react";
 import {
   HardDrive,
@@ -14,6 +14,7 @@ import {
   Image,
   Video,
   Archive,
+  Check,
 } from "lucide-react";
 
 import DAMSidebar from "./DAMSidebar";
@@ -22,7 +23,7 @@ import DAMSearchFilters from "./DAMSearchFilters";
 import DAMAssetDetail from "./DAMAssetDetail";
 import DAMUpload from "./DAMUpload";
 import DAMBreadcrumb from "./DAMBreadcrumb";
-
+import DAMSearchBar from "./DAMSearchBar";
 import { DigitalAsset, Product, SearchFilters } from "../../types/dam.types";
 import { products, digitalAssets } from "./dam.data";
 
@@ -42,6 +43,7 @@ interface AssetGridProps {
   onDeleteAsset: (assetId: number) => void;
   onAddToCollection?: (asset: DigitalAsset) => void;
   isDetailModalOpen?: boolean;
+  onAddToFolderClick?: (asset: DigitalAsset) => void;
 }
 
 const AssetGrid: FC<AssetGridProps> = ({
@@ -55,6 +57,7 @@ const AssetGrid: FC<AssetGridProps> = ({
   onDeleteAsset,
   onAddToCollection,
   isDetailModalOpen = false,
+  onAddToFolderClick,
 }) => {
   const gridStyle: React.CSSProperties = {
     gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize * 50}px, 1fr))`,
@@ -152,6 +155,7 @@ const AssetGrid: FC<AssetGridProps> = ({
               onDelete={onDeleteAsset}
               onAddToCollection={onAddToCollection}
               isDisabled={isDetailModalOpen}
+              onAddToFolderClick={onAddToFolderClick}
             />
           </div>
         </div>
@@ -195,6 +199,7 @@ interface LibraryContentProps {
   onAddToCollection: (asset: DigitalAsset) => void;
   onBulkDownload: () => void;
   onBulkDelete: () => void;
+  onAddToFolderClick?: (asset: DigitalAsset) => void;
 }
 
 const getTypeIcon = (type: string) => {
@@ -235,18 +240,18 @@ const LibraryContent: FC<LibraryContentProps> = ({
   onAddToCollection,
   onBulkDownload,
   onBulkDelete,
+  onAddToFolderClick,
 }) => {
-  // Display title logic
+  const [showTypeBreakdown, setShowTypeBreakdown] = useState(false);
+
   const displayTitle = viewingFolderId
     ? folderName
     : selectedProduct
       ? selectedProduct.name
       : "All Assets";
 
-  // Check if viewing folder or product
   const isFolderView = !!viewingFolderId;
 
-  // Calculate asset type breakdown
   const typeBreakdown = useMemo(() => {
     const breakdown: Record<string, number> = {};
     sortedAssets.forEach((asset) => {
@@ -255,7 +260,6 @@ const LibraryContent: FC<LibraryContentProps> = ({
     return breakdown;
   }, [sortedAssets]);
 
-  // Calculate total file size
   const totalSize = useMemo(() => {
     const totalBytes = sortedAssets.reduce((sum, asset) => sum + (asset.sizeInBytes || 0), 0);
     if (totalBytes === 0) return "0 KB";
@@ -266,11 +270,9 @@ const LibraryContent: FC<LibraryContentProps> = ({
 
   return (
     <section className="flex-1 px-8 py-8 overflow-auto bg-white flex flex-col">
-      {/* ENHANCED: Header with metadata */}
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            {/* Title with Badge */}
             <div className="flex items-center gap-3 mb-3">
               {isFolderView && (
                 <div className="px-3 py-1 bg-amber-100/60 border border-amber-200 rounded-full">
@@ -286,9 +288,59 @@ const LibraryContent: FC<LibraryContentProps> = ({
                 </div>
               )}
               <h1 className="text-3xl font-light text-gray-900">{displayTitle}</h1>
+              
+         {/* INFO ICON - TYPE BREAKDOWN TOOLTIP */}
+{sortedAssets.length > 0 && (
+  <div className="relative">
+    <button
+      onClick={() => setShowTypeBreakdown(!showTypeBreakdown)}
+      className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-all duration-200 text-gray-500 hover:text-blue-600"
+      title="View asset type breakdown"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fillRule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </button>
+    
+    {/* TOOLTIP - TYPE BREAKDOWN */}
+    {showTypeBreakdown && (
+      <div className="absolute left-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-max z-10 animate-fade-in">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Asset Type Distribution</p>
+          <button
+            onClick={() => setShowTypeBreakdown(false)}
+            className="ml-3 p-1 hover:bg-gray-100 rounded transition-all text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="space-y-2">
+          {Object.entries(typeBreakdown).map(([type, count]) => (
+            <div key={type} className="flex items-center gap-2">
+              <div className="p-1 bg-gray-100 rounded">
+                {getTypeIcon(type)}
+              </div>
+              <span className="text-xs font-medium text-gray-700 capitalize">{type}:</span>
+              <span className="text-xs font-semibold text-gray-900">{count}</span>
             </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+)}
+</div>
 
-            {/* Product Info */}
+
             {selectedProduct && !isFolderView && (
               <div className="flex items-center gap-6 text-sm text-gray-600 mb-3 flex-wrap">
                 <div>
@@ -315,126 +367,94 @@ const LibraryContent: FC<LibraryContentProps> = ({
               </div>
             )}
 
-            {/* Asset Stats */}
-            <div className="flex gap-4 text-sm">
-              <div className="px-3 py-2 bg-blue-50 rounded-lg border border-blue-200/50">
-                <span className="text-gray-600">Total Assets: </span>
-                <span className="font-semibold text-blue-900">{sortedAssets.length}</span>
-              </div>
-              <div className="px-3 py-2 bg-purple-50 rounded-lg border border-purple-200/50">
-                <span className="text-gray-600">Total Size: </span>
-                <span className="font-semibold text-purple-900">{totalSize}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Count Badge */}
-          <span className="px-4 py-2 text-sm bg-gray-200/60 text-slate-900 rounded-full font-semibold border border-gray-300/50 backdrop-blur-sm ml-4">
-            {sortedAssets.length} items
-          </span>
-        </div>
-
-        {/* Asset Type Breakdown */}
-        {sortedAssets.length > 0 && (
-          <div className="flex gap-3 text-xs text-gray-600 mt-4 flex-wrap">
-            {Object.entries(typeBreakdown).map(([type, count]) => (
-              <div
-                key={type}
-                className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-1.5"
-              >
-                {getTypeIcon(type)}
-                <span className="font-medium capitalize">{type}:</span>
-                <span className="font-semibold text-gray-900">{count}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Controls Bar */}
-      <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/30 flex-wrap gap-4">
-        <div className="flex items-center gap-6 flex-wrap">
-          {selectedAssets.size > 0 && (
-            <div className="flex items-center gap-3 transition-all duration-200 animate-fade-in">
-              <button
-                onClick={onBulkDownload}
-                className="p-3 hover:bg-blue-100/60 text-blue-600 rounded-lg flex items-center gap-1.5 transition-all duration-200 hover:scale-105"
-              >
-                <Download className="h-4 w-4" />
-              </button>
-
-              <button
-                onClick={onBulkDelete}
-                className="p-3 hover:bg-red-100/60 text-red-600 rounded-lg flex items-center gap-1.5 transition-all duration-200 hover:scale-105"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-
-              <button
-                onClick={onClearSelection}
-                className="p-3 hover:bg-slate-100/60 text-slate-500 rounded-lg transition-all duration-200 hover:scale-105"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <div className="flex-1 max-w-lg mx-4">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search assets by name, format..."
-              className="w-full pl-12 pr-4 py-3 bg-white/60 backdrop-blur-sm border border-white/40 rounded-xl text-sm focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 shadow-sm hover:bg-white/80"
-            />
-          </div>
-        </div>
-
-        {/* View Controls */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onFilterOpen}
-            className="flex items-center gap-2 px-4 py-2 bg-white/60 hover:bg-white/80 text-slate-700 rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/40 hover:scale-105"
-            title="Open Filters"
-          >
-            <Filter className="h-4 w-4" />
-            <span className="text-xs font-semibold">Filter</span>
-          </button>
-
-          <div className="flex items-center gap-1 bg-white/60 p-1 rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/40">
-            <button
-              onClick={() => onViewModeChange("grid")}
-              className={`px-3 py-2 rounded-md flex items-center gap-1.5 transition-all duration-200 ${
-                viewMode === "grid"
-                  ? "bg-blue-600 text-white shadow-lg border border-white/20"
-                  : "text-slate-600 hover:bg-white/50"
-              }`}
-              title="Grid View"
-            >
-              <LayoutGrid className="h-4 w-4" />
-              <span className="text-xs font-semibold hidden sm:inline">Grid</span>
-            </button>
-            <button
-              onClick={() => onViewModeChange("list")}
-              className={`px-3 py-2 rounded-md flex items-center gap-1.5 transition-all duration-200 ${
-                viewMode === "list"
-                  ? "bg-blue-600 text-white shadow-lg border border-white/20"
-                  : "text-slate-600 hover:bg-white/50"
-              }`}
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-              <span className="text-xs font-semibold hidden sm:inline">List</span>
-            </button>
+           
           </div>
         </div>
       </div>
 
-      {/* Asset Grid/List */}
+      {/* ALL 3 IN SAME ROW - SEPARATED, LOCKED POSITIONS WITH BOTTOM SPACE */}
+      <div className="px-8 py-4 pb-6 border-b border-gray-100 bg-white flex-shrink-0 h-auto">
+        <div className="flex items-center justify-between h-12 gap-4">
+          
+          {/* LEFT: BULK ACTIONS - Fixed Width */}
+          <div style={{ width: "120px", minWidth: "120px", flexShrink: 0 }}>
+            {selectedAssets.size > 0 ? (
+              <div className="flex items-center gap-3 animate-fade-in">
+                <button
+                  onClick={onBulkDownload}
+                  className="p-2 hover:bg-blue-100/60 text-blue-600 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0"
+                >
+                  <Download className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={onBulkDelete}
+                  className="p-2 hover:bg-red-100/60 text-red-600 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={onClearSelection}
+                  className="p-2 hover:bg-slate-100/60 text-slate-500 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <div />
+            )}
+          </div>
+
+          {/* CENTER: SEARCH BAR - Fixed Width */}
+          <div style={{ width: "520px", minWidth: "320px", flexShrink: 0 }}>
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300 pointer-events-none" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Search assets..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-colors duration-300 shadow-sm"
+                style={{ height: "40px", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
+
+          {/* RIGHT: FILTER & VIEW CONTROLS - Fixed Width */}
+          <div style={{ width: "240px", minWidth: "240px", flexShrink: 0 }} className="flex items-center justify-end gap-3">
+            <button
+              onClick={onFilterOpen}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-lg transition-all duration-200 text-sm font-medium whitespace-nowrap flex-shrink-0"
+            >
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+
+            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg flex-shrink-0">
+              <button
+                onClick={() => onViewModeChange("grid")}
+                className={`px-2.5 py-1.5 rounded-md transition-all duration-200 flex-shrink-0 ${
+                  viewMode === "grid"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-gray-200"
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => onViewModeChange("list")}
+                className={`px-2.5 py-1.5 rounded-md transition-all duration-200 flex-shrink-0 ${
+                  viewMode === "list"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-gray-200"
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className={`flex-1 overflow-auto ${isDetailModalOpen ? "pointer-events-none opacity-50" : ""}`}>
         {sortedAssets.length === 0 ? (
           <EmptyState />
@@ -450,6 +470,7 @@ const LibraryContent: FC<LibraryContentProps> = ({
             onDeleteAsset={onDeleteAsset}
             onAddToCollection={onAddToCollection}
             isDetailModalOpen={isDetailModalOpen}
+            onAddToFolderClick={onAddToFolderClick}
           />
         )}
       </div>
@@ -457,8 +478,10 @@ const LibraryContent: FC<LibraryContentProps> = ({
   );
 };
 
+
 const DAMPage: FC = () => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(products[0]);
+const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
   const [selectedAssets, setSelectedAssets] = useState<Set<number>>(new Set());
   const [selectedAssetDetail, setSelectedAssetDetail] = useState<DigitalAsset | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
@@ -475,12 +498,29 @@ const DAMPage: FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [filtersPanelOpen, setFiltersPanelOpen] = useState<boolean>(false);
 
-  // Folder state
   const [viewingFolderId, setViewingFolderId] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string>("");
   const [folderAssets, setFolderAssets] = useState<DigitalAsset[]>([]);
 
+  // Global folder popup state
+  const [showFolderPopup, setShowFolderPopup] = useState(false);
+  const [selectedAssetForFolder, setSelectedAssetForFolder] = useState<DigitalAsset | null>(null);
+  const [assetFolderMap, setAssetFolderMap] = useState<Map<number, string[]>>(new Map());
+  const [selectedFoldersForPopup, setSelectedFoldersForPopup] = useState<string[]>([]);
+  const [folderSearchTerm, setFolderSearchTerm] = useState("");
+
   const allAssets = useMemo<DigitalAsset[]>(() => Object.values(digitalAssets).flat(), []);
+
+  const allFolders = useMemo(() => {
+    return ["Electronics", "Wireless", "Videos", "Images", "Documents", "Archive"];
+  }, []);
+
+  const filteredFolders = useMemo(() => {
+    if (!folderSearchTerm) return allFolders;
+    return allFolders.filter(folder =>
+      folder.toLowerCase().includes(folderSearchTerm.toLowerCase())
+    );
+  }, [folderSearchTerm, allFolders]);
 
   const currentAssets = useMemo<DigitalAsset[]>(() => {
     if (viewingFolderId) return folderAssets;
@@ -512,6 +552,44 @@ const DAMPage: FC = () => {
       (a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
     );
   }, [filteredAssets]);
+
+  const handleOpenFolderPopup = (asset: DigitalAsset) => {
+    setSelectedAssetForFolder(asset);
+    setSelectedFoldersForPopup(assetFolderMap.get(asset.id) || []);
+    setShowFolderPopup(true);
+  };
+
+  const handleCloseFolderPopup = () => {
+    setShowFolderPopup(false);
+    setSelectedAssetForFolder(null);
+    setFolderSearchTerm("");
+  };
+
+  const handleFolderSelect = (folderName: string) => {
+    if (selectedAssetForFolder) {
+      setSelectedFoldersForPopup((prev) => {
+        if (prev.includes(folderName)) {
+          return prev.filter(f => f !== folderName);
+        } else {
+          return [...prev, folderName];
+        }
+      });
+
+      setAssetFolderMap((prev) => {
+        const newMap = new Map(prev);
+        const currentFolders = newMap.get(selectedAssetForFolder.id) || [];
+        
+        if (!currentFolders.includes(folderName)) {
+          newMap.set(selectedAssetForFolder.id, [...currentFolders, folderName]);
+        }
+        
+        console.log(`✓ Asset ${selectedAssetForFolder.id} added to folder: ${folderName}`);
+        console.log("Asset-Folder Map:", Object.fromEntries(newMap));
+        
+        return newMap;
+      });
+    }
+  };
 
   const handleProductSelect = (product: Product | null) => {
     setSelectedProduct(product);
@@ -572,7 +650,7 @@ const DAMPage: FC = () => {
     console.log("Add to collection:", asset.name);
   };
 
-  const handleFolderSelect = (folderId: string | null, assets: DigitalAsset[]) => {
+  const handleFolderSelect2 = (folderId: string | null, assets: DigitalAsset[]) => {
     if (folderId) {
       setViewingFolderId(folderId);
       setFolderName(folderId);
@@ -591,29 +669,62 @@ const DAMPage: FC = () => {
         return <DAMUpload />;
       case "folders":
         return (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <FolderIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">Select a folder from the sidebar to view assets</p>
-            </div>
-          </div>
+          <LibraryContent
+            selectedProduct={null}
+            viewingFolderId={viewingFolderId}
+            folderName={folderName}
+            sortedAssets={sortedAssets}
+            selectedAssets={selectedAssets}
+            isDetailModalOpen={isDetailModalOpen}
+            viewMode={viewMode}
+            cardSize={cardSize}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onViewModeChange={setViewMode}
+            onCardSizeChange={setCardSize}
+            onFilterOpen={() => setFiltersPanelOpen(true)}
+            onSelectAll={handleSelectAll}
+            onSelectAsset={handleSelectAsset}
+            onClearSelection={handleClearSelection}
+            onPreviewAsset={handleAssetPreview}
+            onDownloadAsset={handleAssetDownload}
+            onDeleteAsset={handleAssetDelete}
+            onAddToCollection={openAddToCollectionForAsset}
+            onBulkDownload={handleBulkDownload}
+            onBulkDelete={handleBulkDelete}
+            onAddToFolderClick={handleOpenFolderPopup}
+          />
         );
       default:
         return null;
     }
   };
 
+  const getFolderColor = (index: number) => {
+    const colors = [
+      "bg-blue-100 text-blue-600",
+      "bg-purple-100 text-purple-600",
+      "bg-pink-100 text-pink-600",
+      "bg-amber-100 text-amber-600",
+      "bg-green-100 text-green-600",
+      "bg-cyan-100 text-cyan-600",
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white font-sans">
-      <DAMBreadcrumb
-        selectedProduct={selectedProduct}
-        viewingFolderId={viewingFolderId}
-        activeTab={activeTab}
-        onNavigateHome={handleNavigateHome}
-        onTabChange={setActiveTab}
-      />
+      <div className="relative z-50">
+        <DAMBreadcrumb
+          selectedProduct={selectedProduct}
+          viewingFolderId={viewingFolderId}
+          activeTab={activeTab}
+          onNavigateHome={handleNavigateHome}
+          onTabChange={setActiveTab}
+        />
+      </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden trans">
         <DAMSidebar
           isCollapsed={isSidebarCollapsed}
           activeTab={activeTab}
@@ -626,7 +737,7 @@ const DAMPage: FC = () => {
             }
           }}
           onToggleCollapse={() => setIsSidebarCollapsed((s) => !s)}
-          onFolderSelect={handleFolderSelect}
+          onFolderSelect={handleFolderSelect2}
           onFilterOpen={() => setFiltersPanelOpen(true)}
         />
 
@@ -656,6 +767,7 @@ const DAMPage: FC = () => {
                 onAddToCollection={openAddToCollectionForAsset}
                 onBulkDownload={handleBulkDownload}
                 onBulkDelete={handleBulkDelete}
+                onAddToFolderClick={handleOpenFolderPopup}
               />
 
               <DAMSearchFilters
@@ -668,10 +780,137 @@ const DAMPage: FC = () => {
           ) : (
             <div className="flex-1 overflow-auto bg-white animate-fade-in">
               {renderTabContent()}
+              {activeTab === "folders" && (
+                <DAMSearchFilters
+                  assets={currentAssets}
+                  onFilterChange={setSearchFilters}
+                  isOpen={filtersPanelOpen}
+                  onClose={() => setFiltersPanelOpen(false)}
+                />
+              )}
             </div>
           )}
         </main>
       </div>
+
+      {/* GLOBAL FOLDER POPUP - In Main Window with Search */}
+      {showFolderPopup && selectedAssetForFolder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+          onClick={handleCloseFolderPopup}
+          style={{
+            animation: "backdropFadeIn 0.3s ease-out forwards",
+          }}
+        >
+          <div
+            className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              animation: "popupSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+            }}
+          >
+            {/* Header */}
+            <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900">Add to Folders</h3>
+                <p className="text-sm text-gray-500 mt-1">{selectedAssetForFolder.name}</p>
+              </div>
+              <button
+                onClick={handleCloseFolderPopup}
+                className="p-2 hover:bg-gray-100 rounded-full transition-all duration-300"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="px-8 py-4 border-b border-gray-100 bg-gray-50/50">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300" />
+                <input
+                  type="text"
+                  value={folderSearchTerm}
+                  onChange={(e) => setFolderSearchTerm(e.target.value)}
+                  placeholder="Search folders..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Folder Grid */}
+            <div className="p-8">
+              {filteredFolders.length === 0 ? (
+                <div className="text-center py-12">
+                  <FolderIcon className="h-16 w-16 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No folders found</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredFolders.map((folder, index) => {
+                    const isFolderSelected = selectedFoldersForPopup.includes(folder);
+                    const colorClass = getFolderColor(index);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleFolderSelect(folder)}
+                        className="group relative"
+                        style={{
+                          animation: `folderItemFadeIn 0.4s ease-out ${index * 0.08}s both`,
+                        }}
+                      >
+                        <div
+                          className={`p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-3 cursor-pointer ${
+                            isFolderSelected
+                              ? "border-green-400 bg-green-50/50 shadow-lg scale-105"
+                              : "border-gray-200 bg-gray-50/50 hover:border-gray-300 hover:shadow-md hover:scale-102"
+                          }`}
+                        >
+                          <div
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${colorClass} group-hover:scale-110`}
+                          >
+                            <FolderIcon className="h-7 w-7" />
+                          </div>
+
+                          <p className="font-semibold text-gray-900 text-sm">{folder}</p>
+
+                          {isFolderSelected && (
+                            <div
+                              className="absolute top-3 right-3 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg"
+                              style={{
+                                animation: "checkmarkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                              }}
+                            >
+                              <Check className="h-4 w-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-5 border-t border-gray-100 flex gap-3 bg-gray-50/50">
+              <button
+                onClick={handleCloseFolderPopup}
+                className="flex-1 px-4 py-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 rounded-xl font-medium text-sm transition-all duration-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCloseFolderPopup}
+                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-all duration-300 shadow-md"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isDetailModalOpen && selectedAssetDetail && (
         <DAMAssetDetail
@@ -684,35 +923,50 @@ const DAMPage: FC = () => {
       )}
 
       <style>{`
+        @keyframes backdropFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes popupSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes folderItemFadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.8) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes checkmarkPop {
+          from {
+            opacity: 0;
+            transform: scale(0) rotate(-45deg);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+          }
+        }
+
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .animate-in {
-          animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
       `}</style>
     </div>
   );
