@@ -360,9 +360,9 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
     const folder = findFolder(tree);
     if (!folder || !folder.assetIds || folder.assetIds.length === 0) return [];
 
-    // Filter real assets from dam.data by numeric ID
+    // Filter real assets from dam.data by numeric ID with safety check
     return allDataAssets.filter((asset) =>
-      folder.assetIds?.includes(asset.id)
+      asset && asset.id && folder.assetIds?.includes(asset.id)
     );
   };
 
@@ -423,9 +423,9 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
             isDragged ? "opacity-50 bg-gray-100" : ""
           } ${
             isDropTarget
-              ? "bg-blue-100 border-2 border-blue-400 ring-2 ring-blue-200/50"
+              ? "bg-orange-100 border-2 border-orange-400 ring-2 ring-orange-200/50"
               : isSelected
-                ? "bg-blue-50 border border-blue-300 shadow-sm"
+                ? "bg-orange-50 border border-orange-300 shadow-sm"
                 : isHovered
                   ? "bg-gray-100/80"
                   : "hover:bg-gray-50"
@@ -465,7 +465,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
 
           {/* Icon */}
           <FolderIcon className={`h-4 w-4 flex-shrink-0 transition-colors duration-150 ${
-            isSelected ? "text-blue-600" : "text-amber-500"
+            isSelected ? "text-orange-600" : "text-amber-500"
           }`} />
 
           {/* Name */}
@@ -478,12 +478,12 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
                 if (e.key === "Enter") renameFolder(node.id, e.currentTarget.value);
                 if (e.key === "Escape") setRenamingId(null);
               }}
-              className="flex-1 px-2 py-1 text-sm bg-white border-2 border-blue-400 rounded-md outline-none focus:ring-2 focus:ring-blue-300/50"
+              className="flex-1 px-2 py-1 text-sm bg-white border-2 border-orange-400 rounded-md outline-none focus:ring-2 focus:ring-orange-300/50"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <span className={`flex-1 truncate font-medium ${
-              isSelected ? "text-blue-900" : "text-gray-700"
+              isSelected ? "text-orange-900" : "text-gray-700"
             }`}>
               {node.name}
             </span>
@@ -498,10 +498,10 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
                 e.stopPropagation();
                 createFolder(node.id);
               }}
-              className="p-1.5 hover:bg-blue-200/60 rounded-md transition-colors duration-150"
+              className="p-1.5 hover:bg-orange-200/60 rounded-md transition-colors duration-150"
               title="New subfolder"
             >
-              <Plus className="h-3.5 w-3.5 text-blue-600" />
+              <Plus className="h-3.5 w-3.5 text-orange-600" />
             </button>
             <button
               onClick={(e) => {
@@ -529,7 +529,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
           {node.assetIds && node.assetIds.length > 0 && (
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
               isSelected
-                ? "bg-blue-200 text-blue-800"
+                ? "bg-orange-200 text-orange-800"
                 : "bg-gray-200 text-gray-700"
             }`}>
               {node.assetIds.length}
@@ -570,7 +570,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
               onClick={() => onTabChange(key as ActiveTab)}
               className={`p-2 rounded-lg transition-colors duration-150 ${
                 activeTab === key
-                  ? "bg-gray-950 text-white shadow-md"
+                  ? "bg-orange-600 text-white shadow-md"
                   : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
               }`}
               title={TAB_CONFIG[key as ActiveTab].label}
@@ -594,7 +594,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
       {/* HEADER */}
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-2xl font-light text-gray-950">DAM</h2>
+          <h2 className="text-2xl font-light text-grey-600">DAM</h2>
           <button
             onClick={onToggleCollapse}
             className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-150"
@@ -614,7 +614,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
             onClick={() => onTabChange(key as ActiveTab)}
             className={`w-full px-4 py-3 rounded-lg flex items-start justify-between transition-colors duration-150 group ${
               activeTab === key
-                ? "bg-gray-950 text-white shadow-md"
+                ? "bg-orange-600 text-white shadow-md"
                 : "text-gray-700 hover:bg-gray-50"
             }`}
           >
@@ -626,7 +626,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
                 <p className="text-sm font-medium">{label}</p>
                 <p
                   className={`text-xs mt-0.5 ${
-                    activeTab === key ? "text-gray-300" : "text-gray-500"
+                    activeTab === key ? "text-orange-100" : "text-gray-500"
                   }`}
                 >
                   {description}
@@ -656,7 +656,7 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
             </div>
             <button
               onClick={() => createFolder(null)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-blue-100 rounded-lg transition-colors duration-150"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-orange-100 rounded-lg transition-colors duration-150"
               title="New folder"
             >
               <Plus className="h-4 w-4" />
@@ -687,14 +687,14 @@ const DAMSidebar: FC<DAMSidebarProps> = ({
         <div className="space-y-4">
           <div>
             <p className="text-xs font-medium text-gray-600 mb-2">ASSETS</p>
-            <p className="text-2xl font-light text-gray-950">
+            <p className="text-2xl font-light text-orange-600">
               {sortedAssets.length}
             </p>
           </div>
           {selectedAssets.size > 0 && (
             <div className="pt-4 border-t border-gray-200 animate-fade-in">
               <p className="text-xs text-gray-600">
-                <span className="font-medium text-gray-950">
+                <span className="font-medium text-orange-600">
                   {selectedAssets.size}
                 </span>{" "}
                 selected

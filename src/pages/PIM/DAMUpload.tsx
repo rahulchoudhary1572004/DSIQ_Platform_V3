@@ -171,7 +171,7 @@ const DAMUpload: FC = () => {
               : "border-gray-300 hover:border-gray-600"
           }`}
         >
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-r from-gray-900 via-transparent to-gray-900 transition-opacity duration-300" />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-r from-orange-900 via-orange-600 to-orange-900 transition-opacity duration-300" />
 
           <input
             type="file"
@@ -184,7 +184,7 @@ const DAMUpload: FC = () => {
             <Upload className={`h-12 w-12 mb-4 transition-all duration-150 ${
               isDragging 
                 ? "text-gray-900 scale-125 rotate-12" 
-                : "text-gray-400 group-hover:text-gray-600 group-hover:scale-110"
+                : "text-gray-400 group-hover:text-orange-600 group-hover:scale-110"
             }`} />
             <span className="text-lg font-semibold text-gray-900">Drag files here</span>
             <span className="text-sm text-gray-600 mt-1">or click to select</span>
@@ -371,7 +371,7 @@ const DAMUpload: FC = () => {
             {canStartUpload && (
               <button
                 onClick={startUpload}
-                className="w-full mt-8 py-3 px-6 bg-gray-900 text-white font-semibold rounded-lg hover:bg-black transition-all duration-150 shadow-sm hover:shadow-md active:scale-95"
+                className="w-full mt-8 py-3 px-6 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-all duration-150 shadow-sm hover:shadow-md active:scale-95"
               >
                 Start Upload ({uploadedFiles.filter(f => f.status === "pending").length})
               </button>

@@ -1,4 +1,4 @@
-// Design: Ultra Fast - Lightning Speed ⚡ (No Blur)
+
 import { FC, useState, useEffect, useRef } from "react";
 import { X, Download, Trash2, Clock, User, Share2, Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { DigitalAsset } from "../../types/dam.types";
@@ -19,14 +19,17 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [volume, setVolume] = useState(1);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const handlePlayPause = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        // Auto play might fail without user interaction, catch the error
+        videoRef.current.play().catch((error) => {
+          console.warn('Video play failed:', error);
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -49,6 +52,11 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
     setVolume(newVolume);
     if (videoRef.current) {
       videoRef.current.volume = newVolume;
+      // Auto unmute when volume is increased
+      if (newVolume > 0 && isMuted) {
+        setIsMuted(false);
+        videoRef.current.muted = false;
+      }
     }
   };
 
@@ -77,7 +85,7 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
 
   return (
     <div
-      className="relative w-full h-full bg-black rounded-lg overflow-hidden group cursor-pointer"
+      className="relative w-full h-full bg-orange-50 rounded-lg overflow-hidden group cursor-pointer"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowControls(false)}
     >
@@ -112,7 +120,7 @@ const PremiumVideoPlayer: FC<{ src: string }> = ({ src }) => {
         <div className="px-4 pt-4 pb-1">
           <div className="h-0.5 bg-white/10 rounded-full overflow-hidden cursor-pointer group/bar">
             <div
-              className="h-full bg-blue-400 transition-all duration-50"
+              className="h-full bg-orange-400 transition-all duration-50"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -349,7 +357,7 @@ const DAMAssetDetail: FC<DAMAssetDetailProps> = ({
           <div className="px-10 py-6 border-t border-gray-100 flex gap-2 flex-shrink-0">
             <button
               onClick={() => onDownload(asset.id)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors duration-100 active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg font-medium text-sm hover:bg-orange-700 transition-colors duration-100 active:scale-95"
             >
               <Download className="h-4 w-4" />
               Get

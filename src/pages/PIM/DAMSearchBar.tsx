@@ -20,7 +20,7 @@ const DAMSearchBar: FC<DAMSearchBarProps> = ({
         <div className="w-80">
           <div className="relative group">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300 pointer-events-none flex-shrink-0"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-orange-600 transition-colors duration-300 pointer-events-none flex-shrink-0"
               style={{ width: "20px", height: "20px" }}
             />
             <input
@@ -28,7 +28,7 @@ const DAMSearchBar: FC<DAMSearchBarProps> = ({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-colors duration-300 shadow-sm font-normal"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-colors duration-300 shadow-sm font-normal"
               style={{
                 height: "40px",
                 boxSizing: "border-box",

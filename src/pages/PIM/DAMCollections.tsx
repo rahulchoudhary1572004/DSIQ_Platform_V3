@@ -50,7 +50,7 @@ interface DAMCollectionsProps {
 }
 
 const COLLECTION_COLORS: Record<CollectionColor, { bg: string; border: string; text: string; icon: string }> = {
-  blue: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", icon: "bg-blue-100" },
+  blue: { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", icon: "bg-orange-100" },
   green: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", icon: "bg-green-100" },
   purple: { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", icon: "bg-purple-100" },
   orange: { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", icon: "bg-orange-100" },
@@ -192,8 +192,8 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
     if (!name) return;
     onCreateCollection(name);
     
-    // Store extended data for new collection
-    const newId = Math.max(...collections.map(c => c.id), 0) + 1;
+    // Store extended data for new collection - safe ID generation
+    const newId = collections.length > 0 ? Math.max(...collections.map(c => c.id), 0) + 1 : 1;
     setExtendedCollections(prev => {
       const newMap = new Map(prev);
       newMap.set(newId, {
@@ -317,7 +317,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
         {/* Pin Badge */}
         {collection.isPinned && (
           <div className="absolute top-3 right-12 z-10">
-            <Pin className="h-4 w-4 text-blue-600 fill-blue-600" />
+            <Pin className="h-4 w-4 text-orange-600 fill-orange-600" />
           </div>
         )}
 
@@ -407,7 +407,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                 if (e.key === 'Escape') setRenamingId(null);
               }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full px-2 py-1 border-2 border-blue-400 rounded-md text-base font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full px-2 py-1 border-2 border-orange-400 rounded-md text-base font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300"
             />
           ) : (
             <h3 className="text-base font-semibold text-gray-900 mb-1 truncate">{collection.name}</h3>
@@ -484,7 +484,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
             </h1>
             
             {viewingCollectionId && collectionToShow && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+              <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
                 {currentCollectionAssets.length} items
               </span>
             )}
@@ -516,7 +516,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
             {!viewingCollectionId && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-150 font-medium text-sm shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-150 font-medium text-sm shadow-sm"
               >
                 <Plus className="h-4 w-4" />
                 New Collection
@@ -535,14 +535,14 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search collections..."
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-150"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-150"
               />
             </div>
 
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-150 cursor-pointer"
+              className="px-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-150 cursor-pointer"
             >
               <option value="name">Sort: Name</option>
               <option value="date">Sort: Date</option>
@@ -554,17 +554,17 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                 onClick={() => setViewMode("grid")}
                 className={`p-2 rounded-md transition-all duration-150 ${
                   viewMode === "grid"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:bg-gray-200"
+                    ? "bg-white text-orange-600 shadow-sm"
+                    : "text-slate-600 hover:bg-gray-200"
                 }`}
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-all duration-150 ${
+                className={`px-2.5 py-1.5 rounded-md transition-all duration-200 flex-shrink-0 ${
                   viewMode === "list"
-                    ? "bg-white text-blue-600 shadow-sm"
+                    ? "bg-white text-orange-600 shadow-sm"
                     : "text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -614,7 +614,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                       e.stopPropagation();
                       handleRemoveAsset(asset.id);
                     }}
-                    className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-all duration-200 flex items-center justify-center opacity-0 hover:opacity-100"
+                    className="absolute inset-0 bg-orange-900/0 hover:bg-orange-900/50 transition-all duration-200 flex items-center justify-center opacity-0 hover:opacity-100"
                   >
                     <Trash2 className="h-5 w-5 text-white" />
                   </button>
@@ -628,7 +628,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
       {/* CREATE MODAL */}
       {showCreateModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-orange-900/50 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setShowCreateModal(false)}
         >
           <div
@@ -645,7 +645,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                   type="text"
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-150"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-150"
                   placeholder="e.g., Product Photos"
                   autoFocus
                 />
@@ -658,7 +658,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                 <textarea
                   value={newCollectionDescription}
                   onChange={(e) => setNewCollectionDescription(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-150 resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-150 resize-none"
                   rows={3}
                   placeholder="Add a description..."
                 />
@@ -692,7 +692,7 @@ const DAMCollections: FC<DAMCollectionsProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-150 font-medium shadow-sm"
+                  className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-150 font-medium shadow-sm"
                 >
                   Create Collection
                 </button>

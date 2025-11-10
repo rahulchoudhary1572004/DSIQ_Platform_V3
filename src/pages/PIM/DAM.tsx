@@ -1,5 +1,5 @@
-// components/DAM/DAM.tsx - COMPLETE with Folder Search Popup
-import React, { useState, useMemo, FC } from "react";
+
+import React, { useState, useMemo, FC, useEffect, useRef } from "react";
 import {
   HardDrive,
   X,
@@ -24,6 +24,7 @@ import DAMAssetDetail from "./DAMAssetDetail";
 import DAMUpload from "./DAMUpload";
 import DAMBreadcrumb from "./DAMBreadcrumb";
 import DAMSearchBar from "./DAMSearchBar";
+import DAMAssetEditPanel from "./DAMAssetEditPanel";
 import { DigitalAsset, Product, SearchFilters } from "../../types/dam.types";
 import { products, digitalAssets } from "./dam.data";
 
@@ -44,6 +45,7 @@ interface AssetGridProps {
   onAddToCollection?: (asset: DigitalAsset) => void;
   isDetailModalOpen?: boolean;
   onAddToFolderClick?: (asset: DigitalAsset) => void;
+  onEdit?: (asset: DigitalAsset) => void;
 }
 
 const AssetGrid: FC<AssetGridProps> = ({
@@ -58,6 +60,7 @@ const AssetGrid: FC<AssetGridProps> = ({
   onAddToCollection,
   isDetailModalOpen = false,
   onAddToFolderClick,
+  onEdit,
 }) => {
   const gridStyle: React.CSSProperties = {
     gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize * 50}px, 1fr))`,
@@ -90,7 +93,7 @@ const AssetGrid: FC<AssetGridProps> = ({
                 type="checkbox"
                 checked={selectedAssets.has(asset.id)}
                 onChange={() => onSelectAsset(asset.id)}
-                className="w-5 h-5 rounded cursor-pointer accent-blue-500"
+                className="w-5 h-5 rounded cursor-pointer accent-orange-500"
               />
             </div>
 
@@ -118,7 +121,7 @@ const AssetGrid: FC<AssetGridProps> = ({
             <div className="col-span-1 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <button
                 onClick={() => onDownloadAsset(asset.id)}
-                className="p-2 hover:bg-blue-100/60 rounded-lg text-slate-500 hover:text-blue-600 transition-all duration-200"
+                className="p-2 hover:bg-orange-100/60 rounded-lg text-slate-500 hover:text-orange-600 transition-all duration-200"
               >
                 <Download className="h-5 w-5" />
               </button>
@@ -156,6 +159,7 @@ const AssetGrid: FC<AssetGridProps> = ({
               onAddToCollection={onAddToCollection}
               isDisabled={isDetailModalOpen}
               onAddToFolderClick={onAddToFolderClick}
+              onEdit={onEdit}
             />
           </div>
         </div>
@@ -186,6 +190,10 @@ interface LibraryContentProps {
   viewMode: ViewMode;
   cardSize: number;
   searchTerm: string;
+  pageSize: number | 'all';
+  currentPage: number;
+  totalPages: number;
+  showPageSizeDropdown: boolean;
   onSearchChange: (term: string) => void;
   onViewModeChange: (mode: ViewMode) => void;
   onCardSizeChange: (size: number) => void;
@@ -200,6 +208,10 @@ interface LibraryContentProps {
   onBulkDownload: () => void;
   onBulkDelete: () => void;
   onAddToFolderClick?: (asset: DigitalAsset) => void;
+  onEdit: (asset: DigitalAsset) => void;
+  onPageSizeChange: (size: number | 'all') => void;
+  onPageChange: (page: number) => void;
+  onTogglePageSizeDropdown: () => void;
 }
 
 const getTypeIcon = (type: string) => {
@@ -227,6 +239,10 @@ const LibraryContent: FC<LibraryContentProps> = ({
   viewMode,
   cardSize,
   searchTerm,
+  pageSize,
+  currentPage,
+  totalPages,
+  showPageSizeDropdown,
   onSearchChange,
   onViewModeChange,
   onCardSizeChange,
@@ -241,6 +257,10 @@ const LibraryContent: FC<LibraryContentProps> = ({
   onBulkDownload,
   onBulkDelete,
   onAddToFolderClick,
+  onEdit,
+  onPageSizeChange,
+  onPageChange,
+  onTogglePageSizeDropdown,
 }) => {
   const [showTypeBreakdown, setShowTypeBreakdown] = useState(false);
 
@@ -283,8 +303,8 @@ const LibraryContent: FC<LibraryContentProps> = ({
                 </div>
               )}
               {selectedProduct && !isFolderView && (
-                <div className="px-3 py-1 bg-blue-100/60 border border-blue-200 rounded-full">
-                  <span className="text-xs font-semibold text-blue-900">Product</span>
+                <div className="px-3 py-1 bg-orange-100/60 border border-orange-200 rounded-full">
+                  <span className="text-xs font-semibold text-orange-900">Product</span>
                 </div>
               )}
               <h1 className="text-3xl font-light text-gray-900">{displayTitle}</h1>
@@ -294,7 +314,7 @@ const LibraryContent: FC<LibraryContentProps> = ({
   <div className="relative">
     <button
       onClick={() => setShowTypeBreakdown(!showTypeBreakdown)}
-      className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-all duration-200 text-gray-500 hover:text-blue-600"
+      className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-all duration-200 text-gray-500 hover:text-orange-600"
       title="View asset type breakdown"
     >
       <svg
@@ -382,7 +402,7 @@ const LibraryContent: FC<LibraryContentProps> = ({
               <div className="flex items-center gap-3 animate-fade-in">
                 <button
                   onClick={onBulkDownload}
-                  className="p-2 hover:bg-blue-100/60 text-blue-600 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0"
+                  className="p-2 hover:bg-orange-100/60 text-orange-600 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0"
                 >
                   <Download className="h-5 w-5" />
                 </button>
@@ -407,20 +427,64 @@ const LibraryContent: FC<LibraryContentProps> = ({
           {/* CENTER: SEARCH BAR - Fixed Width */}
           <div style={{ width: "520px", minWidth: "320px", flexShrink: 0 }}>
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-orange-600 transition-colors duration-300 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Search assets..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-colors duration-300 shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-colors duration-300 shadow-sm"
                 style={{ height: "40px", boxSizing: "border-box" }}
               />
             </div>
           </div>
 
           {/* RIGHT: FILTER & VIEW CONTROLS - Fixed Width */}
-          <div style={{ width: "240px", minWidth: "240px", flexShrink: 0 }} className="flex items-center justify-end gap-3">
+          <div style={{ width: "320px", minWidth: "320px", flexShrink: 0 }} className="flex items-center justify-end gap-3">
+            
+            {/* Page Size Dropdown */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTogglePageSizeDropdown();
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-lg transition-all duration-200 text-sm font-medium whitespace-nowrap flex-shrink-0"
+              >
+                <span>{pageSize === 'all' ? 'All' : pageSize}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showPageSizeDropdown && (
+                <div 
+                  className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-50 min-w-[80px] animate-fade-in"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => onPageSizeChange('all')}
+                    className={`w-full px-4 py-2 text-sm text-left hover:bg-orange-50 transition-colors duration-200 ${
+                      pageSize === 'all' ? "bg-orange-100 text-orange-600 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {[6, 12, 24, 48, 96].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => onPageSizeChange(size)}
+                      className={`w-full px-4 py-2 text-sm text-left hover:bg-orange-50 transition-colors duration-200 ${
+                        pageSize === size ? "bg-orange-100 text-orange-600 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={onFilterOpen}
               className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-lg transition-all duration-200 text-sm font-medium whitespace-nowrap flex-shrink-0"
@@ -434,7 +498,7 @@ const LibraryContent: FC<LibraryContentProps> = ({
                 onClick={() => onViewModeChange("grid")}
                 className={`px-2.5 py-1.5 rounded-md transition-all duration-200 flex-shrink-0 ${
                   viewMode === "grid"
-                    ? "bg-blue-600 text-white shadow-sm"
+                    ? "bg-orange-600 text-white shadow-sm"
                     : "text-slate-600 hover:bg-gray-200"
                 }`}
               >
@@ -444,7 +508,7 @@ const LibraryContent: FC<LibraryContentProps> = ({
                 onClick={() => onViewModeChange("list")}
                 className={`px-2.5 py-1.5 rounded-md transition-all duration-200 flex-shrink-0 ${
                   viewMode === "list"
-                    ? "bg-blue-600 text-white shadow-sm"
+                    ? "bg-orange-600 text-white shadow-sm"
                     : "text-slate-600 hover:bg-gray-200"
                 }`}
               >
@@ -459,19 +523,77 @@ const LibraryContent: FC<LibraryContentProps> = ({
         {sortedAssets.length === 0 ? (
           <EmptyState />
         ) : (
-          <AssetGrid
-            assets={sortedAssets}
-            selectedAssets={selectedAssets}
-            viewMode={viewMode}
-            cardSize={cardSize}
-            onSelectAsset={onSelectAsset}
-            onPreviewAsset={onPreviewAsset}
-            onDownloadAsset={onDownloadAsset}
-            onDeleteAsset={onDeleteAsset}
-            onAddToCollection={onAddToCollection}
-            isDetailModalOpen={isDetailModalOpen}
-            onAddToFolderClick={onAddToFolderClick}
-          />
+          <>
+            <AssetGrid
+              assets={sortedAssets}
+              selectedAssets={selectedAssets}
+              viewMode={viewMode}
+              cardSize={cardSize}
+              onSelectAsset={onSelectAsset}
+              onPreviewAsset={onPreviewAsset}
+              onDownloadAsset={onDownloadAsset}
+              onDeleteAsset={onDeleteAsset}
+              onAddToCollection={onAddToCollection}
+              isDetailModalOpen={isDetailModalOpen}
+              onAddToFolderClick={onAddToFolderClick}
+              onEdit={onEdit}
+            />
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between py-8 px-4 max-w-4xl mx-auto w-full h-[76px]">
+                <button
+                  onClick={() => onPageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-5 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-colors duration-200 shadow-sm min-w-[100px] h-[44px] flex-shrink-0"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex items-center gap-2 flex-1 justify-center px-4 h-[44px]">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => onPageChange(page)}
+                          className={`min-w-[44px] h-[44px] rounded-xl text-sm font-semibold transition-colors duration-200 flex items-center justify-center flex-shrink-0 ${
+                            currentPage === page
+                              ? "bg-orange-600 text-white shadow-lg border-2 border-orange-600"
+                              : "bg-white border-2 border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="px-2 text-gray-400 font-semibold h-[44px] flex items-center">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => onPageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-5 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700 transition-colors duration-200 shadow-sm min-w-[100px] h-[44px] flex-shrink-0"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
@@ -497,10 +619,18 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("library");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [filtersPanelOpen, setFiltersPanelOpen] = useState<boolean>(false);
+  
+  const [pageSize, setPageSize] = useState<number | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showPageSizeDropdown, setShowPageSizeDropdown] = useState<boolean>(false);
 
   const [viewingFolderId, setViewingFolderId] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string>("");
   const [folderAssets, setFolderAssets] = useState<DigitalAsset[]>([]);
+
+  // Edit panel state
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [selectedAssetForEdit, setSelectedAssetForEdit] = useState<DigitalAsset | null>(null);
 
   // Global folder popup state
   const [showFolderPopup, setShowFolderPopup] = useState(false);
@@ -508,6 +638,23 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [assetFolderMap, setAssetFolderMap] = useState<Map<number, string[]>>(new Map());
   const [selectedFoldersForPopup, setSelectedFoldersForPopup] = useState<string[]>([]);
   const [folderSearchTerm, setFolderSearchTerm] = useState("");
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showPageSizeDropdown) {
+        setShowPageSizeDropdown(false);
+      }
+    };
+    
+    if (showPageSizeDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showPageSizeDropdown]);
 
   const allAssets = useMemo<DigitalAsset[]>(() => Object.values(digitalAssets).flat(), []);
 
@@ -553,6 +700,22 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     );
   }, [filteredAssets]);
 
+  const paginatedAssets = useMemo<DigitalAsset[]>(() => {
+    if (pageSize === 'all') {
+      return sortedAssets;
+    }
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sortedAssets.slice(startIndex, endIndex);
+  }, [sortedAssets, currentPage, pageSize]);
+
+  const totalPages = useMemo(() => {
+    if (pageSize === 'all') {
+      return 1;
+    }
+    return Math.ceil(sortedAssets.length / pageSize);
+  }, [sortedAssets.length, pageSize]);
+
   const handleOpenFolderPopup = (asset: DigitalAsset) => {
     setSelectedAssetForFolder(asset);
     setSelectedFoldersForPopup(assetFolderMap.get(asset.id) || []);
@@ -596,6 +759,7 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     setSelectedAssets(new Set());
     setViewingFolderId(null);
     setFolderName("");
+    setCurrentPage(1);
   };
 
   const handleNavigateHome = () => {
@@ -603,6 +767,7 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     setViewingFolderId(null);
     setFolderName("");
     setSelectedAssets(new Set());
+    setCurrentPage(1);
   };
 
   const handleSelectAll = () => {
@@ -650,6 +815,19 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     console.log("Add to collection:", asset.name);
   };
 
+  const handleEditAsset = (asset: DigitalAsset) => {
+    setSelectedAssetForEdit(asset);
+    setShowEditPanel(true);
+  };
+
+  const handleSaveEdit = (assetId: number, updates: { name: string; uploadedBy: string; file?: File }) => {
+    console.log("Saving asset edits:", assetId, updates);
+    // Here you would call an API to update the asset
+    // For now, just log and close
+    setShowEditPanel(false);
+    setSelectedAssetForEdit(null);
+  };
+
   const handleFolderSelect2 = (folderId: string | null, assets: DigitalAsset[]) => {
     if (folderId) {
       setViewingFolderId(folderId);
@@ -661,6 +839,18 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
       setFolderAssets([]);
     }
     setSelectedProduct(null);
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (size: number | 'all') => {
+    setPageSize(size);
+    setCurrentPage(1);
+    setShowPageSizeDropdown(false);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const renderTabContent = () => {
@@ -673,12 +863,16 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
             selectedProduct={null}
             viewingFolderId={viewingFolderId}
             folderName={folderName}
-            sortedAssets={sortedAssets}
+            sortedAssets={paginatedAssets}
             selectedAssets={selectedAssets}
             isDetailModalOpen={isDetailModalOpen}
             viewMode={viewMode}
             cardSize={cardSize}
             searchTerm={searchTerm}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            showPageSizeDropdown={showPageSizeDropdown}
             onSearchChange={setSearchTerm}
             onViewModeChange={setViewMode}
             onCardSizeChange={setCardSize}
@@ -693,6 +887,10 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
             onBulkDownload={handleBulkDownload}
             onBulkDelete={handleBulkDelete}
             onAddToFolderClick={handleOpenFolderPopup}
+            onEdit={handleEditAsset}
+            onPageSizeChange={handlePageSizeChange}
+            onPageChange={handlePageChange}
+            onTogglePageSizeDropdown={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
           />
         );
       default:
@@ -702,7 +900,7 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const getFolderColor = (index: number) => {
     const colors = [
-      "bg-blue-100 text-blue-600",
+      "bg-orange-100 text-orange-600",
       "bg-purple-100 text-purple-600",
       "bg-pink-100 text-pink-600",
       "bg-amber-100 text-amber-600",
@@ -747,12 +945,16 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
                 selectedProduct={selectedProduct}
                 viewingFolderId={viewingFolderId}
                 folderName={folderName}
-                sortedAssets={sortedAssets}
+                sortedAssets={paginatedAssets}
                 selectedAssets={selectedAssets}
                 isDetailModalOpen={isDetailModalOpen}
                 viewMode={viewMode}
                 cardSize={cardSize}
                 searchTerm={searchTerm}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                showPageSizeDropdown={showPageSizeDropdown}
                 onSearchChange={setSearchTerm}
                 onViewModeChange={setViewMode}
                 onCardSizeChange={setCardSize}
@@ -767,6 +969,10 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
                 onBulkDownload={handleBulkDownload}
                 onBulkDelete={handleBulkDelete}
                 onAddToFolderClick={handleOpenFolderPopup}
+                onEdit={handleEditAsset}
+                onPageSizeChange={handlePageSizeChange}
+                onPageChange={handlePageChange}
+                onTogglePageSizeDropdown={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
               />
 
               <DAMSearchFilters
@@ -825,13 +1031,13 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
             {/* Search Bar */}
             <div className="px-8 py-4 border-b border-gray-100 bg-gray-50/50">
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-orange-600 transition-colors duration-300" />
                 <input
                   type="text"
                   value={folderSearchTerm}
                   onChange={(e) => setFolderSearchTerm(e.target.value)}
                   placeholder="Search folders..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all duration-300"
                   autoFocus
                 />
               </div>
@@ -868,7 +1074,7 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
                         >
                           <div
                             className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${colorClass} group-hover:scale-110`}
-                          >
+                          > 
                             <FolderIcon className="h-7 w-7" />
                           </div>
 
@@ -902,7 +1108,7 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
               </button>
               <button
                 onClick={handleCloseFolderPopup}
-                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-all duration-300 shadow-md"
+                className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium text-sm transition-all duration-300 shadow-md"
               >
                 Done
               </button>
@@ -967,6 +1173,17 @@ const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }
       `}</style>
+
+      {/* Edit Panel */}
+      <DAMAssetEditPanel
+        asset={selectedAssetForEdit}
+        isOpen={showEditPanel}
+        onClose={() => {
+          setShowEditPanel(false);
+          setSelectedAssetForEdit(null);
+        }}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 };

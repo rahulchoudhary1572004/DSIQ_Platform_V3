@@ -1,6 +1,6 @@
-// components/DAM/DAMAssetCard.tsx - Ultra Smooth with Hover Preview
+
 import React, { FC, useState, useRef, useEffect } from "react";
-import { Download, Trash2, Eye, Folder, MoreVertical } from "lucide-react";
+import { Download, Trash2, Eye, Folder, MoreVertical, Edit2 } from "lucide-react";
 import { DigitalAsset } from "../../types/dam.types";
 import DAMAssetPreview from "./DAMAssetPreview";
 
@@ -14,6 +14,7 @@ interface DAMAssetCardProps {
   onAddToCollection?: (asset: DigitalAsset) => void;
   isDisabled?: boolean;
   onAddToFolderClick?: (asset: DigitalAsset) => void;
+  onEdit?: (asset: DigitalAsset) => void;
 }
 
 const DAMAssetCard: FC<DAMAssetCardProps> = ({
@@ -26,6 +27,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
   onAddToCollection,
   isDisabled = false,
   onAddToFolderClick,
+  onEdit,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -53,14 +55,20 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
 
   // Hover preview handlers
   const handleCardMouseEnter = () => {
-    if (isDisabled || imageError) return;
+    if (isDisabled || imageError || showMenu) return;
+    
+    // Clear any existing timer first to prevent stacking
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
     
     hoverTimerRef.current = setTimeout(() => {
-      if (cardRef.current) {
+      if (cardRef.current && !showMenu) {
         setCardRect(cardRef.current.getBoundingClientRect());
         setShowHoverPreview(true);
       }
-    }, 1500); // 1.5 seconds delay
+    }, 800); // 0.8 seconds delay
   };
 
   const handleCardMouseLeave = () => {
@@ -71,6 +79,18 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
     setShowHoverPreview(false);
     setCardRect(null);
   };
+
+  // Hide preview when menu opens or any interaction happens
+  useEffect(() => {
+    if (showMenu) {
+      setShowHoverPreview(false);
+      setCardRect(null);
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+    }
+  }, [showMenu]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -83,7 +103,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
 
   const getTypeColor = (type?: string) => {
     const colors: Record<string, string> = {
-      image: "bg-blue-100",
+      image: "bg-orange-100",
       video: "bg-purple-100",
       document: "bg-orange-100",
       audio: "bg-green-100",
@@ -93,7 +113,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
 
   const getTypeText = (type?: string) => {
     const textColors: Record<string, string> = {
-      image: "text-blue-700",
+      image: "text-orange-700",
       video: "text-purple-700",
       document: "text-orange-700",
       audio: "text-green-700",
@@ -134,12 +154,12 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
           </div>
         )}
 
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+        <div className="absolute inset-0 bg-orange-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
 
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-150 flex items-center justify-center gap-3">
           <button
             onClick={() => onPreview(asset)}
-            className="p-2.5 bg-white/95 rounded-lg text-slate-700 hover:text-blue-600 transition-all duration-100 shadow-md active:scale-95"
+            className="p-2.5 bg-white/95 rounded-lg text-slate-700 hover:text-orange-600 transition-all duration-100 shadow-md active:scale-95"
             title="Preview"
           >
             <Eye className="h-5 w-5" />
@@ -167,7 +187,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
 
           <div className="mt-1.5 space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
               <p className="text-xs text-slate-600 truncate">{asset.type || "Asset"}</p>
             </div>
             <p className="text-xs text-slate-500">
@@ -185,7 +205,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
             onClick={onSelect}
             className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-all duration-100 ${
               isSelected
-                ? "bg-blue-500 text-white shadow-md"
+                ? "bg-orange-500 text-white shadow-md"
                 : "bg-white/60 text-slate-700 hover:bg-white/70"
             }`}
           >
@@ -195,7 +215,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
           {onAddToFolderClick && (
             <button
               onClick={() => onAddToFolderClick(asset)}
-              className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold transition-all duration-100 flex items-center gap-1 active:scale-95"
+              className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded text-xs font-semibold transition-all duration-100 flex items-center gap-1 active:scale-95"
               title="Add to folder"
             >
               <Folder className="h-3 w-3" />
@@ -218,7 +238,7 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
                   animation: "menuSlideUp 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
-                {onAddToCollection && (
+                {/* {onAddToCollection && (
                   <button
                     onClick={() => {
                       onAddToCollection(asset);
@@ -226,12 +246,28 @@ const DAMAssetCard: FC<DAMAssetCardProps> = ({
                     }}
                     className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2 transition-all duration-100 border-b border-white/20"
                   >
-                    <Folder className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                    <Folder className="h-3 w-3 text-orange-600 flex-shrink-0" />
                     <span className="truncate">Collection</span>
+                  </button>
+                )} */}
+                {onEdit && (
+                  <button
+                    onClick={() => {
+                      setShowHoverPreview(false);
+                      setCardRect(null);
+                      onEdit(asset);
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-orange-50 text-slate-700 text-xs flex items-center gap-2 transition-all duration-100 border-b border-white/20"
+                  >
+                    <Edit2 className="h-3 w-3 text-orange-600 flex-shrink-0" />
+                    <span className="truncate">Edit</span>
                   </button>
                 )}
                 <button
                   onClick={() => {
+                    setShowHoverPreview(false);
+                    setCardRect(null);
                     onDelete(asset.id);
                     setShowMenu(false);
                   }}

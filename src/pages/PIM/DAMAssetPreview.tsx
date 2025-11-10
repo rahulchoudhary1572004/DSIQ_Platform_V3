@@ -15,7 +15,7 @@ const DAMAssetPreview: FC<DAMAssetPreviewProps> = ({ asset, show, cardRect }) =>
 
   // Calculate position - place preview above the card
   const previewHeight = 240;
-  const gap = 12; // gap between card and preview
+  const gap = -220; // gap between card and preview
   
   let top = cardRect.top - previewHeight - gap;
   let left = cardRect.left + (cardRect.width / 2);
@@ -40,24 +40,16 @@ const DAMAssetPreview: FC<DAMAssetPreviewProps> = ({ asset, show, cardRect }) =>
               src={asset.url || asset.thumbnail}
               alt={asset.name}
               className="w-full h-full object-contain"
+              onError={(e) => {
+                // Fallback to placeholder if image fails to load
+                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240'%3E%3Crect fill='%23374151' width='360' height='240'/%3E%3Ctext x='50%25' y='50%25' font-family='system-ui' font-size='14' fill='%239CA3AF' text-anchor='middle' dy='.3em'%3EImage unavailable%3C/text%3E%3C/svg%3E";
+              }}
               style={{ 
                 animation: "appleImageReveal 0.6s cubic-bezier(0.32, 0.72, 0, 1) both",
               }}
             />
             
-            {/* Bottom Info Bar - Apple Style */}
-            <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-black/95 via-black/80 to-transparent backdrop-blur-xl border-t border-white/5">
-              <div className="px-5 py-2.5 flex items-center justify-between h-full">
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-[13px] font-medium truncate tracking-tight">{asset.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-white/50 font-medium">{asset.format.toUpperCase()}</span>
-                    <span className="w-1 h-1 rounded-full bg-white/20"></span>
-                    <span className="text-[10px] text-white/50 font-medium">{asset.size}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+           
           </div>
         );
 
@@ -71,29 +63,19 @@ const DAMAssetPreview: FC<DAMAssetPreviewProps> = ({ asset, show, cardRect }) =>
               muted
               loop
               playsInline
+              onError={(e) => {
+                // Hide video element on error and show fallback
+                e.currentTarget.style.display = 'none';
+              }}
               style={{ 
                 animation: "appleImageReveal 0.6s cubic-bezier(0.32, 0.72, 0, 1) both",
               }}
             />
             
-            {/* Play Button - Minimalist */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/20 shadow-2xl">
-              <div className="w-0 h-0 border-l-[14px] border-l-white/90 border-y-[9px] border-y-transparent ml-1"></div>
-            </div>
+          
 
-            {/* Bottom Info Bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-black/95 via-black/80 to-transparent backdrop-blur-xl border-t border-white/5">
-              <div className="px-5 py-2.5 flex items-center justify-between h-full">
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-[13px] font-medium truncate tracking-tight">{asset.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-white/50 font-medium">{asset.format.toUpperCase()}</span>
-                    <span className="w-1 h-1 rounded-full bg-white/20"></span>
-                    <span className="text-[10px] text-white/50 font-medium">{asset.size}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+          
           </div>
         );
 
@@ -134,7 +116,7 @@ const DAMAssetPreview: FC<DAMAssetPreviewProps> = ({ asset, show, cardRect }) =>
           top: `${top}px`,
           left: `${left}px`,
           transform: 'translateX(-50%)',
-          animation: "appleFloat 0.5s cubic-bezier(0.32, 0.72, 0, 1)",
+          animation: show ? "appleFloatIn 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards" : "appleFloatOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
           willChange: 'transform, opacity',
           pointerEvents: 'none',
         }}
@@ -168,7 +150,7 @@ const DAMAssetPreview: FC<DAMAssetPreviewProps> = ({ asset, show, cardRect }) =>
       </div>
 
       <style>{`
-        @keyframes appleFloat {
+        @keyframes appleFloatIn {
           0% {
             opacity: 0;
             transform: translateX(-50%) translateY(-8px) scale(0.96);
@@ -176,6 +158,17 @@ const DAMAssetPreview: FC<DAMAssetPreviewProps> = ({ asset, show, cardRect }) =>
           100% {
             opacity: 1;
             transform: translateX(-50%) translateY(0) scale(1);
+          }
+        }
+
+        @keyframes appleFloatOut {
+          0% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-8px) scale(0.96);
           }
         }
         

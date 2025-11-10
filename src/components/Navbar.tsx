@@ -180,7 +180,7 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen, isLoggedIn, selectedApp, setS
         {isLoggedIn ? (
           !showMainNav ? (
             <>
-              <button ref={sidebarToggleRef} onClick={handleSidebarToggle} className="p-[6px] rounded-md text-gray-600 hover:bg-primary-orange hover:text-white" aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}>
+              <button ref={sidebarToggleRef} onClick={handleSidebarToggle} className="p-[6px] rounded-md text-gray-600 hover:bg-primary-orane hover:text-white" aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}>
                 {isSidebarOpen ? <TableOfContents size={15} /> : <ArrowRightFromLine size={15} />}
               </button>
               <div className="relative" ref={appDropdownRef}>
