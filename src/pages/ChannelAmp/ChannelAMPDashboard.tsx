@@ -1,17 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Calendar, Filter } from "lucide-react"
 import SummaryCard from "../../components/ChannelAmp/SummaryCard"
 import CampaignFilters from "../../components/ChannelAmp/CampaignFilters"
 import CampaignGrid from "../../components/ChannelAmp/CampaignGrid"
 import PerformanceCharts from "../../components/ChannelAmp/PerformanceCharts"
-import ConnectAmazonAds from "../../components/ChannelAmp/ConnectAmazonAds"
 import { DollarSign, Eye, MousePointer, Target, TrendingUp, Percent } from "lucide-react"
-import api from "../../api/axios"
 
 const ChannelAMPDashboard = () => {
-  const [isAmazonConnected, setIsAmazonConnected] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [adTypes, setAdTypes] = useState(["SP", "SB", "SD", "STV"])
   const [activeAdTypes, setActiveAdTypes] = useState(["SP", "SB"])
@@ -20,20 +17,6 @@ const ChannelAMPDashboard = () => {
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     end: new Date().toISOString().split("T")[0],
   })
-
-  // Check Amazon connection status on component mount
-  useEffect(() => {
-    const checkAmazonConnection = async () => {
-      try {
-        const response = await api.get("/amazon-auth/status")
-        setIsAmazonConnected(response.data.connected || false)
-      } catch (error) {
-        console.error("Failed to check Amazon connection:", error)
-        setIsAmazonConnected(false)
-      }
-    }
-    checkAmazonConnection()
-  }, [])
 
   // Mock data - replace with real API calls
   const [summaryData, setSummaryData] = useState({
@@ -83,14 +66,6 @@ const ChannelAMPDashboard = () => {
       roas: 2.1,
     },
   ])
-
-  const handleAmazonConnectionSuccess = () => {
-    setIsAmazonConnected(true)
-    setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-    }, 2000)
-  }
 
   const handleFiltersChange = (filters) => {
     console.log("Filters changed:", filters)
@@ -151,21 +126,6 @@ const ChannelAMPDashboard = () => {
       trendValue: "+3.2%",
     },
   ]
-
-  // Show connection screen if Amazon Ads is not connected
-  // if (!isAmazonConnected) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-  //       <div className="max-w-2xl w-full">
-  //         <div className="text-center mb-8">
-  //           <h1 className="text-3xl font-bold text-gray-900 mb-2">ChannelAMP Dashboard</h1>
-  //           <p className="text-gray-600">Manage and optimize your Amazon advertising campaigns</p>
-  //         </div>
-  //         <ConnectAmazonAds onConnectionSuccess={handleAmazonConnectionSuccess} />
-  //       </div>
-  //     </div>
-  //   )
-  // }
 
   return (
     <div className="h-full bg-gray-50">

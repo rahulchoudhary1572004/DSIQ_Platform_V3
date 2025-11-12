@@ -1,88 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input } from '@progress/kendo-react-inputs';
-import { ComboBox } from '@progress/kendo-react-dropdowns';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { registerAdmin } from '../redux/slices/authSlice';
+import { registerAdmin, loginUser } from '../../../redux/slices/authSlice';
 import { Eye, EyeOff } from 'lucide-react';
-import axios from 'axios';
-import showToast from '../../utils/toast';
+import showToast from '../../../../utils/toast';
 import AuthLayout from '../components/AuthLayout';
-import { loginUser } from '../redux/slices/authSlice'
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const backend_url = import.meta.env.VITE_BACKEND_URL;
 
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     name: '',
     companyEmail: '',
-    address: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    country_id: '',
   });
 
-  const [countries, setCountries] = useState([]);
-  const [filteredCountries, setFilteredCountries] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${backend_url}/get-country`);
-        const countryData = response.data.data;
-
-        // Utility function to convert ISO code to Unicode flag emoji
-        function getFlagEmoji(isoCode) {
-          const code = isoCode.toUpperCase();
-          const A = 0x1F1E6;
-          return [...code]
-            .map(char => String.fromCodePoint(A + char.charCodeAt(0) - 65))
-            .join('');
-        }
-
-        // Transform country data
-        const transformedCountries = countryData.map(c => ({
-          id: c.id,
-          name: c.nicename,
-          flag: getFlagEmoji(c.iso), // Replaces emojiFlags.countryCode(c.iso)?.emoji
-          phoneCode: `+${c.phonecode}`,
-          iso: c.iso,
-          iso3: c.iso3,
-        }));
-
-        setCountries(transformedCountries);
-        setFilteredCountries(transformedCountries);
-
-        const defaultCountry = transformedCountries.find(c => c.iso === 'US');
-        if (defaultCountry) {
-          setFormData(prev => ({
-            ...prev,
-            country_id: defaultCountry.id,
-            phone: defaultCountry.phoneCode + ' ',
-          }));
-        }
-      } catch (err) {
-        console.error('Error fetching countries:', err);
-        setError('Failed to load country data. Please try again later.');
-        showToast.error('Failed to load country data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCountries();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,32 +35,14 @@ const RegisterPage = () => {
     }
   };
 
-  const handleCountryChange = (e) => {
-    const selectedCountry = e.value;
-    const country_id = selectedCountry && selectedCountry.id ? selectedCountry.id : '';
-
-    setFormData(prev => ({
-      ...prev,
-      country_id,
-    }));
-
-    if (selectedCountry && selectedCountry.phoneCode) {
-      const currentNumber = formData.phone.replace(/^\+\d+\s*/, '');
-      setFormData(prev => ({
-        ...prev,
-        phone: `${selectedCountry.phoneCode} ${currentNumber}`.trim(),
-      }));
-    }
-  };
-
   const togglePasswordVisibility = () => setShowPassword(prev => !prev);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(prev => !prev);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { first_name, last_name, name, companyEmail, address, phone, password, confirmPassword, country_id } = formData;
+    const { first_name, last_name, name, companyEmail, phone, password, confirmPassword } = formData;
 
-    if (!first_name || !name || !companyEmail || !password || !confirmPassword || !country_id) {
+    if (!first_name || !name || !companyEmail || !password || !confirmPassword) {
       showToast.error('Please fill in all required fields');
       return;
     }
@@ -150,7 +72,6 @@ const RegisterPage = () => {
           email: companyEmail,
           phone,
           password,
-          country_id,
           role_id: 'admin',
         }) as any
       ) as any).unwrap();
@@ -166,68 +87,24 @@ const RegisterPage = () => {
         showToast.success('Admin account created successfully!');
       }, 500);
 
-      navigate('/workspaceCreate');
+      // Redirect to workspace creation (commented out - now going to dashboard)
+      // navigate('/workspaceCreate');
+      
+      // Redirect to dashboard after successful registration and login
+      navigate('/');
 
     } catch (error) {
       if (companyEmail === 'a@a.com') {
-        navigate('/workspaceCreate');
+        // Redirect to workspace creation for test user (commented out)
+        // navigate('/workspaceCreate');
+        
+        // Redirect to dashboard for test user
+        navigate('/');
       } else {
         console.error('Registration error:', error);
         showToast.handleApiError(error);
       }
     }
-  };
-
-  // Handle Enter key press for ComboBox
-  const handleComboBoxKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      // Find the first form element after the ComboBox and focus it
-      const form = e.target.closest('form');
-      const formElements = form.querySelectorAll('input, select, textarea, button');
-      const currentIndex = Array.from(formElements).indexOf(e.target);
-      const nextElement = formElements[currentIndex + 1];
-      if (nextElement && nextElement.type !== 'submit') {
-        nextElement.focus();
-      } else {
-        // If it's the last field or next is submit button, submit the form
-        handleSubmit(e);
-      }
-    }
-  };
-
-  const selectedCountry = countries.find(c => c.id === formData.country_id) || null;
-
-  const handleFilterChange = (event) => {
-    const value = event.filter.value || '';
-    setSearchTerm(value);
-    const filtered = countries.filter(
-      c => c.name.toLowerCase().includes(value.toLowerCase()) || c.id.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredCountries(filtered);
-  };
-
-  const countryItemRender = (li, itemProps) => {
-    const country = itemProps.dataItem;
-    return React.cloneElement(li, {
-      ...li.props,
-      children: (
-        <div className="flex items-center gap-2 py-1">
-          <span>{country.flag}</span>
-          <span>{country.name}</span>
-        </div>
-      ),
-    });
-  };
-
-  const countryValueRender = (element, value) => {
-    if (!value) return element;
-    return (
-      <div className="flex items-center gap-2">
-        <span>{value.flag}</span>
-        <span>{value.name}</span>
-      </div>
-    );
   };
 
   return (
@@ -267,12 +144,7 @@ const RegisterPage = () => {
           </span>
         </div>
 
-        {loading ? (
-          <div className="text-center">Loading countries...</div>
-        ) : error ? (
-          <div className="text-center text-red-500">{error}</div>
-        ) : (
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg space-y-4 shadow-sm border border-light-gray p-8 w-full">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg space-y-4 shadow-sm border border-light-gray p-8 w-full">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-dark-gray mb-2">Create your account</h1>
               <p className="text-gray-600 text-sm">Get started with your DSIQ platform admin account</p>
@@ -327,30 +199,12 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <ComboBox
-                data={filteredCountries}
-                textField="name"
-                dataItemKey="id"
-                value={selectedCountry}
-                onChange={handleCountryChange}
-                filterable
-                onFilterChange={handleFilterChange}
-                itemRender={countryItemRender}
-                valueRender={countryValueRender as any}
-                placeholder="Select country *"
-                className="w-full !border-light-gray !rounded-md focus:!ring-2 focus:!ring-primary-orange focus:!outline-none !text-sm !py-1 !px-3"
-                required
-                {...{onKeyDown: handleComboBoxKeyDown} as any}
-              />
-            </div>
-
-            <div>
               <Input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="Phone number (optional)"
+                placeholder="Phone number"
                 className="w-full !border-light-gray !rounded-md focus:!ring-2 focus:!ring-primary-orange focus:!outline-none !text-sm !py-2 !px-3"
               />
             </div>
@@ -407,7 +261,6 @@ const RegisterPage = () => {
               </a>
             </p>
           </form>
-        )}
 
         <div className="mt-8 text-center">
           <div className="text-small text-gray">

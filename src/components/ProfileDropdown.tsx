@@ -1,16 +1,16 @@
-import React from 'react';
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, ChevronRight } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { logout } from '../redux/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../redux/slices/authSlice';
 
 const ProfileDropdown = ({ onClose }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const userRole = "Admin";
+  const { user } = useSelector((state: any) => state.auth);
 
-  const handleSignOut = () => {
-    dispatch(logout());
+  const handleSignOut = async () => {
+    await dispatch(logoutUser() as any);
     onClose();
     navigate('/login');
   };
@@ -37,8 +37,9 @@ const ProfileDropdown = ({ onClose }) => {
       <div className="px-3 py-[9px] border-b border-light-gray bg-cream">
         <p className="text-[9px] text-gray uppercase">Signed in as</p>
         <div className="flex items-center justify-between mt-[3px]">
-          <p className="text-[10.5px] font-medium text-dark-gray">{userRole}</p>
+          <p className="text-[10.5px] font-medium text-dark-gray">{user?.first_name} {user?.last_name}</p>
         </div>
+        <p className="text-[9px] text-gray">{user?.email}</p>
       </div>
 
       {/* Menu Items */}

@@ -6,6 +6,11 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(),tailwindcss(),],
+  server: {
+    port: 5173,
+    strictPort: true, // Exit if port 5173 is already in use
+    host: true, // Listen on all addresses
+  },
   build: {
     sourcemap: false, // Disable sourcemaps to eliminate build warnings
     chunkSizeWarningLimit: 2000, // Increase chunk size limit to suppress warnings (2MB)

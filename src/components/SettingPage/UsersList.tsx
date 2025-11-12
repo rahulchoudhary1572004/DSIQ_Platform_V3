@@ -17,6 +17,7 @@ import {
   fetchUsers,
   addUser,
   toggleArchiveUser,
+  assignRole,
   selectActiveUsers,
   selectArchivedUsers,
   clearError
@@ -223,34 +224,47 @@ const UsersList = () => {
     const user = [...activeUsers, ...archivedUsers].find((u) => u.id === id);
     if (!user) return;
 
-    const selectedRoleId = availableRoles.find((role) => role.id === editForm.Role)?.id ?? user.role_id;
+    const selectedRoleId = availableRoles.find((role) => role.id === editForm.Role)?.id;
+
+    if (selectedRoleId && selectedRoleId !== user.role_id) {
+      dispatch(assignRole({ userId: id, roleId: selectedRoleId }))
+        .unwrap()
+        .then(() => {
+          showToast.success("User role updated successfully!");
+        })
+        .catch((updateError) => {
+          showToast.error(updateError || 'Failed to update user role');
+        });
+    }
     
-    dispatch(toggleArchiveUser({
-      id,
-      password: "12345",
-      is_archive: user.is_archive || false,
-      first_name: editForm.firstName,
-      last_name: editForm.lastName,
-      role_id: selectedRoleId
-    }))
-      .unwrap()
-      .then(() => {
-        setEditUserId(null);
-        setEditForm({ firstName: "", lastName: "", Role: "" });
-        showToast.success("User details updated successfully!");
-      })
-      .catch((updateError) => {
-        showToast.error(updateError || 'Failed to update user');
-      });
+    const detailsToUpdate: Partial<UserRecord> = {};
+    if (editForm.firstName !== user.first_name) {
+      detailsToUpdate.first_name = editForm.firstName;
+    }
+    if (editForm.lastName !== user.last_name) {
+      detailsToUpdate.last_name = editForm.lastName;
+    }
+
+    if (Object.keys(detailsToUpdate).length > 0) {
+        dispatch(toggleArchiveUser({
+          id,
+          ...detailsToUpdate
+        }))
+        .unwrap()
+        .then(() => {
+          showToast.success("User details updated successfully!");
+        })
+        .catch((updateError) => {
+          showToast.error(updateError || 'Failed to update user details');
+        });
+    }
+
+    setEditUserId(null);
+    setEditForm({ firstName: "", lastName: "", Role: "" });
   }, [dispatch, editForm, availableRoles, activeUsers, archivedUsers]);
 
-  const handleAddUser = (userData: AddUserFormData) => {
-    dispatch(addUser({
-      email: userData.email ?? "",
-      first_name: userData.first_name ?? "",
-      last_name: userData.last_name ?? "",
-      role_id: userData.role_id ?? "",
-    }))
+  const handleAddUser = (userData: any) => {
+    dispatch(addUser(userData))
       .unwrap()
       .then(() => {
         setIsModalOpen(false);
@@ -410,57 +424,71 @@ const UsersList = () => {
     );
   }, [editUserId, editForm.Role, handleEditChange, handleEditSave, availableRoles]);
 
-  const actionsCell = useCallback((props) => {
-    if (props.rowType === "groupHeader") return null;
-    if (!props.dataItem?.id) return <td></td>;
-    return (
-      <td>
-        {!props.dataItem.is_archive ? (
-          editUserId === props.dataItem.id ? (
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleEditSave(props.dataItem.id)}
-                className="px-3 py-1 bg-success-green text-white rounded-md hover:bg-opacity-80 transition duration-200 text-button"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => { setEditUserId(null); setEditForm({ firstName: "", lastName: "", Role: "" }); }}
-                className="px-3 py-1 bg-gray text-white rounded-md hover:bg-opacity-80 transition duration-200 text-button"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="flex justify-center space-x-2">
-              <button
-                onClick={() => handleEdit(props.dataItem)}
-                className="p-2 text-warning-yellow hover:text-opacity-80 hover:bg-cream rounded-full transition duration-200"
-              >
-                <Edit2 size={18} />
-              </button>
-              <button
-                onClick={() => handleArchive(props.dataItem)}
-                className="p-2 text-danger-red hover:text-opacity-80 hover:bg-cream rounded-full transition duration-200"
-              >
-                <Archive size={18} />
-              </button>
-              <button
-                onClick={() => { setSelectedUserForPassword(props.dataItem); setIsPasswordModalOpen(true); }}
-                className="p-2 text-info-blue hover:text-opacity-80 hover:bg-cream rounded-full transition duration-200"
-              >
-                <KeyRound size={18} />
-              </button>
-            </div>
-          )
-        ) : (
+  const actionsCell = useCallback((props: GridCellProps) => {
+    if (props.rowType === "groupHeader" || !props.dataItem) return null;
+
+    const user = props.dataItem as ProcessedUserRecord;
+    const isCurrentlyEditing = editUserId === user.id;
+
+    if (user.archived) {
+      return (
+        <td>
           <button
-            onClick={() => handleRestore(props.dataItem)}
+            onClick={() => handleRestore(user)}
             className="px-3 py-1 bg-success-green text-white rounded-md hover:bg-opacity-80 transition duration-200 flex items-center justify-center text-button"
           >
             <RotateCcw size={14} className="mr-1" /> Restore
           </button>
-        )}
+        </td>
+      );
+    }
+
+    if (isCurrentlyEditing) {
+      return (
+        <td>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleEditSave(user.id)}
+              className="px-3 py-1 bg-success-green text-white rounded-md hover:bg-opacity-80 transition duration-200 text-button"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => { setEditUserId(null); setEditForm({ firstName: "", lastName: "", Role: "" }); }}
+              className="px-3 py-1 bg-gray text-white rounded-md hover:bg-opacity-80 transition duration-200 text-button"
+            >
+              Cancel
+            </button>
+          </div>
+        </td>
+      );
+    }
+
+    return (
+      <td>
+        <div className="flex justify-center space-x-2">
+          <button
+            onClick={() => handleEdit(user)}
+            className="p-2 text-warning-yellow hover:text-opacity-80 hover:bg-cream rounded-full transition duration-200"
+            title="Edit User"
+          >
+            <Edit2 size={18} />
+          </button>
+          <button
+            onClick={() => handleArchive(user)}
+            className="p-2 text-danger-red hover:text-opacity-80 hover:bg-cream rounded-full transition duration-200"
+            title="Archive User"
+          >
+            <Archive size={18} />
+          </button>
+          <button
+            onClick={() => { setSelectedUserForPassword(user); setIsPasswordModalOpen(true); }}
+            className="p-2 text-info-blue hover:text-opacity-80 hover:bg-cream rounded-full transition duration-200"
+            title="Update Password"
+          >
+            <KeyRound size={18} />
+          </button>
+        </div>
       </td>
     );
   }, [editUserId, handleEditSave, handleEdit, handleArchive, handleRestore]);

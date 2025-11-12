@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronRight, Cog, MessageSquare, BookOpen, 
   ShoppingBag, TrendingUp, Calendar, Users, FileText, Zap, 
   Clipboard, Target, LayoutDashboard, Package, Image, Share2, 
-  Globe, LayoutList
+  Globe, LayoutList, Link2
 } from "lucide-react";
 
 // Constants
@@ -48,6 +48,7 @@ const MENU_ITEMS = {
     },
     { icon: <Zap size={ICON_SIZE} />, label: "Automation Rules" },
     { icon: <Clipboard size={ICON_SIZE} />, label: "Reporting" },
+    { icon: <Link2 size={ICON_SIZE} />, label: "Connections" },
   ],
   "PIM": [
     { icon: <LayoutDashboard size={ICON_SIZE} />, label: "Dashboard" },
@@ -287,6 +288,7 @@ const Sidebar = ({ isOpen, selectedApp, toggleSidebar }) => {
         "/targets": "Ad Groups-Targets",
         "/automation-rules": "Automation Rules",
         "/reporting": "Reporting",
+        "/connections": "Connections",
       },
       "pim": {
         "/dashboard": "Dashboard",
@@ -357,15 +359,19 @@ const Sidebar = ({ isOpen, selectedApp, toggleSidebar }) => {
   }, []);
 
   const handleItemClick = useCallback((item, subItem = null) => {
+    // Ensure item is a string (handle both string and object inputs)
+    const itemLabel = typeof item === 'string' ? item : item?.label || '';
+    const subItemLabel = typeof subItem === 'string' ? subItem : subItem?.label || null;
+    
     let route;
-    if (item === "App Settings") {
+    if (itemLabel === "App Settings") {
       route = "/app-settings";
     } else {
       const appSlug = toSlug(selectedApp.name);
       route = `/${appSlug}`;
-      const itemSlug = toSlug(subItem || item);
+      const itemSlug = toSlug(subItemLabel || itemLabel);
       route += `/${itemSlug}`;
-      setActiveItem(subItem ? `${item}-${subItem}` : item);
+      setActiveItem(subItemLabel ? `${itemLabel}-${subItemLabel}` : itemLabel);
     }
     navigate(route);
   }, [selectedApp, navigate]);

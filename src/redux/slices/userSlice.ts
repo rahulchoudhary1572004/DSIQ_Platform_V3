@@ -3,8 +3,7 @@ import type { AxiosError } from 'axios';
 import api from '../../api/axios';
 import { getModuleIdByName } from '../../../utils/getModuleIdByName';
 import type { RootState } from '../store';
-
-const moduleId = getModuleIdByName('User Management');
+import toast from '../../../utils/toast';
 
 export interface UserRecord {
   id: string | number;
@@ -14,7 +13,13 @@ export interface UserRecord {
   role_id: string | number;
   module_id?: string | number;
   password?: string;
+  is_active?: boolean;
   is_archive?: boolean;
+  is_verified?: boolean;
+  phone?: string;
+  gender?: string;
+  profile_photo_url?: string;
+  dob?: string; // Format: YYYY-MM-DD
   [key: string]: unknown;
 }
 
@@ -31,10 +36,18 @@ interface FetchUsersResponse {
 }
 
 interface AddUserPayload {
-  email: string;
   first_name: string;
   last_name: string;
-  role_id: string | number;
+  email: string;
+  password: string;
+  is_active: boolean;
+  is_archive: boolean;
+  is_verified: boolean;
+  phone: string;
+  gender: string;
+  profile_photo_url: string;
+  dob: string; // Format: YYYY-MM-DD
+  role_id: string;
 }
 
 interface ToggleArchivePayload extends Partial<UserRecord> {
@@ -66,24 +79,37 @@ export const fetchUsers = createAsyncThunk<
   'users/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const usersModuleId = moduleId;
+      // Resolve module ID at runtime; fallback to /modules if not present in JWT
+      let usersModuleId = getModuleIdByName('User Management');
       if (!usersModuleId) {
-        return rejectWithValue('Module ID for User Management not found');
+        try {
+          const modResp = await api.get('/modules');
+          const raw = Array.isArray(modResp.data)
+            ? modResp.data
+            : Array.isArray(modResp.data?.data)
+              ? modResp.data.data
+              : modResp.data?.modules || [];
+          const norm = (s: unknown) => String(s ?? '').toLowerCase().replace(/[\s_-]+/g, '');
+          const target = norm('User Management');
+          const match = (raw as any[]).find((m) => norm(m?.name ?? m?.module_name) === target);
+          usersModuleId = match?.id ?? null;
+          try { localStorage.setItem('modules', JSON.stringify(raw)); } catch {}
+        } catch (e) {
+          // ignore; will reject below
+        }
       }
+      if (!usersModuleId) return rejectWithValue('Module ID for User Management not found');
 
-      const [activeUsersResponse, archivedUsersResponse] = await Promise.all([
-        api
-          .get(`/get-users?module_id=${usersModuleId}&archived=false`)
-          .catch(() => ({ data: { data: [] } })),
-        api
-          .get(`/get-users?module_id=${usersModuleId}&archived=true`)
-          .catch(() => ({ data: { data: [] } })),
-      ]);
+      const response = await api.get('/me');
+      const user = response.data.user as UserRecord;
 
-      return {
-        active: (activeUsersResponse.data?.data ?? []) as UserRecord[],
-        archived: (archivedUsersResponse.data?.data ?? []) as UserRecord[],
-      };
+      // The /me endpoint returns only the current user.
+      // We will place this single user into the active list.
+      // To get a full list of all users, a different API endpoint is needed.
+      const active = user && !user.is_archive ? [user] : [];
+      const archived = user && user.is_archive ? [user] : [];
+
+      return { active, archived };
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
       const message = axiosError.response?.data?.message ?? buildErrorMessage(error, 'Failed to fetch users');
@@ -95,31 +121,35 @@ export const fetchUsers = createAsyncThunk<
 // Add a new user
 export const addUser = createAsyncThunk<
   UserRecord,
-  AddUserPayload,
+  Partial<AddUserPayload>,
   { rejectValue: string }
 >(
   'users/addUser',
   async (userData, { rejectWithValue }) => {
     try {
-      if (!moduleId) {
-        return rejectWithValue('Module ID for User Management not found');
-      }
-
       const payload = {
-        email: userData.email,
-        password: '12345',
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        role_id: userData.role_id,
-        module_id: moduleId,
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
+        email: userData.email || '',
+        password: userData.password || '',
+        is_active: userData.is_active !== undefined ? userData.is_active : true,
+        is_archive: userData.is_archive !== undefined ? userData.is_archive : false,
+        is_verified: userData.is_verified !== undefined ? userData.is_verified : false,
+        phone: userData.phone || '',
+        gender: userData.gender || '',
+        profile_photo_url: userData.profile_photo_url || '',
+        dob: userData.dob || '',
+        role_id: userData.role_id || '',
       };
 
       const response = await api.post<{ data: UserRecord } | UserRecord>('/create-user', payload);
       const createdUser = (response.data && 'data' in response.data ? response.data.data : response.data) as UserRecord;
+      toast.success('User created successfully');
       return createdUser;
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
       const message = axiosError.response?.data?.message ?? 'Failed to add user';
+      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -134,13 +164,30 @@ export const toggleArchiveUser = createAsyncThunk<
   'users/toggleArchive',
   async (userData, { rejectWithValue }) => {
     try {
-      if (!moduleId) {
-        return rejectWithValue('Module ID for User Management not found');
+      // Resolve module ID at runtime; fallback to /modules if not present in JWT
+      let usersModuleId = getModuleIdByName('User Management');
+      if (!usersModuleId) {
+        try {
+          const modResp = await api.get('/modules');
+          const raw = Array.isArray(modResp.data)
+            ? modResp.data
+            : Array.isArray(modResp.data?.data)
+              ? modResp.data.data
+              : modResp.data?.modules || [];
+          const norm = (s: unknown) => String(s ?? '').toLowerCase().replace(/[\s_-]+/g, '');
+          const target = norm('User Management');
+          const match = (raw as any[]).find((m) => norm(m?.name ?? m?.module_name) === target);
+          usersModuleId = match?.id ?? null;
+          try { localStorage.setItem('modules', JSON.stringify(raw)); } catch {}
+        } catch (e) {
+          // ignore; will reject below
+        }
       }
+      if (!usersModuleId) return rejectWithValue('Module ID for User Management not found');
 
       const payload = {
         id: userData.id,
-        module_id: moduleId,
+        module_id: usersModuleId,
         password: userData.password,
         is_archive: userData.is_archive,
         first_name: userData.first_name,
@@ -154,6 +201,30 @@ export const toggleArchiveUser = createAsyncThunk<
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
       const message = axiosError.response?.data?.message ?? 'Failed to update user';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const assignRole = createAsyncThunk<
+  UserRecord,
+  { userId: string | number; roleId: string | number },
+  { rejectValue: string }
+>(
+  'users/assignRole',
+  async ({ userId, roleId }, { rejectWithValue }) => {
+    try {
+      const response = await api.post<{ data: UserRecord } | UserRecord>('/assign-role', {
+        user_id: userId,
+        role_id: roleId,
+      });
+      const updatedUser = (response.data && 'data' in response.data ? response.data.data : response.data) as UserRecord;
+      toast.success('Role assigned successfully');
+      return updatedUser;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const message = axiosError.response?.data?.message ?? 'Failed to assign role';
+      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -214,6 +285,17 @@ const userSlice = createSlice({
       })
       .addCase(toggleArchiveUser.rejected, (state, action) => {
         state.error = action.payload ?? 'Failed to update user';
+      })
+      .addCase(assignRole.fulfilled, (state, action) => {
+        const updatedUser = action.payload;
+        const updateUser = (users: UserRecord[]) =>
+          users.map((user) => (user.id === updatedUser.id ? { ...user, ...updatedUser } : user));
+
+        state.activeUsers = updateUser(state.activeUsers);
+        state.archivedUsers = updateUser(state.archivedUsers);
+      })
+      .addCase(assignRole.rejected, (state, action) => {
+        state.error = action.payload ?? 'Failed to assign role';
       });
   },
 });

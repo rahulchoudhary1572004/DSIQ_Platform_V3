@@ -3,9 +3,10 @@ import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/tool
 import type { AxiosError } from 'axios';
 import axios from '../../api/axios';
 import type { RootState } from '../store';
+import toast from '../../../utils/toast';
 
 export interface ProfileData {
-  id: number | null;
+  id: string | number | null;
   first_name: string;
   last_name: string;
   email: string;
@@ -13,16 +14,23 @@ export interface ProfileData {
   dob: string | null;
   gender: string | null;
   country_id: number | null;
-  country_name: string | null;
-  marriage_anniversary: string | null;
-  other_anniversaries: string | null;
+  country_name?: string | null;
+  marriage_anniversary?: string | null;
+  other_anniversaries?: string | null;
   profile_photo_url: string | null;
-  role_id: number | null;
-  role_name: string;
+  role_id: string | number | null;
+  role_name?: string;
   is_active: boolean;
   is_verified: boolean;
   is_archive: boolean;
   bio?: string | null;
+  organization_id?: string | number | null;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  created_by_id?: string | number | null;
+  updated_by?: string;
+  updated_by_id?: string | number | null;
 }
 
 type AsyncStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -63,21 +71,33 @@ const initialState: ProfileState = {
 };
 
 // ✅ Async Thunk to Fetch Profile Data
-export const fetchProfile = createAsyncThunk<
+export const fetchProfile = createAsyncThunk(
+  'profile/fetchProfile',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/get-profile');
+      return response.data.user;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);// ✅ Async Thunk to Fetch Current User (/me endpoint)
+export const fetchCurrentUser = createAsyncThunk<
   ProfileData,
   void,
   { rejectValue: string }
 >(
-  'profile/fetchProfile',
+  'profile/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get<{ data: ProfileData }>('/get-profile');
+      const response = await axios.get<{ data: ProfileData }>('/me');
+      toast.success('Current user data fetched successfully');
       return response.data.data;
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
-      return rejectWithValue(
-        axiosError.response?.data?.message ?? 'Failed to fetch profile'
-      );
+      const errorMessage = axiosError.response?.data?.message ?? 'Failed to fetch current user';
+      toast.error(errorMessage);
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -154,6 +174,23 @@ const profileSlice = createSlice({
       .addCase(fetchProfile.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload ?? 'Failed to fetch profile';
+      })
+      // Fetch Current User Cases (/me endpoint)
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = {
+          ...state.data,
+          ...action.payload
+        };
+        state.error = null;
+      })
+      .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload ?? 'Failed to fetch current user';
       })
       // Update Profile Cases
       .addCase(updateProfile.pending, (state) => {

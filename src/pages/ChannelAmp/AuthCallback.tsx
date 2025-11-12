@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
+import { useDispatch } from "react-redux"
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
-import api from "../../api/axios"
+import { getLwaAccessToken, fetchLwaProfiles } from "../../redux/slices/channelAmpSlice"
 
 const AuthCallback = () => {
+  const dispatch = useDispatch()
   const [status, setStatus] = useState("processing") // processing, success, error
   const [message, setMessage] = useState("Processing Amazon Ads authorization...")
   const navigate = useNavigate()
@@ -39,16 +41,44 @@ const AuthCallback = () => {
 
         setMessage("Exchanging authorization code for access token...")
 
-        // Use your existing API call
-        await api.post("/amazon-auth", { code })
+        // Call the lwa-access-token API via Redux
+        const result = await dispatch(getLwaAccessToken(code) as any)
 
-        setStatus("success")
-        setMessage("Successfully connected to Amazon Ads!")
-
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          navigate("/channelamp/dashboard")
-        }, 2000)
+        if (getLwaAccessToken.fulfilled.match(result)) {
+          setMessage("Access token received! Fetching your Amazon Ads profiles...")
+          
+          // Add a small delay to ensure backend has stored the token
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          // Fetch profiles from Amazon after successful token exchange
+          const profilesResult = await dispatch(fetchLwaProfiles() as any)
+          
+          if (fetchLwaProfiles.fulfilled.match(profilesResult)) {
+            setStatus("success")
+            setMessage("Successfully connected to Amazon Ads!")
+            
+            // Clear the stored state
+            sessionStorage.removeItem("oauth_state")
+            
+            // Redirect to profiles page after a short delay
+            setTimeout(() => {
+              navigate("/channelamp/profiles")
+            }, 2000)
+          } else {
+            // Token exchange succeeded but profile fetch failed
+            // Still consider it a success, user can fetch profiles later
+            setStatus("success")
+            setMessage("Connected to Amazon Ads! You can now view your profiles.")
+            
+            sessionStorage.removeItem("oauth_state")
+            
+            setTimeout(() => {
+              navigate("/channelamp")
+            }, 2000)
+          }
+        } else {
+          throw new Error(result.payload || 'Failed to exchange authorization code')
+        }
       } catch (error) {
         console.error("Amazon auth failed:", error)
         setStatus("error")
