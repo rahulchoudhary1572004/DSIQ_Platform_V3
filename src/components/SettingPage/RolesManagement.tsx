@@ -94,7 +94,8 @@ const RolesManagement: FC<RolesManagementProps> = ({ onCreateRole }) => {
   useEffect(() => {
     const fetchModules = async () => {
       try {
-        const modules = await getRequest<ModuleInfo[]>("/get-modules");
+        // Use the correct endpoint: /modules instead of /get-modules
+        const modules = await getRequest<ModuleInfo[]>("/modules");
         const moduleMapping = modules.reduce<Record<string, ModuleInfo["id"]>>((map, module) => {
           map[module.module_name] = module.id;
           return map;
@@ -105,7 +106,8 @@ const RolesManagement: FC<RolesManagementProps> = ({ onCreateRole }) => {
           error instanceof Error
             ? error.message
             : "Failed to load modules. Using fallback module IDs.";
-        setNameError(message);
+        console.error("Error fetching modules:", error);
+        showToast.error(message, { autoClose: 3000 });
       }
     };
 

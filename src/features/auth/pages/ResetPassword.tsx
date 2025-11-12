@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Input } from '@progress/kendo-react-inputs';
 import { Button } from '@progress/kendo-react-buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { resetPassword } from '../redux/slices/authSlice';
-import showToast from '../../utils/toast';
+import { resetPassword } from '../../../redux/slices/authSlice';
+import showToast from '../../../../utils/toast';
 
 
 const ResetPasswordPage = () => {
@@ -14,6 +13,7 @@ const ResetPasswordPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    email: '',
     password: '',
     confirmPassword: ''
   });
@@ -51,7 +51,12 @@ const ResetPasswordPage = () => {
   };
 
   const validatePassword = () => {
-    const { password, confirmPassword } = formData;
+    const { email, password, confirmPassword } = formData;
+
+    if (!email) {
+      showToast.error('Please enter your email address');
+      return false;
+    }
 
     if (!password) {
       showToast.error('Please enter a password');
@@ -90,12 +95,11 @@ const ResetPasswordPage = () => {
 
     if (validatePassword()) {
       try {
-        // Use token here
-        console.log('Reset token:', token);
-        dispatch(resetPassword({ token, password: formData.password }) as any);
-        // Simulating API call with token and new password
-        // Example:
-        // await resetPasswordAPI({ token, password: formData.password });
+        // Use email and new_password for the API
+        dispatch(resetPassword({ 
+          email: formData.email, 
+          new_password: formData.password 
+        }) as any);
 
         showToast.success('Password reset successfully');
         setTimeout(() => {
@@ -128,6 +132,19 @@ const ResetPasswordPage = () => {
         </div>
 
         <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <Input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              className="!w-full"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="email"
+            />
+          </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <div className="relative">

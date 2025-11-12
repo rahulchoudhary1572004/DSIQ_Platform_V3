@@ -6,7 +6,11 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
     first_name: '',
     last_name: '',
     email: '',
-    role_id: ''
+    role_id: '',
+    password: '',
+    phone: '',
+    gender: '',
+    dob: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -17,14 +21,22 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
         first_name: editingUser.first_name || '',
         last_name: editingUser.last_name || '',
         email: editingUser.email || '',
-        role_id: editingUser.role_id || ''
+        role_id: editingUser.role_id || '',
+        password: '',
+        phone: editingUser.phone || '',
+        gender: editingUser.gender || '',
+        dob: editingUser.dob || ''
       });
     } else {
       setFormData({
         first_name: '',
         last_name: '',
         email: '',
-        role_id: ''
+        role_id: '',
+        password: '',
+        phone: '',
+        gender: '',
+        dob: ''
       });
     }
     setErrors({});
@@ -52,6 +64,7 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
       (newErrors as any).email = 'Please enter a valid email';
     }
     if (!(formData as any).role_id) (newErrors as any).role_id = 'Role is required';
+    if (!editingUser && !(formData as any).password) (newErrors as any).password = 'Password is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -62,10 +75,7 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
     if (!validateForm()) return;
 
     const userData = {
-      first_name: formData.first_name.trim(),
-      last_name: formData.last_name.trim(),
-      email: formData.email.trim(),
-      role_id: formData.role_id
+      ...formData
     };
 
     onAddUser(userData);
@@ -126,6 +136,60 @@ const AddUser = ({ isOpen, onClose, onAddUser, availableRoles = [], editingUser 
               placeholder="Enter email address"
             />
             {(errors as any).email && <p className="mt-1 text-danger-red text-small">{(errors as any).email}</p>}
+          </div>
+
+          {!editingUser && (
+            <div className="mb-4">
+              <label className="block text-dark-gray mb-2 text-table">Password*</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full bg-cream text-dark-gray px-3 py-2 rounded border ${(errors as any).password ? 'border-danger-red' : 'border-light-gray'} focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input`}
+                placeholder="Enter password"
+              />
+              {(errors as any).password && <p className="mt-1 text-danger-red text-small">{(errors as any).password}</p>}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-dark-gray mb-2 text-table">Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full bg-cream text-dark-gray px-3 py-2 rounded border border-light-gray focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input"
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div>
+              <label className="block text-dark-gray mb-2 text-table">Gender</label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full bg-cream text-dark-gray px-3 py-2 rounded border border-light-gray focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-dark-gray mb-2 text-table">Date of Birth</label>
+            <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              className="w-full bg-cream text-dark-gray px-3 py-2 rounded border border-light-gray focus:outline-none focus:ring-2 focus:ring-primary-orange focus:border-primary-orange text-input"
+            />
           </div>
 
           <div className="mb-6">

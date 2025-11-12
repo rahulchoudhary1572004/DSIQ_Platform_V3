@@ -7,7 +7,8 @@ import moduleReducer from './slices/moduleSlice';
 import rolesReducer from './slices/rolesSlice';
 import usersReducer from './slices/userSlice';
 import workspaceViewReducer from './slices/workspaceViewSlice';
-import dateRangeReducer from './slices/dateRangeSlice'; 
+import dateRangeReducer from './slices/dateRangeSlice';
+import channelAmpReducer from './slices/channelAmpSlice'; 
 
 export const store = configureStore({
   reducer: {
@@ -18,7 +19,8 @@ export const store = configureStore({
     modules: moduleReducer,
     users: usersReducer,
     roles: rolesReducer,
-    dateRange: dateRangeReducer
+    dateRange: dateRangeReducer,
+    channelAmp: channelAmpReducer
   }
 });
 

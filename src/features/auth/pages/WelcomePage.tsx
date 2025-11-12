@@ -1,10 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from '@progress/kendo-react-buttons';
 import { Card, CardTitle, CardBody } from '@progress/kendo-react-layout';
-import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import Footer from '../components/Footer'
+import { Link, useLocation } from 'react-router-dom';
+import Footer from '../../../components/Footer';
 
 
 const WelcomePage = ({ isLoggedIn }) => {

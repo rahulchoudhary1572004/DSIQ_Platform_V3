@@ -4,7 +4,31 @@ import axios from '../../api/axios';
 import { getModuleIdByName } from '../../../utils/getModuleIdByName';
 import type { RootState } from '../store';
 
-const moduleId = getModuleIdByName('Workspace');
+// Feature flag: gate Workspace API usage (set VITE_HAS_WORKSPACE_API=true to enable calls)
+const HAS_WORKSPACE_API = (import.meta as any)?.env?.VITE_HAS_WORKSPACE_API === 'true';
+
+// Resolve Workspace module id at runtime; backend may not expose a 'Workspace' module yet
+const resolveWorkspaceModuleId = async (): Promise<string | number | null> => {
+  let id = getModuleIdByName('Workspace');
+  if (id) return id;
+  try {
+    const resp = await axios.get('/modules');
+    const raw = Array.isArray(resp.data)
+      ? resp.data
+      : Array.isArray(resp.data?.data)
+        ? resp.data.data
+        : resp.data?.modules || [];
+    const norm = (s: unknown) => String(s ?? '').toLowerCase().replace(/[\s_-]+/g, '');
+    const targetNames = ['Workspace', 'Reporting']; // try common aliases
+    const match = (raw as any[]).find((m) => {
+      const name = norm(m?.name ?? m?.module_name);
+      return targetNames.some((t) => name === norm(t));
+    });
+    return match?.id ?? null;
+  } catch {
+    return null;
+  }
+};
 
 type AsyncStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 
@@ -73,6 +97,11 @@ export const fetchWorkspaces = createAsyncThunk<
 >(
   'workspaceView/fetchWorkspaces',
   async (_, { rejectWithValue }) => {
+    // Short-circuit when Workspace API is not available to avoid 404 noise
+    if (!HAS_WORKSPACE_API) {
+      return { active: [], archived: [] } as FetchWorkspacesResponse;
+    }
+    const moduleId = await resolveWorkspaceModuleId();
     if (!moduleId) {
       return rejectWithValue('Workspace module ID not found.');
     }
@@ -103,6 +132,10 @@ export const fetchWorkspaceDetail = createAsyncThunk<
 >(
   'workspaceView/fetchWorkspaceDetail',
   async (id, { rejectWithValue }) => {
+    if (!HAS_WORKSPACE_API) {
+      return rejectWithValue('Workspace API not available yet');
+    }
+    const moduleId = await resolveWorkspaceModuleId();
     if (!moduleId) {
       return rejectWithValue('Workspace module ID not found.');
     }
@@ -127,6 +160,11 @@ export const fetchWorkspaceProducts = createAsyncThunk<
 >(
   'workspaceView/fetchWorkspaceProducts',
   async (workspaceId, { rejectWithValue }) => {
+    if (!HAS_WORKSPACE_API) {
+      // Return empty list gracefully when API is not available
+      return [] as WorkspaceProduct[];
+    }
+    const moduleId = await resolveWorkspaceModuleId();
     if (!moduleId) {
       return rejectWithValue('Workspace module ID not found.');
     }
@@ -148,6 +186,10 @@ export const updateWorkspaceDetails = createAsyncThunk<
 >(
   'workspaceView/updateWorkspaceDetails',
   async (payload, { rejectWithValue }) => {
+    if (!HAS_WORKSPACE_API) {
+      return rejectWithValue('Workspace API not available yet');
+    }
+    const moduleId = await resolveWorkspaceModuleId();
     if (!moduleId) {
       return rejectWithValue('Workspace module ID not found.');
     }
@@ -173,6 +215,10 @@ export const toggleWorkspaceArchive = createAsyncThunk<
 >(
   'workspaceView/toggleWorkspaceArchive',
   async ({ id, is_archive }, { rejectWithValue }) => {
+    if (!HAS_WORKSPACE_API) {
+      return rejectWithValue('Workspace API not available yet');
+    }
+    const moduleId = await resolveWorkspaceModuleId();
     if (!moduleId) {
       return rejectWithValue('Workspace module ID not found.');
     }

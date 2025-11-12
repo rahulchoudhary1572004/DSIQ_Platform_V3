@@ -1,33 +1,101 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { useSearchParams } from "react-router-dom"
 import { ExternalLink, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import api from "../../api/axios"
-
-const CLIENT_ID = "amzn1.application-oa2-client.YOUR_CLIENT_ID"
-const REDIRECT_URI = "https://yourapp.com/auth/callback"
-const SCOPE = "advertising::campaign_management"
+import { getLwaLoginUrl, getLwaAccessToken, fetchLwaProfiles } from "../../redux/slices/channelAmpSlice"
 
 const ConnectAmazonAds = ({ onConnectionSuccess }) => {
+  const dispatch = useDispatch()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { lwaLoginUrl, loading: reduxLoading } = useSelector((state: any) => state.channelAmp)
   const [isConnecting, setIsConnecting] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Check if user is already connected by calling your API
+  // Auto-detect authorization code from URL
+  useEffect(() => {
+    const code = searchParams.get("code")
+    const error = searchParams.get("error")
+    
+    if (error) {
+      setConnectionError(`Authorization failed: ${error}`)
+      setLoading(false)
+      // Clean up URL
+      searchParams.delete("error")
+      searchParams.delete("error_description")
+      setSearchParams(searchParams)
+      return
+    }
+    
+    if (code) {
+      // Code found in URL - automatically process it
+      handleAutoConnect(code)
+      // Clean up URL
+      searchParams.delete("code")
+      searchParams.delete("scope")
+      setSearchParams(searchParams)
+    }
+  }, [searchParams])
+
+  const handleAutoConnect = async (code: string) => {
+    setIsConnecting(true)
+    setConnectionError(null)
+
+    try {
+      // Exchange code for token
+      const result = await dispatch(getLwaAccessToken(code) as any)
+      
+      if (getLwaAccessToken.fulfilled.match(result)) {
+        // Wait a bit for backend to process
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Fetch profiles
+        await dispatch(fetchLwaProfiles() as any)
+        
+        setIsConnected(true)
+        
+        if (onConnectionSuccess) {
+          onConnectionSuccess()
+        }
+      } else {
+        throw new Error(result.payload || 'Failed to exchange code')
+      }
+    } catch (error) {
+      console.error('Auto connection error:', error)
+      setConnectionError("Failed to connect automatically. Please try again.")
+    } finally {
+      setIsConnecting(false)
+      setLoading(false)
+    }
+  }
+
+  // Check if user is already connected by getting profiles
   useEffect(() => {
     const checkConnectionStatus = async () => {
       try {
         setLoading(true)
-        // Check connection status with your API
-        const response = await api.get("/amazon-auth/status")
-        if (response.data && typeof response.data.connected === "boolean") {
-          setIsConnected(response.data.connected)
-          if (response.data.connected && onConnectionSuccess) {
-            onConnectionSuccess()
-          }
+        // Get LWA profiles to check connection status
+        const response = await api.get("/lwa-profiles")
+        
+        // Parse response - backend returns object {profiles: [...], message: "..."}
+        let profiles;
+        if (typeof response.data === 'string') {
+          profiles = JSON.parse(response.data);
+        } else if (response.data && typeof response.data === 'object') {
+          profiles = response.data.profiles || response.data.data || [];
         } else {
-          throw new Error("Invalid response format")
+          profiles = [];
+        }
+        
+        const hasProfiles = Array.isArray(profiles) && profiles.length > 0;
+        setIsConnected(hasProfiles)
+        
+        if (hasProfiles && onConnectionSuccess) {
+          onConnectionSuccess()
         }
       } catch (error) {
         console.error("Failed to check Amazon connection status:", error)
@@ -46,16 +114,26 @@ const ConnectAmazonAds = ({ onConnectionSuccess }) => {
     return Math.random().toString(36).substring(2, 15)
   }
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     setIsConnecting(true)
     setConnectionError(null)
 
     try {
       const state = generateState()
       sessionStorage.setItem("oauth_state", state)
-      const authUrl = `https://www.amazon.com/ap/oa?client_id=${CLIENT_ID}&scope=${SCOPE}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${state}`
-      window.location.href = authUrl
+      
+      // Get the Amazon OAuth URL from the backend
+      const result = await dispatch(getLwaLoginUrl() as any)
+      
+      if (getLwaLoginUrl.fulfilled.match(result)) {
+        // Redirect to Amazon OAuth page (simplest approach)
+        // Backend should redirect back to current page with ?code=xxx
+        window.location.href = result.payload
+      } else {
+        throw new Error(result.payload || 'Failed to get login URL')
+      }
     } catch (error) {
+      console.error('Connection error:', error)
       setConnectionError("Failed to initiate connection. Please try again.")
       setIsConnecting(false)
     }
@@ -64,7 +142,7 @@ const ConnectAmazonAds = ({ onConnectionSuccess }) => {
   const handleDisconnect = async () => {
     try {
       setLoading(true)
-      await api.delete("/amazon-auth")
+      // Reset Redux state instead of API call
       setIsConnected(false)
       setConnectionError(null)
     } catch (error) {

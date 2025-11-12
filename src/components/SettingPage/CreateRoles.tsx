@@ -3,7 +3,7 @@ import { Check, X, Copy, Loader2 } from "lucide-react";
 import { Card, CardHeader, CardBody, CardTitle, CardSubtitle, CardActions } from '@progress/kendo-react-layout';
 import { useDebounce } from 'use-debounce';
 import { useSelector, useDispatch } from 'react-redux';
-import { createRole } from '../../redux/slices/rolesSlice';
+import { createRoleWithPermissions } from '../../redux/slices/rolesSlice';
 import api from '../../api/axios';
 import { getModuleIdByName } from "../../../utils/getModuleIdByName";
 import showToast from '../../../utils/toast'; 
@@ -12,6 +12,7 @@ import { getRequest } from '../../api/apiHelper/getHelper';
 const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
   const dispatch = useDispatch();
   const { roles } = useSelector((state: any) => state.roles);
+  const organization_id = useSelector((state: any) => state.auth?.user?.organization_id);
   // State for wizard flow
   const [activeTab, setActiveTab] = useState("details");
   const [creationComplete, setCreationComplete] = useState(false);
@@ -68,16 +69,22 @@ const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
     const fetchModules = async () => {
       setIsLoadingModules(true);
       try {
-        const response = await getRequest('/get-modules'); 
-        setModules(response as any);
-        // Initialize permission matrix with fetched modules
-        setPermissionMatrix((response as any[]).map((module: any) => ({
-          name: module.module_name,
-          create: false,
-          read: true,
-          update: false,
-          archived: false
-        })));
+        // Use the correct endpoint: /modules instead of /get-modules
+        const response = await getRequest('/modules'); 
+        const list = Array.isArray(response) ? response as any[] : (response as any)?.data || (response as any)?.modules || [];
+        setModules(list as any);
+        // Initialize permission matrix with fetched modules (use display name normalized)
+        setPermissionMatrix((list as any[]).map((module: any) => {
+          const rawName = module.name ?? module.module_name ?? 'Unknown Module';
+          const display = String(rawName).replace(/_/g, ' ');
+          return {
+            name: display,
+            create: false,
+            read: true,
+            update: false,
+            archived: false
+          };
+        }));
       } catch (err: any) {
         console.error('Error fetching modules:', err);
         showToast.error(err.message, { autoClose: 5000 });
@@ -127,11 +134,15 @@ const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
         return;
       }
 
+      // Check against existing roles from Redux store (client-side cache)
       setIsCheckingName(true);
       try {
-        const payload = { name: debouncedName.trim() };
-        const response = await api.post('/check-role', payload);
-        const isAvailable = response.data.message !== 'Role name already exists';
+        // Check if role name already exists in the roles list
+        const existingRole = roles.find(
+          (role: any) => role.name.toLowerCase() === debouncedName.trim().toLowerCase()
+        );
+
+        const isAvailable = !existingRole;
 
         setNameAvailability(isAvailable);
         setValidation(prev => ({
@@ -142,22 +153,13 @@ const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
           }
         }));
       } catch (err) {
-        console.error('Error checking role name:', err);
-        let errorMessage = "Failed to check role name availability";
-        if (err.response) {
-          if (err.response.status === 400) {
-            errorMessage = err.response.data.message || "Invalid role name format";
-          } else if (err.response.data?.message) {
-            errorMessage = err.response.data.message;
-          }
-        }
-        showToast.error(errorMessage, { autoClose: 1000 });
-        setNameAvailability(false);
+        // If check fails, allow creation (optimistic approach)
+        setNameAvailability(true);
         setValidation(prev => ({
           ...prev,
           details: {
-            isValid: false,
-            message: errorMessage
+            isValid: true,
+            message: ""
           }
         }));
       } finally {
@@ -227,10 +229,17 @@ const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
 
   // Transform frontend permissions to backend format
   const transformPermissionsToBackend = (matrix) => {
-    return matrix.map(module => ({
-      module_id: modules.find(m => m.module_name === module.name)?.id || "",
-      permission: `${module.create ? 'T' : 'F'}${module.read ? 'T' : 'F'}${module.update ? 'T' : 'F'}${module.archived ? 'T' : 'F'}`
-    }));
+    // Not used anymore for compact format; kept for reference
+    return matrix.map((module: any) => ({
+      module_id: (modules as any[]).find((m: any) => {
+        const rawName = m.name ?? m.module_name ?? '';
+        return String(rawName).replace(/_/g, ' ') === module.name;
+      })?.id || '',
+      can_create: Boolean(module.create),
+      can_read: Boolean(module.read),
+      can_update: Boolean(module.update),
+      can_archive: Boolean(module.archived),
+    })).filter((p: any) => p.module_id);
   };
 
   // Handle create role submission with backend
@@ -239,14 +248,24 @@ const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
     setError(null);
 
     try {
-      const payload = {
-        module_id: getModuleIdByName('User Management'),
-        name: formData.details.name,
-        description: formData.details.description,
-        permissions: transformPermissionsToBackend(permissionMatrix)
+      if (!organization_id) {
+        showToast.error('Organization is missing. Please re-login or select an organization.');
+        setIsSubmitting(false);
+        return;
+      }
+      // Build permissions payload for /create-role-with-permissions
+      const permissionsPayload = transformPermissionsToBackend(permissionMatrix);
+
+      // Pull organization_id from auth slice (fallback null)
+      const apiPayload = {
+        role: {
+          name: formData.details.name.trim(),
+          organization_id,
+        },
+        permissions: permissionsPayload,
       };
 
-      await (dispatch(createRole(payload) as any) as any).unwrap();
+      await (dispatch(createRoleWithPermissions(apiPayload) as any) as any).unwrap();
       if (typeof onRoleCreated === 'function') {
         onRoleCreated();
       }
@@ -264,13 +283,15 @@ const CreateRoles = ({ onCancel, onRoleCreated }: any) => {
     const selectedRole = roles.find(role => role.id === roleId);
 
     if (selectedRole) {
-      const newMatrix = modules.map(module => {
-        const modulePermissions = selectedRole.permissions[module.module_name] || {
+      const newMatrix = modules.map((module: any) => {
+        const rawName = module.name ?? module.module_name ?? 'Unknown Module';
+        const display = String(rawName).replace(/_/g, ' ');
+        const modulePermissions = selectedRole.permissions[display] || {
           create: false, read: true, update: false, archived: false
         };
 
         return {
-          name: module.module_name,
+          name: display,
           ...modulePermissions
         };
       });

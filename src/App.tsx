@@ -7,32 +7,35 @@ import {
 } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { ProductDataProvider } from "./context/ProductDataContext";
-import WelcomePage from "./pages/WelcomePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/SignupPage";
+import WelcomePage from "./features/auth/pages/WelcomePage";
+import LoginPage from "./features/auth/pages/LoginPage";
+import SignupPage from "./features/auth/pages/SignupPage";
+import ResetPassword from "./features/auth/pages/ResetPassword";
 import WorkspaceForm from "./pages/WorkspaceCreation";
 import ModifyWorkspace from "./pages/WorkspaceView/ModifyWorkspace";
 import Home from "./pages/Home";
 import HelpPage from "./pages/HelpPage";
 import Profile from "./components/Profile";
 import ViewWorkspacesPage from "./pages/WorkspaceView/ViewWorkspace";
-import ResetPassword from "./pages/ResetPassword";
 import SettingsPage from "./pages/SettingsPage";
 import WorkspaceDetailsPage from "./pages/WorkspaceView/WorkspaceDetailsPage";
 import { initializePermissions } from "./redux/slices/permissionSlice";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProductAttribute from "./pages/PIM/ProductAttribute/ProductDetailPage";
+import { fetchCurrentUser } from "./redux/slices/authSlice";
 //shopperIQ
 import ReviewMinerPage from "./pages/ShopperIQ/ReviewMinerPage";
 //ChannelAmp
 import MainPage from "./pages/ChannelAmp/mainPage"
 import ChannelAMPDashboard from "./pages/ChannelAmp/ChannelAMPDashboard";
+import ConnectAmazonAds from "./components/ChannelAmp/ConnectAmazonAds";
 import AuthCallback from "./pages/ChannelAmp/AuthCallback";
 import ProfilesPage from "./pages/ChannelAmp/ProfilesPage";
 import CampaignsPage from "./pages/ChannelAmp/CampaignsPage";
 import AdGroupsPage from "./pages/ChannelAmp/AdGroupsPage";
 import AdsPage from "./pages/ChannelAmp/AdsPage";
+
 // PIM Components
 import PIM_Dashboard from "./pages/PIM/Dashboard";
 import ProductListing from "./pages/PIM/ProductCatalog";
@@ -112,6 +115,13 @@ const App = () => {
   useEffect(() => {
     const permissions = dispatch(initializePermissions() as any);
   }, []);
+
+  useEffect(() => {
+    // On initial load, if a token exists, fetch the current user's full profile
+    if (isLoggedIn) {
+      dispatch(fetchCurrentUser() as any);
+    }
+  }, [isLoggedIn, dispatch]);
 
   return (
     <Router>
@@ -199,6 +209,7 @@ const App = () => {
                     <Route path="targets" element={<Targets />} />
                     <Route path="automation-rules" element={<AutomationRules />} />
                     <Route path="reporting" element={<Reporting />} />
+                    <Route path="connections" element={<ConnectAmazonAds onConnectionSuccess={() => {}} />} />
                   </Route>
                   {/* PIM */}
                   <Route path="pim">
@@ -232,7 +243,7 @@ const App = () => {
             </Route>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/test/productAttributePage" element={<ProductAttribute />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register" element={<SignupPage />} />
             <Route path="/resetPassword/:token" element={<ResetPassword />} />
             <Route
               path="/workspaceCreate"
