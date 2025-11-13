@@ -1,80 +1,141 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useProductData } from "../../context/ProductDataContext"
 import { Plus, X, Search, Trash2, Copy, Settings, Eye, ArrowLeft, ChevronDown } from "lucide-react"
 import FloatingAddButton from "../../../helper_Functions/FloatingAddButton"
+import { useViewTemplates, useViewTemplateOperations, ENV } from "../../api/pim"
+import type { ViewTemplate } from "../../api/pim"
 
 const ViewManagementPage = () => {
   const navigate = useNavigate()
-  const { viewTemplates, setViewTemplates, fieldMappingTemplates } = useProductData()
+  const { fieldMappingTemplates } = useProductData()
+  
+  // Use real API hooks
+  const { templates: viewTemplates, loading, error, fetchTemplates, setTemplates: setViewTemplates } = useViewTemplates(ENV.ORG_ID)
+  const { create, update, delete: deleteViewTemplate } = useViewTemplateOperations(ENV.ORG_ID)
+  
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [expandedViewId, setExpandedViewId] = useState(null)
+  const [expandedViewId, setExpandedViewId] = useState<string | null>(null)
   const [newViewData, setNewViewData] = useState({
     name: "",
-    description: "",
     sourceViewId: "",
   })
 
-  const handleConfigureView = (viewId) => {
+  // Hardcoded field mapping for now (TODO: will be updated in future)
+  const [viewFieldMappings, setViewFieldMappings] = useState<Record<string, {
+    templateId: string;
+    enabledRetailers: string[];
+  }>>({})
+
+  // Fetch view templates on component mount
+  useEffect(() => {
+    fetchTemplates()
+  }, [])
+
+  const handleConfigureView = (viewId: string) => {
     navigate(`/pim/views/${viewId}`)
   }
 
-  const handleCreateView = (viewData) => {
-    console.log("Creating view:", viewData)
-    setShowCreateModal(false)
-    setNewViewData({ name: "", description: "", sourceViewId: "" })
-    navigate(`/pim/views/${viewData.sourceViewId}/configure`)
+  const handleCreateView = async () => {
+    if (!newViewData.name) {
+      return
+    }
+
+    try {
+      let sectionsToCreate = []
+
+      // If a source template is selected, copy its sections
+      if (newViewData.sourceViewId) {
+        const sourceTemplate = viewTemplates.find(v => v.id === newViewData.sourceViewId)
+        if (sourceTemplate && sourceTemplate.sections) {
+          sectionsToCreate = sourceTemplate.sections.map(section => ({
+            id: section.id,
+            title: section.title,
+            order: section.order,
+            attributes: section.attributes.map(attr => ({
+              id: attr.id,
+              name: attr.name,
+              type: attr.type,
+              required: attr.required,
+              order: attr.order,
+              options: attr.options || [],
+            }))
+          }))
+        }
+      }
+
+      // Create temporary view template in local state (not saved to backend yet)
+      const tempId = `temp-${Date.now()}`
+      const newTemplate = {
+        id: tempId,
+        name: newViewData.name,
+        orgId: ENV.ORG_ID,
+        sections: sectionsToCreate,
+        _isNew: true, // Flag to indicate this is a new unsaved template
+      }
+
+      setShowCreateModal(false)
+      setNewViewData({ name: "", sourceViewId: "" })
+      
+      // Navigate to configure the new view, passing the template in state
+      navigate(`/pim/views/${tempId}`, { state: { newTemplate } })
+    } catch (error) {
+      console.error("Error creating view:", error)
+    }
   }
 
-  const handleDeleteView = (viewId) => {
-    const view = viewTemplates.find((v) => v.id === viewId)
-    if (view?.isDefault) {
+  const handleDeleteView = async (viewId: string) => {
+    // Check if it's the first template (treating it as default)
+    const isFirstTemplate = viewTemplates[0]?.id === viewId
+    if (isFirstTemplate) {
       alert("Cannot delete the default view")
       return
     }
-    console.log("Deleting view:", viewId)
+    
+    if (!confirm("Are you sure you want to delete this view?")) {
+      return
+    }
+
+    try {
+      await deleteViewTemplate(viewId)
+      await fetchTemplates()
+    } catch (error) {
+      console.error("Error deleting view:", error)
+    }
   }
 
-  const handleRetailerToggle = (viewId, retailer) => {
-    setViewTemplates(prevViews => 
-      prevViews.map(view => {
-        if (view.id === viewId && view.defaultFieldMapping?.templateId) {
-          const currentRetailers = view.defaultFieldMapping.enabledRetailers || []
-          const newRetailers = currentRetailers.includes(retailer)
-            ? currentRetailers.filter(r => r !== retailer)
-            : [...currentRetailers, retailer]
-          
-          return {
-            ...view,
-            defaultFieldMapping: {
-              ...view.defaultFieldMapping,
-              enabledRetailers: newRetailers
-            }
-          }
+  const handleRetailerToggle = (viewId: string, retailer: string) => {
+    setViewFieldMappings(prev => {
+      const current = prev[viewId] || { templateId: "", enabledRetailers: [] }
+      const currentRetailers = current.enabledRetailers || []
+      const newRetailers = currentRetailers.includes(retailer)
+        ? currentRetailers.filter(r => r !== retailer)
+        : [...currentRetailers, retailer]
+      
+      return {
+        ...prev,
+        [viewId]: {
+          ...current,
+          enabledRetailers: newRetailers
         }
-        return view
-      })
-    )
+      }
+    })
   }
 
   const handleBack = () => {
     navigate("/pim/products")
   }
 
-  const filteredViews = viewTemplates.filter(
-    (view) =>
-      view.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      view.description.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredViews = viewTemplates.filter((view) =>
+    view.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleModalSubmit = (e) => {
+  const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (newViewData.name && newViewData.sourceViewId) {
-      handleCreateView(newViewData)
-    }
+    handleCreateView()
   }
 
   return (
@@ -114,140 +175,149 @@ const ViewManagementPage = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="text-gray-500">Loading views...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <div className="text-red-500">{error}</div>
+          </div>
+        )}
+
         {/* Views Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredViews.map((view) => {
-            const template = fieldMappingTemplates.find(
-              t => t.id === view.defaultFieldMapping?.templateId
-            )
-            const isExpanded = expandedViewId === view.id
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredViews.map((view, index) => {
+              // Hardcoded field mapping - TODO: will be updated when backend provides this data
+              const viewMapping = viewFieldMappings[view.id]
+              const template = viewMapping ? fieldMappingTemplates.find(
+                t => t.id === viewMapping.templateId
+              ) : null
+              const isExpanded = expandedViewId === view.id
+              const isFirstView = index === 0 // Treat first view as default
 
-            return (
-              <div
-                key={view.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{view.name}</h3>
-                      {view.isDefault && (
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full border border-blue-200">
-                          Default
-                        </span>
-                      )}
+              return (
+                <div
+                  key={view.id}
+                  className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{view.name}</h3>
+                        {isFirstView && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full border border-blue-200">
+                            Default
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3">{view.description}</p>
                   </div>
-                </div>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Sections:</span>
-                    <span className="font-medium">{view.sections.length}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Total Fields:</span>
-                    <span className="font-medium">
-                      {view.sections.reduce((total, section) => total + section.attributes.length, 0)}
-                    </span>
-                  </div>
-                  
-                  {/* Field Template Dropdown */}
-                  {template && (
-                    <div className="pt-2 border-t">
-                      <button
-                        onClick={() => setExpandedViewId(isExpanded ? null : view.id)}
-                        className="w-full flex items-center justify-between text-sm text-left py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-500">Field Template:</span>
-                          <span className="font-medium text-blue-600">{template.name}</span>
-                        </div>
-                        <ChevronDown 
-                          className={`w-4 h-4 text-gray-400 transition-transform ${
-                            isExpanded ? 'transform rotate-180' : ''
-                          }`} 
-                        />
-                      </button>
-                      
-                      {/* Retailer Checkboxes */}
-                      {isExpanded && (
-                        <div className="mt-2 pl-3 space-y-2">
-                          <p className="text-xs text-gray-500 mb-2">Enable/Disable Retailers:</p>
-                          <div className="space-y-1.5">
-                            {template.retailers?.map((retailer) => {
-                              const isEnabled = view.defaultFieldMapping.enabledRetailers?.includes(retailer)
-                              return (
-                                <label
-                                  key={retailer}
-                                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isEnabled}
-                                    onChange={() => handleRetailerToggle(view.id, retailer)}
-                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                  />
-                                  <span className={`text-sm capitalize ${
-                                    isEnabled ? 'text-green-700 font-medium' : 'text-gray-600'
-                                  }`}>
-                                    {retailer}
-                                  </span>
-                                </label>
-                              )
-                            })}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
-                            {view.defaultFieldMapping.enabledRetailers?.length || 0} of{' '}
-                            {template.retailers?.length || 0} retailers enabled
-                          </div>
-                        </div>
-                      )}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Sections:</span>
+                      <span className="font-medium">{view.sections?.length || 0}</span>
                     </div>
-                  )}
-                  
-                  <div className="flex justify-between text-sm pt-2">
-                    <span className="text-gray-500">Created:</span>
-                    <span className="font-medium">{view.createdAt}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Total Fields:</span>
+                      <span className="font-medium">
+                        {view.sections?.reduce((total, section) => total + section.attributes.length, 0) || 0}
+                      </span>
+                    </div>
+                    
+                    {/* Field Template Dropdown - Hardcoded for now */}
+                    {template && (
+                      <div className="pt-2 border-t">
+                        <button
+                          onClick={() => setExpandedViewId(isExpanded ? null : view.id)}
+                          className="w-full flex items-center justify-between text-sm text-left py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500">Field Template:</span>
+                            <span className="font-medium text-blue-600">{template.name}</span>
+                          </div>
+                          <ChevronDown 
+                            className={`w-4 h-4 text-gray-400 transition-transform ${
+                              isExpanded ? 'transform rotate-180' : ''
+                            }`} 
+                          />
+                        </button>
+                        
+                        {/* Retailer Checkboxes */}
+                        {isExpanded && (
+                          <div className="mt-2 pl-3 space-y-2">
+                            <p className="text-xs text-gray-500 mb-2">Enable/Disable Retailers:</p>
+                            <div className="space-y-1.5">
+                              {template.retailers?.map((retailer) => {
+                                const isEnabled = viewMapping.enabledRetailers?.includes(retailer)
+                                return (
+                                  <label
+                                    key={retailer}
+                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isEnabled}
+                                      onChange={() => handleRetailerToggle(view.id, retailer)}
+                                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className={`text-sm capitalize ${
+                                      isEnabled ? 'text-green-700 font-medium' : 'text-gray-600'
+                                    }`}>
+                                      {retailer}
+                                    </span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                              {viewMapping.enabledRetailers?.length || 0} of{' '}
+                              {template.retailers?.length || 0} retailers enabled
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Modified:</span>
-                    <span className="font-medium">{view.lastModified}</span>
-                  </div>
-                </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleConfigureView(view.id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    <Settings className="h-3 w-3" />
-                    Configure
-                  </button>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm"
-                    title="Duplicate View"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </button>
-                  {!view.isDefault && (
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => handleDeleteView(view.id)}
-                      className="px-3 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
-                      title="Delete View"
+                      onClick={() => handleConfigureView(view.id)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Settings className="h-3 w-3" />
+                      Configure
                     </button>
-                  )}
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm"
+                      title="Duplicate View"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                    {!isFirstView && (
+                      <button
+                        onClick={() => handleDeleteView(view.id)}
+                        className="px-3 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm"
+                        title="Delete View"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
 
-        {filteredViews.length === 0 && (
+        {!loading && !error && filteredViews.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-500 mb-4">
               <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
@@ -273,7 +343,7 @@ const ViewManagementPage = () => {
             <button
               onClick={() => {
                 setShowCreateModal(false)
-                setNewViewData({ name: "", description: "", sourceViewId: "" })
+                setNewViewData({ name: "", sourceViewId: "" })
               }}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
               aria-label="Close modal"
@@ -295,27 +365,18 @@ const ViewManagementPage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={newViewData.description}
-                  onChange={(e) => setNewViewData({ ...newViewData, description: e.target.value })}
-                  placeholder="Enter view description"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Base Template</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Base Template <span className="text-gray-400 text-xs">(Optional)</span>
+                </label>
                 <select
                   value={newViewData.sourceViewId}
                   onChange={(e) => setNewViewData({ ...newViewData, sourceViewId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
                   aria-label="Base template"
                   title="Base template"
                 >
-                  <option value="" disabled>
-                    Select a template to copy from
+                  <option value="">
+                    Create from scratch (empty view)
                   </option>
                   {viewTemplates.map((view) => (
                     <option key={view.id} value={view.id}>
@@ -323,13 +384,16 @@ const ViewManagementPage = () => {
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select a template to copy its structure, or leave empty to start fresh
+                </p>
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false)
-                    setNewViewData({ name: "", description: "", sourceViewId: "" })
+                    setNewViewData({ name: "", sourceViewId: "" })
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
                 >

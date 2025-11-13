@@ -33,6 +33,14 @@ module.exports = {
         // Light gradient colors
         'peach': '#FDE2CF',
         'cream': '#FFF8F4',
+        
+        // Brand Theme Colors (RetailSync)
+        'brand': {
+          'primary': '#DD522C',
+          'light': '#FDE2CF',
+          'secondary': '#F27A56',
+          'hover': '#F27A56',
+        },
       },
       
       // Gradient configuration

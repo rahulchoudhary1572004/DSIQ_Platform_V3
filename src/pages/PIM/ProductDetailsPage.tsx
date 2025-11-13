@@ -11,7 +11,7 @@ const ProductDetailsPage = () => {
   const gridRef = useRef<any>(null)
 
   const handleEdit = () => {
-    navigate(`/${id}/edit`)
+    navigate(`/pim/products/${id}/edit`)
   }
 
   const handleBack = () => {
@@ -34,14 +34,6 @@ const ProductDetailsPage = () => {
 
   return (
     <>
-      <div className="flex justify-end p-4">
-        <ExportButton
-          data={exportData}
-          columns={columns}
-          gridRef={gridRef}
-          fileName={`ProductDetails_${id}`}
-        />
-      </div>
       <ProductViewer
         viewTemplates={viewTemplates}
         productData={productData}

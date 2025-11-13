@@ -60,9 +60,57 @@ export interface ViewTemplate {
 export interface FieldMappingTemplate {
   id: string;
   name: string;
+  category: string;
+  categoryId: string;
   description: string;
-  retailers?: string[];
-  mappings?: Record<string, Record<string, string>>;
+  createdAt: string;
+  lastModified: string;
+  retailers: string[];
+  mappings: Record<string, Record<string, string | number>>;
+}
+
+// ============================================================================
+// Retailer Types
+// ============================================================================
+
+export interface Retailer {
+  id: string;
+  name: string;
+  status: 'connected' | 'disconnected' | 'available';
+  color: string;
+  categories?: string[];
+  connectedDate?: string;
+  tokenExpires?: string;
+}
+
+export interface RetailerField {
+  id: string;
+  label: string;
+  required: boolean;
+  description?: string;
+  dataType?: string;
+}
+
+// ============================================================================
+// Field Mapping Types
+// ============================================================================
+
+export interface FieldMappingModalData {
+  templateId: string;
+  viewId?: string;
+  selectedRetailers: string[];
+  retailerCategories: Record<string, string>;
+  mappings: Record<string, Record<string, string | number>>;
+}
+
+export interface FieldMappingConfiguration {
+  templateId: string;
+  viewId: string;
+  retailers: Array<{
+    retailerId: string;
+    category?: string;
+    mappings: Record<string, string | number>;
+  }>;
 }
 
 // ============================================================================

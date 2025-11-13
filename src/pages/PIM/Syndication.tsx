@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
-import { RefreshCw, Download, Search, Package, MapPin, CheckCircle, XCircle, Clock, Settings, Plus, Filter } from "lucide-react";
+import { RefreshCw, Download, Search, Package, MapPin, CheckCircle, XCircle, Clock, Settings, Plus, Filter, ArrowRight } from "lucide-react";
 import { Grid, GridColumn as Column } from "@progress/kendo-react-grid";
 import { Slider, NumericTextBox } from "@progress/kendo-react-inputs";
 import { process } from "@progress/kendo-data-query";
+import { useNavigate } from "react-router-dom";
 import ExportButton from '../../../helper_Functions/Export';
 import { useProductData } from "../../context/ProductDataContext";
 
@@ -127,13 +128,12 @@ const MyPager = (props) => {
 };
 
 export default function Syndication() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [gridPage, setGridPage] = useState({ skip: 0, take: 10 });
   const [gridFilter, setGridFilter] = useState<any>({ logic: "and", filters: [] });
   const [activeTab, setActiveTab] = useState("status"); // status, readiness, templates
-  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const gridRef = useRef<any>(null);
   
   const { fieldMappingTemplates } = useProductData();
@@ -387,17 +387,19 @@ export default function Syndication() {
                   Manage field mapping templates for different retailers and categories
                 </p>
               </div>
-              <button 
-                onClick={() => setShowTemplateDialog(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" /> Create Template
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => navigate("/pim/field-mapping")}
+                  className="flex items-center gap-2 px-4 py-2 border-2 border-[#DD522C] text-[#DD522C] rounded-lg hover:bg-[#FDE2CF] transition-all shadow-sm"
+                >
+                  <Settings className="w-4 h-4" /> Manage All
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {fieldMappingTemplates.map((template) => (
-                <div key={template.id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                <div key={template.id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow group">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
@@ -411,7 +413,8 @@ export default function Syndication() {
                       </div>
                     </div>
                     <button 
-                      className="text-gray-400 hover:text-gray-600"
+                      onClick={() => navigate("/pim/field-mapping")}
+                      className="text-gray-400 hover:text-[#DD522C] opacity-0 group-hover:opacity-100 transition-all"
                       aria-label="Configure template"
                       title="Configure template"
                     >
@@ -448,10 +451,10 @@ export default function Syndication() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Field Mapping Templates</h3>
                 <p className="text-gray-600 mb-4">Create templates to standardize field mappings across products</p>
                 <button 
-                  onClick={() => setShowTemplateDialog(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  onClick={() => navigate("/pim/field-mapping")}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#DD522C] text-white rounded-lg hover:bg-[#F27A56] transition-colors shadow-md"
                 >
-                  <Plus className="w-4 h-4" /> Create First Template
+                  <Plus className="w-4 h-4" /> Go to Field Mapping
                 </button>
               </div>
             )}

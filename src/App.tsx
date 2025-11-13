@@ -48,13 +48,7 @@ import DigitalAssets from "./pages/PIM/DAM";
 import Syndication from "./pages/PIM/Syndication";
 import Channels from "./pages/PIM/ChannelPages/Channels";
 import ChannelDetails from "./pages/PIM/ChannelPages/ChannelDetails";
-
-// Dynamic Columns Test Pages
-import TestDynamicColumnsIndex from "./pages/TestDynamicColumnsIndex";
-import ProductCatalog_Approach1 from "./components/PIM/product/ProductCatalog_DynamicColumns_Approach1";
-import ProductCatalog_Approach2 from "./components/PIM/product/ProductCatalog_DynamicColumns_Approach2";
-import ProductCatalog_Approach3 from "./components/PIM/product/ProductCatalog_DynamicColumns_Approach3";
-import ProductCatalog_Approach4 from "./components/PIM/product/ProductCatalog_DynamicColumns_Approach4";
+import TestPimApi from "./pages/PIM/TestPimApi";
 
 // Placeholder components for unmapped features
 const CategoryAnalysis = () => <div>Category Analysis Page</div>;
@@ -227,14 +221,7 @@ const App = () => {
                     <Route path="syndication" element={<Syndication />} />
                     <Route path="channels" element={<Channels />} />
                     <Route path="channels/:channelName" element={<ChannelDetails />} />
-                  </Route>
-                  {/* Dynamic Columns Test Routes */}
-                  <Route path="test-dynamic-columns">
-                    <Route index element={<TestDynamicColumnsIndex />} />
-                    <Route path="approach1" element={<ProductCatalog_Approach1 />} />
-                    <Route path="approach2" element={<ProductCatalog_Approach2 />} />
-                    <Route path="approach3" element={<ProductCatalog_Approach3 />} />
-                    <Route path="approach4" element={<ProductCatalog_Approach4 />} />
+                    <Route path="test-api" element={<TestPimApi />} />
                   </Route>
                   {/* App Settings Route */}
                   <Route path="app-settings" element={<AppSettings />} />

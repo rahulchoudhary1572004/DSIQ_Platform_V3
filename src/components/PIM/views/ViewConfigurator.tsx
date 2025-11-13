@@ -36,8 +36,21 @@ const ViewConfigurator = ({
   const [showFieldMappingDialog, setShowFieldMappingDialog] = useState(false)
   const [selectedTemplateId, setSelectedTemplateId] = useState(null)
   const [selectedRetailers, setSelectedRetailers] = useState([])
+  
+  // Track deleted sections and attributes
+  const [deletedSectionIds, setDeletedSectionIds] = useState([])
+  const [deletedAttributes, setDeletedAttributes] = useState([])
 
   const currentViewTemplate = viewTemplates.find((v) => v.id === activeViewId) || viewTemplates[0]
+
+  // Safety check: if no view template exists, return early
+  if (!currentViewTemplate || !currentViewTemplate.sections) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">Loading view template...</div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     const initialExpanded = {}
@@ -51,9 +64,13 @@ const ViewConfigurator = ({
       setSelectedTemplateId(currentViewTemplate.defaultFieldMapping.templateId)
       setSelectedRetailers(currentViewTemplate.defaultFieldMapping.enabledRetailers || [])
     }
-  }, [currentViewTemplate])
+    
+    // Reset deletion tracking when switching views
+    setDeletedSectionIds([])
+    setDeletedAttributes([])
+  }, [currentViewTemplate, activeViewId])
 
-  const filteredSections = currentViewTemplate.sections
+  const filteredSections = (currentViewTemplate.sections || [])
     .filter((section) => section.title.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => a.order - b.order)
 
@@ -91,6 +108,13 @@ const ViewConfigurator = ({
   }
 
   const deleteSection = (sectionId) => {
+    const section = currentViewTemplate.sections.find((s) => s.id === sectionId)
+    
+    // Only track deletion if the section has a real ID (not a temp numeric ID)
+    if (section && section.id && typeof section.id === 'string' && !section.id.toString().startsWith('temp-')) {
+      setDeletedSectionIds((prev) => [...prev, section.id])
+    }
+    
     const updatedTemplate = {
       ...currentViewTemplate,
       sections: currentViewTemplate.sections.filter((s) => s.id !== sectionId),
@@ -102,6 +126,11 @@ const ViewConfigurator = ({
   }
 
   const updateAttribute = (sectionId, attributeId, updates) => {
+    // If changing type to Dropdown and options don't exist, add empty array
+    if (updates.type === 'Dropdown') {
+      updates = { ...updates, options: updates.options || [] }
+    }
+    
     const updatedTemplate = {
       ...currentViewTemplate,
       sections: currentViewTemplate.sections.map((s) =>
@@ -120,6 +149,21 @@ const ViewConfigurator = ({
   }
 
   const deleteAttribute = (sectionId, attributeId) => {
+    const section = currentViewTemplate.sections.find((s) => s.id === sectionId)
+    const attribute = section?.attributes.find((a) => a.id === attributeId)
+    
+    // Only track deletion if both section and attribute have real IDs (not temp numeric IDs)
+    if (
+      section && 
+      attribute && 
+      section.id && 
+      attribute.id && 
+      typeof section.id === 'string' && 
+      typeof attribute.id === 'string'
+    ) {
+      setDeletedAttributes((prev) => [...prev, { id: attribute.id, section_id: section.id }])
+    }
+    
     const updatedTemplate = {
       ...currentViewTemplate,
       sections: currentViewTemplate.sections.map((s) =>
@@ -133,7 +177,14 @@ const ViewConfigurator = ({
   }
 
   const addAttribute = (sectionId) => {
-    const newAttribute = { id: Date.now(), name: "New Field", type: "String", required: false }
+    const newAttribute = { 
+      id: Date.now(), 
+      name: "New Field", 
+      type: "Text", 
+      required: false, 
+      order: 0,
+      options: [] // Initialize with empty array
+    }
     const updatedTemplate = {
       ...currentViewTemplate,
       sections: currentViewTemplate.sections.map((s) =>
@@ -149,6 +200,33 @@ const ViewConfigurator = ({
   const openPicklistOptions = (attributeId) => {
     setCurrentPicklistField(attributeId)
     setShowPicklistDialog(true)
+  }
+
+  const closePicklistDialog = () => {
+    // Save the options to the attribute before closing
+    if (currentPicklistField) {
+      const options = picklistOptions[currentPicklistField] || []
+      
+      // Find the section and update the attribute with options
+      const updatedTemplate = {
+        ...currentViewTemplate,
+        sections: currentViewTemplate.sections.map((section) => ({
+          ...section,
+          attributes: section.attributes.map((attr) => 
+            attr.id === currentPicklistField 
+              ? { ...attr, options } 
+              : attr
+          )
+        }))
+      }
+      
+      setViewTemplates((prev) =>
+        prev.map((template) => (template.id === currentViewTemplate.id ? updatedTemplate : template))
+      )
+    }
+    
+    setShowPicklistDialog(false)
+    setCurrentPicklistField(null)
   }
 
   const addPicklistOption = () => {
@@ -373,7 +451,7 @@ const ViewConfigurator = ({
                 Manage Views
               </button>
               <button
-                onClick={onSave}
+                onClick={() => onSave({ deletedSectionIds, deletedAttributes })}
                 className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
               >
                 <Save className="w-3 h-3" /> Save Configuration
@@ -544,13 +622,13 @@ const ViewConfigurator = ({
                                             onChange={(e) => updateAttribute(section.id, attribute.id, { type: e.target.value })}
                                             className="w-full h-7 text-xs border border-gray-300 rounded-md px-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                           >
-                                            <option value="String">Text</option>
+                                            <option value="Text">Text</option>
                                             <option value="Number">Number</option>
                                             <option value="Boolean">Yes/No</option>
                                             <option value="Date">Date</option>
-                                            <option value="Text">Long Text</option>
+                                            <option value="Long Text">Long Text</option>
                                             <option value="Rich Text">Rich Text</option>
-                                            <option value="Picklist">Dropdown</option>
+                                            <option value="Dropdown">Dropdown</option>
                                           </select>
                                         </div>
 
@@ -575,7 +653,7 @@ const ViewConfigurator = ({
                                         <div>
                                           <label className="text-xs font-medium text-gray-700 mb-1.6 block">Options</label>
                                           <div className="h-7 flex items-center">
-                                            {attribute.type === "Picklist" && (
+                                            {attribute.type === "Dropdown" && (
                                               <button
                                                 onClick={() => openPicklistOptions(attribute.id)}
                                                 className="h-6 px-2 text-xs border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -647,7 +725,7 @@ const ViewConfigurator = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
             <button
-              onClick={() => setShowPicklistDialog(false)}
+              onClick={closePicklistDialog}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
             >
               <X className="h-5 w-5" />
@@ -691,7 +769,7 @@ const ViewConfigurator = ({
 
             <div className="flex justify-end gap-3 pt-4 mt-6 border-t">
               <button
-                onClick={() => setShowPicklistDialog(false)}
+                onClick={closePicklistDialog}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
               >
                 Done

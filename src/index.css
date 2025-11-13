@@ -23,6 +23,13 @@
   --color-danger-red: #DE241E;
   --color-peach: #FDE2CF;
   --color-cream: #FFF8F4;
+  
+  /* Brand Theme Colors (Product Editor/Viewer) */
+  --color-brand-primary: #DD522C;
+  --color-brand-light: #FDE2CF;
+  --color-brand-secondary: #F27A56;
+  --color-brand-hover: #F27A56;
+  
   --z-index-navbar: 50;
   --z-index-dropdown: 60;
   --z-index-tooltip: 70;
@@ -50,6 +57,43 @@
 
   .bg-light-gray {
     background-color: var(--color-light-gray)
+  }
+  
+  /* Brand Theme Colors */
+  .bg-brand-primary {
+    background-color: var(--color-brand-primary)
+  }
+  
+  .bg-brand-light {
+    background-color: var(--color-brand-light)
+  }
+  
+  .bg-brand-secondary {
+    background-color: var(--color-brand-secondary)
+  }
+  
+  .bg-brand-hover {
+    background-color: var(--color-brand-hover)
+  }
+  
+  .text-brand-primary {
+    color: var(--color-brand-primary)
+  }
+  
+  .text-brand-secondary {
+    color: var(--color-brand-secondary)
+  }
+  
+  .border-brand-primary {
+    border-color: var(--color-brand-primary)
+  }
+  
+  .border-brand-light {
+    border-color: var(--color-brand-light)
+  }
+  
+  .border-brand-secondary {
+    border-color: var(--color-brand-secondary)
   }
 
   /* Gradients */

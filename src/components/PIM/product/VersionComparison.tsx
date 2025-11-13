@@ -19,7 +19,7 @@ const VersionComparison = ({ version1, version2, onClose }) => {
             : difference === "added"
             ? "bg-green-50"
             : difference === "modified"
-            ? "bg-blue-50"
+            ? "bg-brand-light"
             : "bg-white"
         }`}
       >
@@ -30,7 +30,7 @@ const VersionComparison = ({ version1, version2, onClose }) => {
               ? "text-red-800"
               : difference === "unchanged"
               ? "text-gray-600"
-              : "text-blue-800"
+              : "text-brand-primary"
           }`}
         >
           {val1 || <span className="text-gray-400">-</span>}
@@ -41,7 +41,7 @@ const VersionComparison = ({ version1, version2, onClose }) => {
               ? "text-green-800"
               : difference === "unchanged"
               ? "text-gray-600"
-              : "text-blue-800"
+              : "text-brand-primary"
           }`}
         >
           {val2 || <span className="text-gray-400">-</span>}
@@ -61,7 +61,6 @@ const VersionComparison = ({ version1, version2, onClose }) => {
 
   return (
     <div className="bg-white p-6 rounded-md border border-gray-200">
-      
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <button
@@ -74,7 +73,6 @@ const VersionComparison = ({ version1, version2, onClose }) => {
           <span className="font-semibold text-lg text-gray-800">Version Comparison</span>
         </div>
       </div>
-      
       <div className="my-6 p-4 bg-gray-50 rounded border border-gray-200">
         <h4 className="font-medium mb-2 text-gray-800">Legend:</h4>
         <div className="flex flex-wrap gap-4 text-sm">
@@ -87,8 +85,8 @@ const VersionComparison = ({ version1, version2, onClose }) => {
             <span className="text-red-800">Removed</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-100 border border-blue-200"></div>
-            <span className="text-blue-800">Modified</span>
+            <div className="w-3 h-3 bg-brand-light border border-brand-secondary"></div>
+            <span className="text-brand-primary">Modified</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-white border border-gray-300"></div>
